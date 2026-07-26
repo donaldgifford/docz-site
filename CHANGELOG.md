@@ -8,6 +8,8 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 ### Documentation
 
 - *(inv)* Add INV-0002 evaluating Effect migration and consolidation
+- *(inv)* Add INV-0003 on curated nav tabs and team docs
+- *(inv)* Add INV-0004 on resolving relative doc links
 
 ## [0.1.2] - 2026-07-23
 

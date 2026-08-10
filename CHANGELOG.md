@@ -11,6 +11,7 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 - *(inv)* Add INV-0003 on curated nav tabs and team docs
 - *(inv)* Add INV-0004 on resolving relative doc links
 - *(inv)* Add INV-0005 on rendering the repo changelog
+- *(inv)* Conclude INV-0005 with all open questions resolved to (a)
 
 ## [0.1.2] - 2026-07-23
 

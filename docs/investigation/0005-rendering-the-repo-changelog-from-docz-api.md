@@ -1,7 +1,7 @@
 ---
 id: INV-0005
 title: "Rendering the repo changelog from docz-api"
-status: In Progress
+status: Concluded
 author: Donald Gifford
 created: 2026-08-10
 ---
@@ -9,7 +9,7 @@ created: 2026-08-10
 
 # INV 0005: Rendering the repo changelog from docz-api
 
-**Status:** In Progress
+**Status:** Concluded
 **Author:** Donald Gifford
 **Date:** 2026-08-10
 
@@ -198,8 +198,8 @@ This is OQ-1; the rest of the forks are presentation-level.
 
 ## Open questions
 
-For review — **a** is the recommendation in each; answer with a
-letter or write in an alternative.
+**Reviewed 2026-08-10: all five resolved to option (a)** — the
+recommendation in each. Options preserved below for the record.
 
 **OQ-1 — How does the nav know a repo serves a changelog?**
 
@@ -259,28 +259,28 @@ letter or write in an alternative.
 
 ## Conclusion
 
-**Answer (pending OQ review):** this is a small, pattern-following
-addition — the hypothesis held. The API side is done and shipped
-(spec 1.2.0); the site side is one lazy route + one gated nav row +
-a spec re-vendor, with every rendering/state/test ingredient already
-precedented by repo home. Under the recommended answers (config-
-snapshot existence signal, `/changelog` route, h1-kept rendering,
-ToC rail, basename hint) it requires **no new docz-api asks** and no
-eager-bundle cost. The only genuine design fork is the existence
-signal (OQ-1); the rest is presentation preference.
+**Answer:** this is a small, pattern-following addition — the
+hypothesis held. The API side is done and shipped (spec 1.2.0); the
+site side is one lazy route + one gated nav row + a spec re-vendor,
+with every rendering/state/test ingredient already precedented by
+repo home. Under the decided answers — all (a): config-snapshot
+existence signal, `/changelog` route, h1-kept rendering, ToC rail,
+basename hint — it requires **no new docz-api asks** and no
+eager-bundle cost. The only genuine design fork was the existence
+signal (OQ-1); the rest was presentation preference.
 
 ## Recommendation
 
-1. Review the five open questions above; answers convert this INV to
-   Concluded.
+1. Open questions reviewed 2026-08-10 — all five resolved to (a);
+   this INV is Concluded.
 2. Implement as one feature PR in the deliverable order of Obs 2
-   (re-vendor → fixtures → route → nav row → states → tests), gated
-   by the chosen OQ answers.
+   (re-vendor → fixtures → route → nav row → states → tests), per
+   the decided answers.
 3. Pass the repo xref resolver into the changelog render so doc-id
    mentions linkify (Obs 4).
-4. If OQ-1 lands on (c), file the `has_changelog` upstream ask
-   alongside the existing DESIGN-0001 additive asks and ship (a) as
-   the interim.
+4. No upstream ask needed under OQ-1(a); note a typed
+   `has_changelog` field alongside DESIGN-0001's additive asks only
+   if the config-snapshot read ever proves brittle.
 5. When INV-0004's relative-link resolver is built, include the
    changelog page with base path = configured file's directory.
 

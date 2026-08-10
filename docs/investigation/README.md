@@ -17,7 +17,7 @@ Design docs, plans, and implementation docs can reference investigations by ID
 | INV-0002 | Evaluate Effect migration and docz-api consolidation | Concluded | 2026-07-25 | Donald Gifford | [0002-evaluate-effect-migration-and-docz-api-consolidation.md](0002-evaluate-effect-migration-and-docz-api-consolidation.md) |
 | INV-0003 | Curated nav tabs for RFCs, frameworks, and team docs | Concluded | 2026-07-25 | Donald Gifford | [0003-curated-nav-tabs-for-rfcs-frameworks-and-team-docs.md](0003-curated-nav-tabs-for-rfcs-frameworks-and-team-docs.md) |
 | INV-0004 | Resolving relative doc links in the reader | Concluded | 2026-07-25 | Donald Gifford | [0004-resolving-relative-doc-links-in-the-reader.md](0004-resolving-relative-doc-links-in-the-reader.md) |
-| INV-0005 | Rendering the repo changelog from docz-api | In Progress | 2026-08-10 | Donald Gifford | [0005-rendering-the-repo-changelog-from-docz-api.md](0005-rendering-the-repo-changelog-from-docz-api.md) |
+| INV-0005 | Rendering the repo changelog from docz-api | Concluded | 2026-08-10 | Donald Gifford | [0005-rendering-the-repo-changelog-from-docz-api.md](0005-rendering-the-repo-changelog-from-docz-api.md) |
 <!-- END DOCZ AUTO-GENERATED -->
 <!-- BEGIN DOCZ AUTO-GENERATED -->
 <!-- END DOCZ AUTO-GENERATED -->

@@ -153,7 +153,7 @@ filename URLs redirect.
       links; no `schema.ts` changes
 - [x] Chart bump per OQ-2a: appVersion to the incoming bare semver,
       chart version patch, image-tag unittest assert updated
-- [ ] Update CLAUDE.md (resolver, base-path parameter, fallback) and
+- [x] Update CLAUDE.md (resolver, base-path parameter, fallback) and
       check off this phase
 
 #### Success Criteria

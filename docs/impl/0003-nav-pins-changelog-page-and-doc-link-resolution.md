@@ -182,7 +182,7 @@ fallback) and the OQ-6b pre-styling.
 - [x] `src/lib/navLinks.ts`: runtime read with the same validation,
       `VITE_NAV_LINKS` fallback, else `[]`; unit tests for
       precedence and hostile input
-- [ ] AppShell: pins as `NavLink`s between Repos and `SessionMenu`;
+- [x] AppShell: pins as `NavLink`s between Repos and `SessionMenu`;
       small-viewport parity; AppShell axe sweep still green
 - [ ] e2e: pins render + navigate in the MSW build via
       `VITE_NAV_LINKS` (2a)

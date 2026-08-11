@@ -46,11 +46,15 @@ export function useRenderedSource(
     xrefs?: XrefResolver;
     /** `RepoDocIndex.byPath` — the relative-link resolution whitelist. */
     paths?: ReadonlyMap<string, string>;
+    /** The source's own repo path; relative hrefs resolve against its
+     * directory. Resolution needs both `paths` and `base`. */
+    base?: string;
   },
 ) {
   const stripLeadingH1 = options?.stripLeadingH1 ?? false;
   const xrefs = options?.xrefs;
   const paths = options?.paths;
+  const base = options?.base;
   return useQuery<RenderedMarkdown>({
     enabled: source !== undefined,
     queryKey: [
@@ -59,11 +63,18 @@ export function useRenderedSource(
       source?.hash,
       stripLeadingH1,
       linkFingerprint(xrefs, paths),
+      base ?? null,
     ],
     queryFn: () =>
       renderMarkdown(
         preprocessDoczMarkdown(source?.raw ?? "", { stripLeadingH1 }),
-        xrefs === undefined ? undefined : { xrefs },
+        {
+          xrefs,
+          links:
+            paths === undefined || base === undefined
+              ? undefined
+              : { base, byPath: paths },
+        },
       ),
     staleTime: Infinity,
     // ReactNode trees aren't serializable; keep them out of any future
@@ -73,7 +84,8 @@ export function useRenderedSource(
 }
 
 /** Reader variant: the header renders the structured title, so the
- * markdown's own leading h1 would duplicate it. */
+ * markdown's own leading h1 would duplicate it. Relative links resolve
+ * against the doc's own `path`. */
 export function useRenderedMarkdown(
   doc: Document | undefined,
   links?: { xrefs?: XrefResolver; paths?: ReadonlyMap<string, string> },
@@ -82,6 +94,6 @@ export function useRenderedMarkdown(
     doc?.raw_md === undefined
       ? undefined
       : { id: doc.doc_id, hash: doc.content_hash, raw: doc.raw_md },
-    { stripLeadingH1: true, ...links },
+    { stripLeadingH1: true, base: doc?.path, ...links },
   );
 }

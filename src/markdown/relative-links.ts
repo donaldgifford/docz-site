@@ -31,7 +31,12 @@ const SCHEME = /^[a-zA-Z][a-zA-Z0-9+.-]*:/;
  * can never match a map key, so traversal fails closed.
  */
 function resolveRepoPath(base: string, relative: string): string | undefined {
-  const segments = base.split("/").slice(0, -1);
+  // Empty/"." base segments (a root-level source, a "./"-prefixed
+  // docs_dir) must not leak into the joined key.
+  const segments = base
+    .split("/")
+    .slice(0, -1)
+    .filter((segment) => segment !== "" && segment !== ".");
   for (const segment of relative.split("/")) {
     if (segment === "" || segment === ".") {
       continue;

@@ -137,7 +137,7 @@ filename URLs redirect.
       the base directory; exact normalized-path lookup (3a); on hit
       rewrite href from the map + `dataXref`, preserving `#fragment`;
       on miss leave the anchor untouched
-- [ ] Thread the `base` parameter through
+- [x] Thread the `base` parameter through
       `renderMarkdown`/`useRenderedSource`: reader = doc `path`,
       repo home = `docs_dir`/index.md, changelog = configured file's
       directory

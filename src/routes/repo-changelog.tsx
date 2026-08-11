@@ -119,7 +119,9 @@ export function Component() {
           hash: changelog.changelog_sha,
           raw: changelog.changelog_md,
         },
-    docIndex === undefined ? undefined : { xrefs: docIndex },
+    docIndex === undefined
+      ? undefined
+      : { xrefs: docIndex.byId, paths: docIndex.byPath },
   );
 
   if (

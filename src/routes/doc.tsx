@@ -99,16 +99,16 @@ export function Component() {
   // own id is excluded (a self-link reads oddly). Until the index
   // loads, the body renders unlinked and is linkified once, cached.
   const docIndex = useRepoDocIndex(owner, repo);
-  const xrefs = useMemo(() => {
+  const links = useMemo(() => {
     if (docIndex === undefined || doc === undefined) {
       return undefined;
     }
-    const withoutSelf = new Map(docIndex);
+    const withoutSelf = new Map(docIndex.byId);
     withoutSelf.delete(doc.doc_id.toUpperCase());
-    return withoutSelf;
+    return { xrefs: withoutSelf, paths: docIndex.byPath };
   }, [docIndex, doc]);
 
-  const rendered = useRenderedMarkdown(doc, xrefs);
+  const rendered = useRenderedMarkdown(doc, links);
   const [format, setFormat] = useState<DocFormat>("html");
 
   // Successful loads feed the palette's empty-query "recent" group.

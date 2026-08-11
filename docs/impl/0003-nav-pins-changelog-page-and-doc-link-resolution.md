@@ -129,7 +129,7 @@ filename URLs redirect.
 
 #### Tasks
 
-- [ ] Widen `useRepoDocIndex` to return `{ byId, byPath }` from the
+- [x] Widen `useRepoDocIndex` to return `{ byId, byPath }` from the
       already-fetched queries; extend the fnv1a render-cache
       fingerprint over both key sets; update existing call sites
 - [ ] New `src/markdown/relative-links.ts` post-sanitize transform:

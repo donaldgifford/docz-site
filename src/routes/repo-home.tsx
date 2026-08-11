@@ -106,7 +106,9 @@ export function Component() {
           hash: index.index_sha,
           raw: index.index_md,
         },
-    docIndex === undefined ? undefined : { xrefs: docIndex },
+    docIndex === undefined
+      ? undefined
+      : { xrefs: docIndex.byId, paths: docIndex.byPath },
   );
 
   if (

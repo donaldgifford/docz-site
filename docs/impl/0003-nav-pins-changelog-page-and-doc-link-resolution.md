@@ -132,7 +132,7 @@ filename URLs redirect.
 - [x] Widen `useRepoDocIndex` to return `{ byId, byPath }` from the
       already-fetched queries; extend the fnv1a render-cache
       fingerprint over both key sets; update existing call sites
-- [ ] New `src/markdown/relative-links.ts` post-sanitize transform:
+- [x] New `src/markdown/relative-links.ts` post-sanitize transform:
       skip absolute/`//`/root/`#`-only hrefs; posix-resolve against
       the base directory; exact normalized-path lookup (3a); on hit
       rewrite href from the map + `dataXref`, preserving `#fragment`;

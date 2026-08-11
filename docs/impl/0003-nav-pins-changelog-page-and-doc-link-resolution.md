@@ -69,8 +69,11 @@ shippable as its own PR, no docz-api changes.
 
 Each phase builds on the previous one. A phase is complete when all
 its tasks are checked off and its success criteria are met. One PR
-per phase; conventional commits; chart-touching Phase 3 bumps the
-chart patch version.
+per phase, labeled `minor` (OQ-2a); conventional commits. Every
+phase PR bumps the chart — appVersion to the incoming release's
+bare semver plus a chart patch bump, image-tag unittest assert
+updated to match — so defaults-only installs pull the released
+image (the metadata-action strips the `v`; appVersion stays bare).
 
 ---
 
@@ -104,6 +107,8 @@ The "cached repo file as page" pattern (repo home) applied to
 - [ ] Unit tests: row gating (enabled / disabled / absent block /
       malformed snapshot), page states (404 / empty / content), memo
       keying; changelog view added to the axe sweep
+- [ ] Chart bump per OQ-2a: appVersion to the incoming bare semver,
+      chart version patch, image-tag unittest assert updated
 - [ ] Update CLAUDE.md (reserved `changelog` segment, snapshot-gated
       row) and check off this phase
 
@@ -146,6 +151,8 @@ filename URLs redirect.
       relative References footer rendered end-to-end
 - [ ] XSS suite: hostile relative hrefs never resolve to emitted
       links; no `schema.ts` changes
+- [ ] Chart bump per OQ-2a: appVersion to the incoming bare semver,
+      chart version patch, image-tag unittest assert updated
 - [ ] Update CLAUDE.md (resolver, base-path parameter, fallback) and
       check off this phase
 
@@ -181,8 +188,9 @@ fallback) and the OQ-6b pre-styling.
       `VITE_NAV_LINKS` (2a)
 - [ ] Helm chart: `config.navLinks` (list of `{label, href}`) →
       `DOCZ_NAV_LINKS` env via `toJson`; `values.schema.json`;
-      helm-unittest default + override; chart patch bump;
-      README.md.gotmpl + helm-docs
+      helm-unittest default + override; appVersion + chart patch
+      bump with image-tag assert (OQ-2a); README.md.gotmpl +
+      helm-docs
 - [ ] `docs` type curation (6b): `CURATED_TYPES` entry,
       `--color-t-docs` token passing `contrast.test.ts`, blurb in
       `docTypes.ts`
@@ -208,9 +216,12 @@ fallback) and the OQ-6b pre-styling.
 
 ## Open Questions
 
-For review — **a** is the recommendation in each; answers gate the
-start of Phase 1. These are execution/process forks; every design
-fork was settled in DESIGN-0002.
+**Reviewed 2026-08-11 — decided: 1a, 2a, 3a, 4b.** Options preserved
+below for the record. Consequences are folded into the phase tasks:
+the documentation PR merges first as `dont-release` (1a); every phase
+PR is labeled `minor` and bumps the chart appVersion alongside (2a);
+no docz-api rollout ordering (3a); execution runs as a donald-loop
+over this doc (4b) once the documentation PR is merged.
 
 **OQ-1 — Merge the documentation branch before starting Phase 1?**
 

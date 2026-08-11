@@ -261,10 +261,7 @@ export const demoOrgHandlers = [
         changelog_sha: "fixture-changelog-sha-docz-api",
       });
     }
-    return HttpResponse.json(
-      { error: "changelog not found" },
-      { status: 404 },
-    );
+    return HttpResponse.json({ error: "changelog not found" }, { status: 404 });
   }),
 
   // getRepoIndex (spec 1.1.0, DESIGN-0003): docz-api has a curated

@@ -141,7 +141,7 @@ filename URLs redirect.
       `renderMarkdown`/`useRenderedSource`: reader = doc `path`,
       repo home = `docs_dir`/index.md, changelog = configured file's
       directory
-- [ ] Doc-route filename fallback: on `NotFoundError` with a
+- [x] Doc-route filename fallback: on `NotFoundError` with a
       `/\.md$/i` `:docId`, redirect (`replace`, hash preserved) when
       exactly one doc's `path` basename matches; ambiguous/none →
       existing panel

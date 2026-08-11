@@ -15,6 +15,7 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 - *(design)* Add DESIGN-0002 consolidating INV-0003/0004/0005
 - *(design)* Approve DESIGN-0002 and scaffold IMPL-0003
 - *(impl)* Add open questions to IMPL-0003 for review
+- *(impl)* Record IMPL-0003 decisions (1a 2a 3a 4b)
 
 ## [0.1.2] - 2026-07-23
 

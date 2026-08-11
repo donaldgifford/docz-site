@@ -29,6 +29,7 @@ created: 2026-08-11
     - [Tasks](#tasks-2)
     - [Success Criteria](#success-criteria-2)
 - [Standing gates (every phase)](#standing-gates-every-phase)
+- [Open Questions](#open-questions)
 - [References](#references)
 <!--toc:end-->
 
@@ -204,6 +205,64 @@ fallback) and the OQ-6b pre-styling.
   suite extension; hrefs only from API data or validated config
 - Check tasks off here as completed; update CLAUDE.md when guidance
   changes; conventional commits per task
+
+## Open Questions
+
+For review — **a** is the recommendation in each; answers gate the
+start of Phase 1. These are execution/process forks; every design
+fork was settled in DESIGN-0002.
+
+**OQ-1 — Merge the documentation branch before starting Phase 1?**
+
+- **a (recommended).** Yes: push `docs/inv-effect-migration` (four
+  INVs + DESIGN-0002 + this IMPL), PR labeled `dont-release`, merge
+  when green. Phase branches then cut cleanly from a main that
+  already carries the plan, and per-task checkbox updates land on
+  main-based branches instead of a long-lived docs branch.
+- **b.** Keep the docs local and fold them into the Phase 1 PR —
+  one fewer PR, but it buries a large docs diff inside a feature
+  review and delays the paper trail landing on main.
+- other: —
+
+**OQ-2 — Release labeling per phase PR?**
+
+- **a (recommended).** `minor` on each phase PR — each phase is a
+  complete user-visible feature (IMPL-0002 set the minor precedent),
+  shipping value as it lands (Phase 2 fixes live broken links).
+  Consequence to accept: every phase PR must also bump the chart
+  (appVersion to the new bare semver + chart patch) so defaults-only
+  installs pull the released image — including Phases 1–2, which
+  otherwise don't touch the chart.
+- **b.** `dont-release` on Phases 1–2, one `minor` on Phase 3 — a
+  single release train and only one chart bump, but the changelog
+  page and the link fix sit unreleased until the end.
+- **c.** `patch` per phase — smallest version churn, but these are
+  features, not fixes, and it muddies the version history.
+- other: —
+
+**OQ-3 — Coordination with the production docz-api?**
+
+- **a (recommended).** No ordering constraint. The site degrades
+  gracefully by design: the nav row gates on `config_snapshot` (absent
+  block → no row) and a missing endpoint just renders the quiet
+  panel, so site phases merge and deploy freely while docz-api 1.2.0
+  rolls out on its own schedule. Courtesy check of the deployed
+  docz-api version at Phase 1 deploy time.
+- **b.** Gate the Phase 1 merge on production docz-api serving spec
+  1.2.0 — strict ordering, no window where the row can't appear, at
+  the cost of coupling this repo's pipeline to the API's rollout.
+- other: —
+
+**OQ-4 — Execution mode?**
+
+- **a (recommended).** Direct, phase by phase in-session: implement a
+  phase, open its PR, you review/merge per the established "if green,
+  merge it" flow, then the next phase starts. Keeps you at the two
+  decision points that matter (merge and release).
+- **b.** donald-loop autonomous run over this IMPL (the IMPL-0001
+  style) with per-phase completion gates — faster wall-clock, less
+  per-phase review.
+- other: —
 
 ## References
 

@@ -7,7 +7,7 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Features
 
-- *(changelog)* Repo changelog page (IMPL-0003 Phase 1) ([#13](`https://github.com/donaldgifford/docz-site`/issues/13))
+- *(changelog)* Repo changelog page (IMPL-0003 Phase 1) ([#13](https://github.com/donaldgifford/docz-site/issues/13))
 - *(reader)* Widen useRepoDocIndex to byId/byPath doc index
 - *(markdown)* Relative doc-link transform, map-as-whitelist
 - *(markdown)* Thread base path + path map through the pipeline
@@ -15,7 +15,7 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Documentation
 
-- INV-0002–0005, DESIGN-0002, and IMPL-0003 ([#12](`https://github.com/donaldgifford/docz-site`/issues/12))
+- INV-0002–0005, DESIGN-0002, and IMPL-0003 ([#12](https://github.com/donaldgifford/docz-site/issues/12))
 - Record relative-link resolver guidance, check off Phase 2
 
 ### Testing
@@ -31,7 +31,7 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Features
 
-- *(auth)* Runtime-configurable login providers via DOCZ_AUTH_PROVIDERS ([#11](`https://github.com/donaldgifford/docz-site`/issues/11))
+- *(auth)* Runtime-configurable login providers via DOCZ_AUTH_PROVIDERS ([#11](https://github.com/donaldgifford/docz-site/issues/11))
 
 ## [0.1.1] - 2026-07-16
 

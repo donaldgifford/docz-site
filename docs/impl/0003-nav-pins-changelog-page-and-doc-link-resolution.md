@@ -149,7 +149,7 @@ filename URLs redirect.
       `./file.md`, fragments, misses, traversal (`../../..`),
       percent-encoded traversal; a demo-org fixture doc with a
       relative References footer rendered end-to-end
-- [ ] XSS suite: hostile relative hrefs never resolve to emitted
+- [x] XSS suite: hostile relative hrefs never resolve to emitted
       links; no `schema.ts` changes
 - [ ] Chart bump per OQ-2a: appVersion to the incoming bare semver,
       chart version patch, image-tag unittest assert updated

@@ -1,7 +1,7 @@
 ---
 id: DESIGN-0002
 title: "Nav pins, changelog page, and doc link resolution"
-status: In Review
+status: Approved
 author: Donald Gifford
 created: 2026-08-10
 ---
@@ -9,7 +9,7 @@ created: 2026-08-10
 
 # DESIGN 0002: Nav pins, changelog page, and doc link resolution
 
-**Status:** In Review
+**Status:** Approved
 **Author:** Donald Gifford
 **Date:** 2026-08-10
 
@@ -299,8 +299,9 @@ live-bug fix second, estate feature last — delivery shape per OQ-5):
    fallback → XSS/unit fixtures. Fixes the live broken References
    links.
 3. **Phase 3 — nav pins**: serve.ts + navLinks.ts + AppShell → chart
-   value/schema/unittest → docs. Most useful once the `rfcs` repo is
-   onboarded, hence last.
+   value/schema/unittest → docs, plus the `docs` type curation
+   (OQ-6b: `CURATED_TYPES` entry, contrast-checked token, blurb).
+   Most useful once the `rfcs` repo is onboarded, hence last.
 
 Each phase ends green on `just ci` semantics; chart-touching Phase 3
 bumps the chart patch version. CLAUDE.md gains the new invariants
@@ -309,8 +310,17 @@ parameter) as each lands.
 
 ## Open Questions
 
-For review — **a** is the recommendation in each; answer with a
-letter or write in an alternative.
+**Reviewed 2026-08-11 — decided: 1a, 2a, 3a, 4a, 5a, 6b.** Options
+preserved below for the record. On 6b, one clarification recorded:
+type colors are **not** runtime-configurable and were never designed
+to be — DESIGN-0001's color system is a curated in-code map
+(`CURATED_TYPES` in `src/lib/colors.ts`, values referencing
+`tokens.css` custom properties) with the deterministic FNV-1a
+fallback for everything else. "Curate the `docs` type" therefore
+means: add `docs` to `CURATED_TYPES`, add its `--color-t-docs` token
+(which must pass `contrast.test.ts`), and give it a blurb in
+`docTypes.ts` — pre-styling a type we know is coming, exactly like
+`framework` was.
 
 **OQ-1 — `DOCZ_NAV_LINKS` wire format?**
 

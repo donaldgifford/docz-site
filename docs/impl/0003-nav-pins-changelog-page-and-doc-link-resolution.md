@@ -151,7 +151,7 @@ filename URLs redirect.
       relative References footer rendered end-to-end
 - [x] XSS suite: hostile relative hrefs never resolve to emitted
       links; no `schema.ts` changes
-- [ ] Chart bump per OQ-2a: appVersion to the incoming bare semver,
+- [x] Chart bump per OQ-2a: appVersion to the incoming bare semver,
       chart version patch, image-tag unittest assert updated
 - [ ] Update CLAUDE.md (resolver, base-path parameter, fallback) and
       check off this phase

@@ -12,9 +12,18 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 - *(changelog)* Repo changelog route with home-pattern states
 - *(changelog)* RepoNav row under Home, snapshot-gated with prefetch
 
+### Bug Fixes
+
+- *(changelog)* Backtick raw tag tokens in commit subjects
+
 ### Documentation
 
 - INV-0002–0005, DESIGN-0002, and IMPL-0003 ([#12](`https://github.com/donaldgifford/docz-site`/issues/12))
+- *(impl)* Check off IMPL-0003 Phase 1; CLAUDE.md changelog guidance
+
+### Testing
+
+- *(changelog)* Page states, row gating, prefetch, axe sweep
 
 ## [0.1.2] - 2026-07-23
 

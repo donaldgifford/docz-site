@@ -177,7 +177,7 @@ fallback) and the OQ-6b pre-styling.
       rule: leading `/`, not `//`, no whitespace/control, ≤ 200),
       cap at 6, drop invalid entries/payloads; inject as
       `__DOCZ_CONFIG__.nav`
-- [ ] `server/serve.test.ts`: parse/cap/drop cases + no-breakout
+- [x] `server/serve.test.ts`: parse/cap/drop cases + no-breakout
       assertions for hostile `DOCZ_NAV_LINKS`
 - [ ] `src/lib/navLinks.ts`: runtime read with the same validation,
       `VITE_NAV_LINKS` fallback, else `[]`; unit tests for

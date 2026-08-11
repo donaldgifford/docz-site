@@ -34,17 +34,20 @@ describe("resolveAuthProviders", () => {
 
 describe("runtimeConfigScript / injectRuntimeConfig", () => {
   test("emits a script that publishes the validated provider list", () => {
-    const script = runtimeConfigScript(["keycloak", "github"]);
+    const script = runtimeConfigScript(["keycloak", "github"], []);
     expect(script).toBe(
-      '<script>window.__DOCZ_CONFIG__={"authProviders":["keycloak","github"]};</script>',
+      '<script>window.__DOCZ_CONFIG__={"authProviders":["keycloak","github"],"nav":[]};</script>',
     );
   });
 
   test("closed whitelist means no HTML/JS breakout is possible", () => {
     // Whatever the env, the script body only ever contains whitelist keys.
-    const script = runtimeConfigScript(resolveAuthProviders("okta</script>"));
+    const script = runtimeConfigScript(
+      resolveAuthProviders("okta</script>"),
+      [],
+    );
     expect(script).not.toContain("</script></script>");
-    expect(script).toContain('{"authProviders":["github"]}');
+    expect(script).toContain('{"authProviders":["github"]');
   });
 
   test("injects the config ahead of the entry bundle (Vite head-script)", () => {
@@ -53,7 +56,7 @@ describe("runtimeConfigScript / injectRuntimeConfig", () => {
       '<!doctype html><html><head><meta charset="UTF-8" />' +
       '<script type="module" crossorigin src="/assets/index.js"></script>' +
       '</head><body><div id="root"></div></body></html>';
-    const out = injectRuntimeConfig(html, runtimeConfigScript(["okta"]));
+    const out = injectRuntimeConfig(html, runtimeConfigScript(["okta"], []));
     expect(out).toContain("__DOCZ_CONFIG__");
     // Textually before the entry bundle — not relying on module defer.
     expect(out.indexOf("__DOCZ_CONFIG__")).toBeLessThan(

@@ -172,7 +172,7 @@ fallback) and the OQ-6b pre-styling.
 
 #### Tasks
 
-- [ ] `server/serve.ts`: `resolveNavLinks` — parse the JSON array,
+- [x] `server/serve.ts`: `resolveNavLinks` — parse the JSON array,
       validate label (`/^[\w .&+-]{1,24}$/`) and href (authReturn
       rule: leading `/`, not `//`, no whitespace/control, ≤ 200),
       cap at 6, drop invalid entries/payloads; inject as

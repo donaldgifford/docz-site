@@ -184,7 +184,7 @@ fallback) and the OQ-6b pre-styling.
       precedence and hostile input
 - [x] AppShell: pins as `NavLink`s between Repos and `SessionMenu`;
       small-viewport parity; AppShell axe sweep still green
-- [ ] e2e: pins render + navigate in the MSW build via
+- [x] e2e: pins render + navigate in the MSW build via
       `VITE_NAV_LINKS` (2a)
 - [ ] Helm chart: `config.navLinks` (list of `{label, href}`) →
       `DOCZ_NAV_LINKS` env via `toJson`; `values.schema.json`;

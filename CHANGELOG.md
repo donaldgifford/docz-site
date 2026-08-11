@@ -7,15 +7,17 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Features
 
-- *(changelog)* Repo changelog page (IMPL-0003 Phase 1) ([#13](https://github.com/donaldgifford/docz-site/issues/13))
 - *(reader)* Widen useRepoDocIndex to byId/byPath doc index
 - *(markdown)* Relative doc-link transform, map-as-whitelist
 - *(markdown)* Thread base path + path map through the pipeline
 - *(reader)* Redirect shared filename URLs to the canonical doc
 
+### Bug Fixes
+
+- *(changelog)* Stop backticking git-cliff's https://github.com/donaldgifford/docz-site placeholder
+
 ### Documentation
 
-- INV-0002–0005, DESIGN-0002, and IMPL-0003 ([#12](https://github.com/donaldgifford/docz-site/issues/12))
 - Record relative-link resolver guidance, check off Phase 2
 
 ### Testing
@@ -26,6 +28,16 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 ### Miscellaneous Tasks
 
 - *(chart)* Bump appVersion to 0.3.0, chart 0.1.4
+
+## [0.2.0] - 2026-08-11
+
+### Features
+
+- *(changelog)* Repo changelog page (IMPL-0003 Phase 1) ([#13](https://github.com/donaldgifford/docz-site/issues/13))
+
+### Documentation
+
+- INV-0002–0005, DESIGN-0002, and IMPL-0003 ([#12](https://github.com/donaldgifford/docz-site/issues/12))
 
 ## [0.1.2] - 2026-07-23
 

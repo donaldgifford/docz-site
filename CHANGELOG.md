@@ -5,15 +5,22 @@ based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 this project adheres to [Semantic Versioning](https://semver.org/).
 ## [unreleased]
 
+### Features
+
+- *(api)* Re-vendor docz-api spec 1.2.0 with getRepoChangelog
+- *(mocks)* Changelog fixtures for the demo org
+- *(changelog)* Repo changelog route with home-pattern states
+- *(changelog)* RepoNav row under Home, snapshot-gated with prefetch
+
 ### Documentation
 
-- INV-0002–0005, DESIGN-0002, and IMPL-0003 ([#12](https://github.com/donaldgifford/docz-site/issues/12))
+- INV-0002–0005, DESIGN-0002, and IMPL-0003 ([#12](`https://github.com/donaldgifford/docz-site`/issues/12))
 
 ## [0.1.2] - 2026-07-23
 
 ### Features
 
-- *(auth)* Runtime-configurable login providers via DOCZ_AUTH_PROVIDERS ([#11](https://github.com/donaldgifford/docz-site/issues/11))
+- *(auth)* Runtime-configurable login providers via DOCZ_AUTH_PROVIDERS ([#11](`https://github.com/donaldgifford/docz-site`/issues/11))
 
 ## [0.1.1] - 2026-07-16
 
@@ -49,7 +56,7 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 - *(directory)* Repo picker, type chips, result count, clear filters
 - *(directory)* Load-more pagination windowed by URL offset
 - *(directory)* Contextual empty states completing the four-state matrix
-- *(search)* Inert snippet renderer honoring only <em> match markers
+- *(search)* Inert snippet renderer honoring only `<em>` match markers
 - *(palette)* Cmdk command palette with grouped results and preview
 - *(shell)* Topbar search affordance opens the command palette
 - *(api)* Re-vendor docz-api spec 1.1.0 with getRepoIndex

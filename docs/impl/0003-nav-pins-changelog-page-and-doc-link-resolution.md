@@ -191,7 +191,7 @@ fallback) and the OQ-6b pre-styling.
       helm-unittest default + override; appVersion + chart patch
       bump with image-tag assert (OQ-2a); README.md.gotmpl +
       helm-docs
-- [ ] `docs` type curation (6b): `CURATED_TYPES` entry,
+- [x] `docs` type curation (6b): `CURATED_TYPES` entry,
       `--color-t-docs` token passing `contrast.test.ts`, blurb in
       `docTypes.ts`
 - [ ] Update CLAUDE.md + root README (nav pins, env, chart value);

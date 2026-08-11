@@ -179,7 +179,7 @@ fallback) and the OQ-6b pre-styling.
       `__DOCZ_CONFIG__.nav`
 - [x] `server/serve.test.ts`: parse/cap/drop cases + no-breakout
       assertions for hostile `DOCZ_NAV_LINKS`
-- [ ] `src/lib/navLinks.ts`: runtime read with the same validation,
+- [x] `src/lib/navLinks.ts`: runtime read with the same validation,
       `VITE_NAV_LINKS` fallback, else `[]`; unit tests for
       precedence and hostile input
 - [ ] AppShell: pins as `NavLink`s between Repos and `SessionMenu`;

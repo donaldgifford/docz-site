@@ -13,6 +13,7 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 - *(inv)* Add INV-0005 on rendering the repo changelog
 - *(inv)* Conclude INV-0005 with all open questions resolved to (a)
 - *(design)* Add DESIGN-0002 consolidating INV-0003/0004/0005
+- *(design)* Approve DESIGN-0002 and scaffold IMPL-0003
 
 ## [0.1.2] - 2026-07-23
 

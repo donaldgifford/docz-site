@@ -256,6 +256,47 @@ describe("portal sibling navigation", () => {
   });
 });
 
+describe("relative link resolution in the reader", () => {
+  it("resolves the RFC-0001 References footer end-to-end", async () => {
+    mountAt("/donaldgifford/docz-api/rfc/RFC-0001");
+    await screen.findByRole(
+      "heading",
+      { level: 1, name: /Relative doc links resolve/ },
+      { timeout: 10_000 },
+    );
+
+    // ../design/….md#goals → the sibling design doc's canonical route,
+    // fragment kept, upgraded to a router link (linkified pass lands
+    // once the repo doc index resolves).
+    const resolved = await screen.findByRole(
+      "link",
+      { name: "docz-api registry design" },
+      { timeout: 10_000 },
+    );
+    await waitFor(() => {
+      expect(resolved).toHaveAttribute(
+        "href",
+        "/donaldgifford/docz-api/design/DESIGN-0001#goals",
+      );
+    });
+    expect(resolved).toHaveAttribute("data-xref");
+    expect(
+      screen.getByRole("link", { name: "OpenAPI contract design" }),
+    ).toHaveAttribute("href", "/donaldgifford/docz-api/design/DESIGN-0002");
+
+    // A file docz never ingested and an absolute URL stay as written.
+    expect(
+      screen.getByRole("link", { name: "an ADR docz-api never ingested" }),
+    ).toHaveAttribute("href", "../adr/0001-not-ingested.md");
+    expect(
+      screen.getByRole("link", { name: "the vendored spec on GitHub" }),
+    ).toHaveAttribute(
+      "href",
+      "https://github.com/donaldgifford/docz-api/blob/main/api/openapi.yaml",
+    );
+  });
+});
+
 describe("filename URL fallback", () => {
   function mountRouterAt(path: string) {
     const router = createMemoryRouter(routes, { initialEntries: [path] });

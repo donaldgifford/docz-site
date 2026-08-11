@@ -145,7 +145,7 @@ filename URLs redirect.
       `/\.md$/i` `:docId`, redirect (`replace`, hash preserved) when
       exactly one doc's `path` basename matches; ambiguous/none →
       existing panel
-- [ ] Unit fixtures: `../type/file.md`, bare `file.md`,
+- [x] Unit fixtures: `../type/file.md`, bare `file.md`,
       `./file.md`, fragments, misses, traversal (`../../..`),
       percent-encoded traversal; a demo-org fixture doc with a
       relative References footer rendered end-to-end

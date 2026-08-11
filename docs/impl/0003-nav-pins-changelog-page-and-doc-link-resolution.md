@@ -186,7 +186,7 @@ fallback) and the OQ-6b pre-styling.
       small-viewport parity; AppShell axe sweep still green
 - [x] e2e: pins render + navigate in the MSW build via
       `VITE_NAV_LINKS` (2a)
-- [ ] Helm chart: `config.navLinks` (list of `{label, href}`) →
+- [x] Helm chart: `config.navLinks` (list of `{label, href}`) →
       `DOCZ_NAV_LINKS` env via `toJson`; `values.schema.json`;
       helm-unittest default + override; appVersion + chart patch
       bump with image-tag assert (OQ-2a); README.md.gotmpl +

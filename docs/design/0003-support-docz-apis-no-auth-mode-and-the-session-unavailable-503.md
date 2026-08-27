@@ -1,7 +1,7 @@
 ---
 id: DESIGN-0003
 title: "Support docz-api's no-auth mode and the session-unavailable 503"
-status: Draft
+status: Approved
 author: Donald Gifford
 created: 2026-08-27
 ---
@@ -10,7 +10,7 @@ created: 2026-08-27
 
 # DESIGN-0003: Support docz-api's no-auth mode and the session-unavailable 503
 
-**Status:** Draft
+**Status:** Approved
 **Author:** Donald Gifford
 **Date:** 2026-08-27
 
@@ -337,6 +337,9 @@ none-mode API serves the current site build too (it just shows the
 awkward anonymous chrome this design removes).
 
 ## Open Questions
+
+**Reviewed 2026-08-12 — decided: 1a, 2a, 3a, 4a, 5a, 6a.** Options
+preserved below for the record.
 
 **OQ-1 — None-mode topbar treatment?**
 

@@ -139,15 +139,19 @@ route surface.
       `signed-out` → existing "Sign in" link (still suppressed on
       `/login`); `anonymous` → `null`; `unavailable` → the inert
       placeholder — "Sign in" is unreachable for any non-401 failure
-- [ ] Session-query recovery from `unavailable` per OQ-2: gentle
-      re-poll only while the query is in an error state, so the
-      topbar self-heals after a backend blip without a reload
-      (SessionMenu never unmounts, so nothing else re-triggers it)
+- [ ] Session-query recovery from `unavailable` (OQ-2a): a
+      `refetchInterval` callback returning ~30 s only while the query
+      is errored (`false` otherwise), so the topbar self-heals after
+      a backend blip without a reload (SessionMenu never unmounts and
+      `refetchOnWindowFocus` is off, so nothing else re-triggers it);
+      the `unavailable` placeholder is visually identical to
+      `pending` with a distinct `data-testid` only (OQ-4a)
 - [ ] `src/routes/login.tsx`: consume the shared session
       classification; `anonymous` → the auth-disabled panel (same
       card chrome, copy per the design, link home, zero
-      `/auth/login` anchors); all other states render the provider
-      buttons unchanged per OQ-3
+      `/auth/login` anchors); every other state — including a still-
+      pending probe — renders the provider buttons unchanged (OQ-3a:
+      buttons immediately, swap only on confirmed anonymous)
 - [ ] `SessionMenu` tests (MSW per-test overrides; fixture default
       identity stays `donaldgifford`): none-mode → no avatar, no
       Sign in, no Sign out anywhere; 503 → placeholder and
@@ -248,6 +252,14 @@ route surface.
   land on main-based branches.
 
 ## Open Questions
+
+**Reviewed 2026-08-12 — decided: 1a, 2a, 3a, 4a.** Options preserved
+below for the record. Consequences are folded into the phase tasks:
+one branch/PR carries all three phases (1a); the session query
+re-polls ~30 s only while errored so the topbar self-heals (2a);
+`/login` renders buttons immediately and swaps only on a confirmed
+anonymous session (3a); the `unavailable` placeholder is visually
+identical to `pending` with only a distinct test id (4a).
 
 **OQ-1 — PR granularity?**
 

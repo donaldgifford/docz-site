@@ -112,7 +112,7 @@ surfaces will consume.
       200 + `provider === "none"` → `anonymous`; 200 otherwise →
       `signed-in`; `SessionRequiredError` → `signed-out`; any other
       error → `unavailable`
-- [ ] `src/lib/session.test.ts`: the full classification table —
+- [x] `src/lib/session.test.ts`: the full classification table —
       pending, github identity, `provider:"none"`, 401, 503, generic
       network error — one assertion per row
 

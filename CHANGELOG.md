@@ -17,6 +17,8 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 
 - DESIGN-0003 + IMPL-0004 — no-auth mode and session-unavailable handling ([#19](https://github.com/donaldgifford/docz-site/issues/19))
 - None-mode and session-classification guidance
+- *(impl)* Check off IMPL-0004 Phase 3 task 3
+- *(impl)* IMPL-0004 Completed, DESIGN-0003 Implemented
 
 ### Styling
 

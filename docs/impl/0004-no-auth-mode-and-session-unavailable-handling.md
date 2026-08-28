@@ -1,7 +1,7 @@
 ---
 id: IMPL-0004
 title: "No-auth mode and session-unavailable handling"
-status: In Progress
+status: Completed
 author: Donald Gifford
 created: 2026-08-27
 ---
@@ -10,7 +10,7 @@ created: 2026-08-27
 
 # IMPL-0004: No-auth mode and session-unavailable handling
 
-**Status:** In Progress
+**Status:** Completed
 **Author:** Donald Gifford
 **Date:** 2026-08-27
 
@@ -191,9 +191,10 @@ route surface.
       helm-docs regenerated
 - [x] Full local gate + changelog sync (`git fetch --tags`, regen,
       cliff-skipped `chore(changelog):` commit)
-- [ ] PR `feat/none-auth-mode` labeled `minor`; merge on green; sync
+- [x] PR `feat/none-auth-mode` labeled `minor`; merge on green; sync
       main
-- [ ] Mark this IMPL Completed and DESIGN-0003 Implemented; close
+      ([#20](https://github.com/donaldgifford/docz-site/pull/20))
+- [x] Mark this IMPL Completed and DESIGN-0003 Implemented; close
       issue #17 (the merge commit references it)
 
 #### Success Criteria
@@ -236,12 +237,12 @@ route surface.
 
 ## Testing Plan
 
-- [ ] Unit: fetcher 503 mapping; `classifySession` table; SessionMenu
+- [x] Unit: fetcher 503 mapping; `classifySession` table; SessionMenu
       per-state rendering incl. recovery; login none-mode panel
-- [ ] Integration (route-level, MSW): 503 doc route → `ErrorPanel`,
+- [x] Integration (route-level, MSW): 503 doc route → `ErrorPanel`,
       no login navigation
-- [ ] Axe: none-mode login panel; existing sweep stays green
-- [ ] No e2e additions (design OQ-5a)
+- [x] Axe: none-mode login panel; existing sweep stays green
+- [x] No e2e additions (design OQ-5a)
 
 ## Dependencies
 

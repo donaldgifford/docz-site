@@ -103,7 +103,7 @@ surfaces will consume.
 - [x] `src/api/fetcher.ts`: add `SessionUnavailableError extends
       ApiError` (status 503, name set, doc comment "transient, NEVER
       a logout"); wire the `case 503:` into `toApiError`
-- [ ] Fetcher tests: 503 with the `{"error":"session unavailable"}`
+- [x] Fetcher tests: 503 with the `{"error":"session unavailable"}`
       envelope → `SessionUnavailableError` carrying the envelope
       message; 503 with a non-JSON body → same class, status-line
       message; existing 401/404 mappings pinned unchanged

@@ -1,7 +1,7 @@
 ---
 id: IMPL-0004
 title: "No-auth mode and session-unavailable handling"
-status: Draft
+status: In Progress
 author: Donald Gifford
 created: 2026-08-27
 ---
@@ -10,7 +10,7 @@ created: 2026-08-27
 
 # IMPL-0004: No-auth mode and session-unavailable handling
 
-**Status:** Draft
+**Status:** In Progress
 **Author:** Donald Gifford
 **Date:** 2026-08-27
 
@@ -97,7 +97,7 @@ surfaces will consume.
 
 #### Tasks
 
-- [ ] Re-vendor `api/openapi.yaml` at `1.2.1` from docz-api main and
+- [x] Re-vendor `api/openapi.yaml` at `1.2.1` from docz-api main and
       run `bun run gen-api`; confirm the diff is the `sessionCookie`
       description note only and `gen-api-check` is current
 - [ ] `src/api/fetcher.ts`: add `SessionUnavailableError extends

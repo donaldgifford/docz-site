@@ -116,9 +116,7 @@ describe("reader four-state matrix", () => {
     );
     mountAt(DOC_URL);
 
-    expect(
-      await screen.findByText("session unavailable"),
-    ).toBeInTheDocument();
+    expect(await screen.findByText("session unavailable")).toBeInTheDocument();
     expect(
       screen.queryByRole("link", { name: "Continue with GitHub" }),
     ).not.toBeInTheDocument();

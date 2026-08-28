@@ -169,7 +169,10 @@ describe("session menu", () => {
               subject: "1138",
               login: "donaldgifford",
             })
-          : HttpResponse.json({ error: "session unavailable" }, { status: 503 }),
+          : HttpResponse.json(
+              { error: "session unavailable" },
+              { status: 503 },
+            ),
       ),
     );
     mountAt("/repos");

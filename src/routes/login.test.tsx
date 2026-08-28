@@ -73,10 +73,9 @@ describe("login page", () => {
     expect(await screen.findByTestId("login-auth-disabled")).toHaveTextContent(
       "Authentication is disabled",
     );
-    expect(screen.getByRole("link", { name: "Browse the docs" })).toHaveAttribute(
-      "href",
-      "/",
-    );
+    expect(
+      screen.getByRole("link", { name: "Browse the docs" }),
+    ).toHaveAttribute("href", "/");
     // The /auth routes aren't mounted upstream in none-mode — the page
     // must offer zero anchors at them.
     expect(screen.queryAllByRole("link", { name: /Continue with/ })).toEqual(

@@ -12,15 +12,15 @@ import { server } from "@/test/server";
 
 const URL_PATH = "/api/v1/auth/session";
 
-function respondWith(status: number, body: BodyInit | null, json = true) {
+function respondWith(status: number, body: string, json = true) {
   server.use(
     http.get(`*${URL_PATH}`, () =>
-      json && body !== null
-        ? HttpResponse.text(String(body), {
+      json
+        ? HttpResponse.text(body, {
             status,
             headers: { "Content-Type": "application/json" },
           })
-        : HttpResponse.text(body === null ? "" : String(body), { status }),
+        : HttpResponse.text(body, { status }),
     ),
   );
 }

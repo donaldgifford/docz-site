@@ -100,7 +100,7 @@ surfaces will consume.
 - [x] Re-vendor `api/openapi.yaml` at `1.2.1` from docz-api main and
       run `bun run gen-api`; confirm the diff is the `sessionCookie`
       description note only and `gen-api-check` is current
-- [ ] `src/api/fetcher.ts`: add `SessionUnavailableError extends
+- [x] `src/api/fetcher.ts`: add `SessionUnavailableError extends
       ApiError` (status 503, name set, doc comment "transient, NEVER
       a logout"); wire the `case 503:` into `toApiError`
 - [ ] Fetcher tests: 503 with the `{"error":"session unavailable"}`

@@ -159,7 +159,7 @@ route surface.
       recovery — 503 then 200 renders the avatar
 - [x] `/login` tests: none-mode panel with no `/auth/login` anchors;
       normal-mode buttons unchanged
-- [ ] Route-surface pin: a doc route answering 503 renders
+- [x] Route-surface pin: a doc route answering 503 renders
       `ErrorPanel` with a working retry and never navigates to
       `/login` (asserted against `SessionUnavailableError`)
 - [ ] Axe sweep: none-mode `/login` panel entry added

@@ -185,7 +185,7 @@ route surface.
       `SessionUnavailableError`, the 401-only Sign in rule) and the
       root README's Auth section (none-mode paragraph: what the site
       shows, that detection is automatic)
-- [ ] Chart bump per the IMPL-0003 OQ-2a convention: appVersion
+- [x] Chart bump per the IMPL-0003 OQ-2a convention: appVersion
       `0.4.0` → `0.5.0` (label `minor`, design OQ-6a), chart version
       `0.1.5` → `0.1.6`, deployment unittest image-tag assert updated,
       helm-docs regenerated

@@ -3,15 +3,33 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 
 import { useGetSession, useLogout } from "@/api/__generated__/docz-api";
+import { classifySession } from "@/lib/session";
 
 /*
- * Session-aware topbar chrome (DESIGN-0001 auth, IMPL-0001 Phase 5).
- * getSession drives three states: pending → inert placeholder, no
- * session → "Sign in" link, session → avatar disclosure with the
- * identity (GitHub `login`, OIDC `email`) and sign-out. Deliberately a
- * disclosure, not role="menu" — one action doesn't warrant roving
- * focus, and axe flags half-implemented menu semantics.
+ * Session-aware topbar chrome (DESIGN-0001 auth, IMPL-0001 Phase 5;
+ * classification per DESIGN-0003). classifySession drives the render:
+ * pending → inert placeholder, signed-out (a real 401, the ONLY route
+ * to "Sign in") → the login link, anonymous (none-mode) → nothing,
+ * unavailable (503 or any other failure) → the same inert placeholder
+ * — never the login link, the state is unknown, not logged out —
+ * and signed-in → avatar disclosure with the identity (GitHub
+ * `login`, OIDC `email`) and sign-out. Deliberately a disclosure, not
+ * role="menu" — one action doesn't warrant roving focus, and axe
+ * flags half-implemented menu semantics.
  */
+
+/** Same footprint as the avatar so the topbar doesn't shift. */
+function InertPlaceholder({ testid }: { testid: string }) {
+  return (
+    <span
+      aria-hidden
+      data-testid={testid}
+      className="grid size-[26px] place-items-center border border-border-default bg-bg-elevated text-[11px] text-fg-secondary"
+    >
+      ·
+    </span>
+  );
+}
 
 export function SessionMenu() {
   const [open, setOpen] = useState(false);
@@ -55,22 +73,22 @@ export function SessionMenu() {
     };
   }, [open]);
 
-  if (sessionQuery.isPending) {
-    // Same footprint as the avatar so the topbar doesn't shift.
-    return (
-      <span
-        aria-hidden
-        data-testid="session-pending"
-        className="grid size-[26px] place-items-center border border-border-default bg-bg-elevated text-[11px] text-fg-secondary"
-      >
-        ·
-      </span>
-    );
-  }
+  const state = classifySession(sessionQuery);
 
-  const session =
-    sessionQuery.data?.status === 200 ? sessionQuery.data.data : undefined;
-  if (session === undefined) {
+  if (state.kind === "pending") {
+    return <InertPlaceholder testid="session-pending" />;
+  }
+  if (state.kind === "anonymous") {
+    // Auth is disabled (AUTH_PROVIDERS=none) — no identity, no sign-in,
+    // no chrome at all.
+    return null;
+  }
+  if (state.kind === "unavailable") {
+    // Visually identical to pending (OQ-4a): the outage story belongs
+    // to route surfaces; the topbar's job is just to not lie.
+    return <InertPlaceholder testid="session-unavailable" />;
+  }
+  if (state.kind === "signed-out") {
     // On /login the page itself is the sign-in affordance — a topbar
     // link pointing at the page you're already on is noise.
     if (location.pathname === "/login") {
@@ -87,6 +105,7 @@ export function SessionMenu() {
     );
   }
 
+  const { session } = state;
   const identity = session.login ?? session.email ?? session.subject;
   const initial = identity.charAt(0).toUpperCase() || "?";
 

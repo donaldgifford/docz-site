@@ -134,7 +134,7 @@ route surface.
 
 #### Tasks
 
-- [ ] `SessionMenu` renders by `classifySession`: `pending` →
+- [x] `SessionMenu` renders by `classifySession`: `pending` →
       existing placeholder; `signed-in` → existing avatar disclosure;
       `signed-out` → existing "Sign in" link (still suppressed on
       `/login`); `anonymous` → `null`; `unavailable` → the inert

@@ -157,7 +157,7 @@ route surface.
       Sign in, no Sign out anywhere; 503 → placeholder and
       explicitly NOT the Sign in link; 401 → Sign in unchanged;
       recovery — 503 then 200 renders the avatar
-- [ ] `/login` tests: none-mode panel with no `/auth/login` anchors;
+- [x] `/login` tests: none-mode panel with no `/auth/login` anchors;
       normal-mode buttons unchanged
 - [ ] Route-surface pin: a doc route answering 503 renders
       `ErrorPanel` with a working retry and never navigates to

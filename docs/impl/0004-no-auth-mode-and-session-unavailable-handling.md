@@ -146,7 +146,7 @@ route surface.
       `refetchOnWindowFocus` is off, so nothing else re-triggers it);
       the `unavailable` placeholder is visually identical to
       `pending` with a distinct `data-testid` only (OQ-4a)
-- [ ] `src/routes/login.tsx`: consume the shared session
+- [x] `src/routes/login.tsx`: consume the shared session
       classification; `anonymous` → the auth-disabled panel (same
       card chrome, copy per the design, link home, zero
       `/auth/login` anchors); every other state — including a still-

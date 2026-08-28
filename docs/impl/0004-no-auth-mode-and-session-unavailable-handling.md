@@ -162,7 +162,7 @@ route surface.
 - [x] Route-surface pin: a doc route answering 503 renders
       `ErrorPanel` with a working retry and never navigates to
       `/login` (asserted against `SessionUnavailableError`)
-- [ ] Axe sweep: none-mode `/login` panel entry added
+- [x] Axe sweep: none-mode `/login` panel entry added
 
 #### Success Criteria
 

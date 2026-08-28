@@ -152,7 +152,7 @@ route surface.
       `/auth/login` anchors); every other state — including a still-
       pending probe — renders the provider buttons unchanged (OQ-3a:
       buttons immediately, swap only on confirmed anonymous)
-- [ ] `SessionMenu` tests (MSW per-test overrides; fixture default
+- [x] `SessionMenu` tests (MSW per-test overrides; fixture default
       identity stays `donaldgifford`): none-mode → no avatar, no
       Sign in, no Sign out anywhere; 503 → placeholder and
       explicitly NOT the Sign in link; 401 → Sign in unchanged;

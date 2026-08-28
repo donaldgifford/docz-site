@@ -181,7 +181,7 @@ route surface.
 
 #### Tasks
 
-- [ ] Update CLAUDE.md (session classification, none-mode chrome,
+- [x] Update CLAUDE.md (session classification, none-mode chrome,
       `SessionUnavailableError`, the 401-only Sign in rule) and the
       root README's Auth section (none-mode paragraph: what the site
       shows, that detection is automatic)

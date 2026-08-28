@@ -18,6 +18,9 @@ import { classifySession } from "@/lib/session";
  * flags half-implemented menu semantics.
  */
 
+/** How often an errored session query re-probes (outage-only). */
+const SESSION_RETRY_MS = 30_000;
+
 /** Same footprint as the avatar so the topbar doesn't shift. */
 function InertPlaceholder({ testid }: { testid: string }) {
   return (
@@ -39,7 +42,18 @@ export function SessionMenu() {
   const location = useLocation();
   const queryClient = useQueryClient();
 
-  const sessionQuery = useGetSession();
+  // Recovery from `unavailable` (DESIGN-0003 OQ-2a): SessionMenu
+  // mounts once in AppShell and never unmounts, and the client sets
+  // refetchOnWindowFocus: false — without a nudge, an exhausted-
+  // retries failure would pin the placeholder until a full reload.
+  // Re-poll gently only while the query is errored; a healthy query
+  // never polls.
+  const sessionQuery = useGetSession({
+    query: {
+      refetchInterval: (query) =>
+        query.state.status === "error" ? SESSION_RETRY_MS : false,
+    },
+  });
   const logout = useLogout({
     mutation: {
       // Settled, not success: even a failed POST (say the cookie

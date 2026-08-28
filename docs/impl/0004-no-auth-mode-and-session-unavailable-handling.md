@@ -139,7 +139,7 @@ route surface.
       `signed-out` → existing "Sign in" link (still suppressed on
       `/login`); `anonymous` → `null`; `unavailable` → the inert
       placeholder — "Sign in" is unreachable for any non-401 failure
-- [ ] Session-query recovery from `unavailable` (OQ-2a): a
+- [x] Session-query recovery from `unavailable` (OQ-2a): a
       `refetchInterval` callback returning ~30 s only while the query
       is errored (`false` otherwise), so the topbar self-heals after
       a backend blip without a reload (SessionMenu never unmounts and

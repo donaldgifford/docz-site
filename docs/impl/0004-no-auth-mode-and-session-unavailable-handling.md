@@ -107,7 +107,7 @@ surfaces will consume.
       envelope → `SessionUnavailableError` carrying the envelope
       message; 503 with a non-JSON body → same class, status-line
       message; existing 401/404 mappings pinned unchanged
-- [ ] New `src/lib/session.ts`: `SessionState` discriminated union +
+- [x] New `src/lib/session.ts`: `SessionState` discriminated union +
       `classifySession(query)` per the design's rules — `pending`;
       200 + `provider === "none"` → `anonymous`; 200 otherwise →
       `signed-in`; `SessionRequiredError` → `signed-out`; any other

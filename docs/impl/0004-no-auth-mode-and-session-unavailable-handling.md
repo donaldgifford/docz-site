@@ -189,7 +189,7 @@ route surface.
       `0.4.0` → `0.5.0` (label `minor`, design OQ-6a), chart version
       `0.1.5` → `0.1.6`, deployment unittest image-tag assert updated,
       helm-docs regenerated
-- [ ] Full local gate + changelog sync (`git fetch --tags`, regen,
+- [x] Full local gate + changelog sync (`git fetch --tags`, regen,
       cliff-skipped `chore(changelog):` commit)
 - [ ] PR `feat/none-auth-mode` labeled `minor`; merge on green; sync
       main

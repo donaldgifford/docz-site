@@ -1,7 +1,7 @@
 ---
 id: DESIGN-0004
 title: "Render non-docz pages from the docz v1.2.0 api block"
-status: Draft
+status: Approved
 author: Donald Gifford
 created: 2026-08-30
 ---
@@ -10,7 +10,7 @@ created: 2026-08-30
 
 # DESIGN-0004: Render non-docz pages from the docz v1.2.0 api block
 
-**Status:** Draft
+**Status:** Approved
 **Author:** Donald Gifford
 **Date:** 2026-08-30
 
@@ -452,6 +452,15 @@ is the page tree built in-memory from the flat list, and the extended
 
 Answer each with a letter — **a is the recommendation**, b onward are
 alternatives; write in your own option if none fits.
+
+**Reviewed 2026-08-30 — decided: 1 other (upstream-first; shipped as
+docz v1.2.2 / docz-api v0.8.1), 2a, 3a, 4a, 5a, 6a.** The detailed
+design above is written to the decided options: Pages nav tree with
+empty-splat redirect home (2a), inline directory page hits with facet
+counts and no filter control until the upstream `source` param lands
+(3a), pages in the link resolver both directions (4a), recents grow a
+`kind` with page-path validation (5a), one `minor` release → v0.6.0
+(6a).
 
 **OQ-1 — The config_snapshot casing bug: how does the site read it?**
 

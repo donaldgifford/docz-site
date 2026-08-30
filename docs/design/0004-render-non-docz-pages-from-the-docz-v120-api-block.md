@@ -24,7 +24,7 @@ created: 2026-08-30
   - [Found bug: the config_snapshot key-casing mismatch](#found-bug-the-configsnapshot-key-casing-mismatch)
   - [What the site already has](#what-the-site-already-has)
 - [Detailed Design](#detailed-design)
-  - [Component 1: spec re-vendor at 1.4.0](#component-1-spec-re-vendor-at-140)
+  - [Component 1: spec re-vendor at 1.4.1](#component-1-spec-re-vendor-at-141)
   - [Component 2: the api-block snapshot reader](#component-2-the-api-block-snapshot-reader)
   - [Component 3: the page index and link resolution](#component-3-the-page-index-and-link-resolution)
   - [Component 4: routes, reader, and nav](#component-4-routes-reader-and-nav)
@@ -47,10 +47,11 @@ markdown file a repo publishes beyond its docz documents — plus a
 render that surface: a page reader under a reserved `/pages/*` route
 family, a Pages section in the repo nav, page hits in the palette and
 directory, and page paths joined into the relative-link resolver. The
-research also surfaced a real bug — `config_snapshot`'s wire keys are
-Go field names, so the site's lowercase readers never match — which is
-being fixed **upstream first** (docz#89 → docz-api#25) so no
-compatibility layer ships here (OQ-1, answered).
+research also surfaced a real bug — `config_snapshot`'s wire keys were
+Go field names, so the site's lowercase readers never matched — fixed
+**upstream first** (docz#89 → docz v1.2.2 → docz-api#25 → v0.8.1,
+spec `1.4.1`) so no compatibility layer ships here (OQ-1, answered;
+chain shipped and verified 2026-08-30).
 
 **Implements:** issue
 [#21](https://github.com/donaldgifford/docz-site/issues/21) (the
@@ -60,9 +61,10 @@ upstream coordination issue).
 
 ### Goals
 
-- Re-vendor the spec at `1.4.0` and regenerate the client — this picks
-  up both the pages endpoints (`1.3.0`) and the search `source`/`path`
-  fields (`1.4.0`) in one hop.
+- Re-vendor the spec at `1.4.1` (docz-api `v0.8.1`) and regenerate the
+  client — one hop picks up the pages endpoints (`1.3.0`), the search
+  `source`/`path` fields (`1.4.0`), and the now-contractual
+  `config_snapshot` key spellings (`1.4.1`).
 - A page reader at `/:owner/:repo/pages/*` rendering `raw_md` through
   the one existing markdown pipeline — pages are untrusted input
   exactly like doc bodies, `index_md`, and `changelog_md`.
@@ -74,8 +76,8 @@ upstream coordination issue).
 - Pages join the link resolver: author-written relative links between
   docs and pages resolve to SPA routes through the same
   exact-match-whitelist transform docs use today.
-- Get the `config_snapshot` key-casing bug fixed **upstream** (docz#89
-  → docz-api#25) before site work starts, so both the existing
+- ~~Get the `config_snapshot` key-casing bug fixed **upstream**~~
+  **Done** (docz#89 → v1.2.2; docz-api#25 → v0.8.1): both the existing
   `changelog:` gate and the new `api:` gate read one normalized shape
   and no compatibility layer ships here (OQ-1, answered).
 - One `minor` release; no new chart values, env vars, or
@@ -179,17 +181,23 @@ resolved** (docz normalization backfills `<docs_dir>/index.md` at
 load, so the snapshot never carries an empty landing page while
 enabled).
 
-Resolution: **OQ-1, answered — fix upstream first.**
-[docz#89](https://github.com/donaldgifford/docz/issues/89) adds json
-tags mirroring the yaml spellings (purely additive there — docz never
-JSON-marshals `Config` itself);
+Resolution: **OQ-1, answered — fixed upstream first. Shipped and
+verified 2026-08-30.**
+[docz#89](https://github.com/donaldgifford/docz/issues/89) (closed →
+docz `v1.2.2`) added json tags mirroring the yaml spellings;
 [docz-api#25](https://github.com/donaldgifford/docz-api/issues/25)
-bumps the pin and contract-pins the marshaled shape. Once the chain
-ships, `config_snapshot` carries the `.docz.yaml` spellings — which is
-what `changelogConfig` already reads, so the shipped gate starts
-working with **zero site changes**, and this design's new reader is
-written against the normalized shape only. No dual-casing
-compatibility layer gets baked in here.
+(closed → docz-api `v0.8.1`, spec `1.4.1`) bumped the pin,
+contract-pinned the marshaled shape (`doczcontract/snapshot_test.go`),
+and made the spellings spec contract — `config_snapshot`'s
+description now documents the `.docz.yaml` keys, `null` list
+semantics, and the pre-`v1.2.2` capitalized history. Verified
+empirically against the new pin: `{"api": {"enabled": true,
+"landing_page": "docs/index.md", "exclude": null, "additional_docs":
+null}, "changelog": {"enabled": true, "file": "CHANGELOG.md"}}`.
+`changelogConfig` already reads this shape, so the shipped gate
+starts working with **zero site changes** (repos refresh their
+snapshots on next ingest), and this design's new reader targets the
+normalized shape only. No dual-casing compatibility layer here.
 
 ### What the site already has
 
@@ -209,9 +217,10 @@ compatibility layer gets baked in here.
 
 ## Detailed Design
 
-### Component 1: spec re-vendor at 1.4.0
+### Component 1: spec re-vendor at 1.4.1
 
-Re-vendor `api/openapi.yaml` from docz-api main and `bun run gen-api`.
+Re-vendor `api/openapi.yaml` from docz-api main (`v0.8.1`) and
+`bun run gen-api`.
 This is **not** editorial: the generated client gains `listRepoPages`
 and `getRepoPage` hooks and `PageList`/`PageSummary`/`Page` types, and
 `SearchHit` gains two required fields — every fixture and test that
@@ -422,15 +431,15 @@ is the page tree built in-memory from the flat list, and the extended
 
 ## Migration / Rollout Plan
 
-1. **Upstream first (blocking):** docz#89 (json tags) → a docz patch
-   release → docz-api#25 (pin bump + contract-pinned snapshot shape)
-   → a docz-api release. Site implementation starts after that chain
-   ships; existing repos pick up normalized snapshots on their next
-   ingest (a fleet nudge clears stragglers at current scale). The
-   shipped changelog row starts working at that point with zero site
-   changes — worth its own line in docz-api's changelog.
-2. Then land the site work as one `minor` release (OQ-6): spec
-   re-vendor first (fixtures sweep), reader, then routes/nav/search —
+1. **Upstream first (blocking): SHIPPED 2026-08-30.** docz#89 → docz
+   `v1.2.2` (json tags); docz-api#25 → `v0.8.1` (pin bump,
+   contract-pinned snapshot shape, spec `1.4.1` documents the
+   spellings). Existing repos pick up normalized snapshots on their
+   next ingest — a fleet nudge clears stragglers at current scale,
+   and the shipped changelog row starts working with zero site
+   changes.
+2. Land the site work as one `minor` release (OQ-6): spec re-vendor
+   first (fixtures sweep), reader, then routes/nav/search —
    sequencing is the IMPL's business.
 3. Remaining upstream ask, additive and non-blocking: a `source`
    filter param on `searchDocs` (unblocks the directory filter
@@ -541,8 +550,9 @@ Original options kept for the record:
 - docz-api DESIGN-0004 — "Consume the docz v1.2.0 api block" (the
   serving side: published-path mapping, flat list rationale,
   exact-byte lookup, reserved words)
-- docz-api spec `1.4.0` (`api/openapi.yaml` at origin/main) — the
-  vendored contract this consumes
+- docz-api spec `1.4.1` (`api/openapi.yaml` at `v0.8.1`) — the
+  vendored contract this consumes, `config_snapshot` spellings
+  included; docz `v1.2.2` — the json-tags release (docz#89)
 - docz `v1.2.0` `pkg/doczcore/config` — `APIConfig` (yaml-only tags;
   the casing evidence), load-time landing-page normalization
 - DESIGN-0002 — relative-link resolution, `byPath`, the

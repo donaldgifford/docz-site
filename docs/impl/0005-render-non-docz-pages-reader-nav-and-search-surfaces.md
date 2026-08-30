@@ -1,7 +1,7 @@
 ---
 id: IMPL-0005
 title: "Render non-docz pages: reader, nav, and search surfaces"
-status: Draft
+status: In Progress
 author: Donald Gifford
 created: 2026-08-30
 ---
@@ -10,7 +10,7 @@ created: 2026-08-30
 
 # IMPL-0005: Render non-docz pages: reader, nav, and search surfaces
 
-**Status:** Draft
+**Status:** In Progress
 **Author:** Donald Gifford
 **Date:** 2026-08-30
 
@@ -89,7 +89,7 @@ release (v0.6.0).
 
 Each phase builds on the previous one. A phase is complete when all
 its tasks are checked off and its success criteria are met. Per OQ-1,
-the phases land as commits on ONE branch/PR (`feat/api-block-pages`).
+the phases land as commits on ONE branch/PR (`feat/impl-0005`).
 
 ---
 
@@ -100,7 +100,7 @@ config gate — no rendered-surface changes yet.
 
 #### Tasks
 
-- [ ] Re-vendor `api/openapi.yaml` at `1.4.1` from docz-api `v0.8.1`
+- [x] Re-vendor `api/openapi.yaml` at `1.4.1` from docz-api `v0.8.1`
       and run `bun run gen-api`; confirm the new surface (pages
       endpoints, `SearchHit.source`/`path`, `config_snapshot`
       spelling contract) and `gen-api-check` current
@@ -253,7 +253,7 @@ Pages become findable: nav tree, palette, directory.
 - [ ] Full local gate + changelog sync (`git fetch --tags`, regen,
       cliff-skipped `chore(changelog):` commit **as the last branch
       commit** — the IMPL-0004 lesson)
-- [ ] PR `feat/api-block-pages` labeled `minor`; merge on green;
+- [ ] PR `feat/impl-0005` labeled `minor`; merge on green;
       sync main
 - [ ] Mark this IMPL Completed and DESIGN-0004 Implemented; close
       issue #21 (the merge references it)
@@ -331,7 +331,7 @@ alternatives; write in your own option if none fits.
 
 **Reviewed 2026-08-30 — decided: 1a, 2a, 3a.** Options preserved
 below for the record. Consequences are folded into the phase tasks:
-one branch/PR (`feat/api-block-pages`) carries all four phases (1a);
+one branch/PR (`feat/impl-0005`) carries all four phases (1a);
 the demo fixtures serve this repo's real markdown mirroring the
 dogfood state (2a); the directory presents source counts on the
 results-count line, page term omitted at zero (3a).

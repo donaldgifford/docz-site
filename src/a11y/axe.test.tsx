@@ -88,6 +88,16 @@ describe("axe: core views", () => {
     await expectNoAxeViolations();
   });
 
+  it("page reader", { timeout: AXE_TIMEOUT }, async () => {
+    mountAt("/donaldgifford/docz-site/pages/guides/local-dev.md");
+    await screen.findByRole(
+      "heading",
+      { level: 1, name: "Local development against a real docz-api" },
+      { timeout: 10_000 },
+    );
+    await expectNoAxeViolations();
+  });
+
   it("type listing page", { timeout: AXE_TIMEOUT }, async () => {
     mountAt("/donaldgifford/docz-site/design");
     await screen.findByRole("table", undefined, { timeout: 10_000 });

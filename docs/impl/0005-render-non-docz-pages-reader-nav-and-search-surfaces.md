@@ -179,7 +179,7 @@ and cross-links resolve before any discovery UI exists.
       resolution end-to-end; own-path drop; XSS resolver-active
       section gains page-target cases (hostile hrefs, traversal —
       fail closed); recents kind round-trip + reset-on-old-shape
-- [ ] Axe sweep entry: page reader
+- [x] Axe sweep entry: page reader
 
 #### Success Criteria
 

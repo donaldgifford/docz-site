@@ -104,7 +104,7 @@ config gate — no rendered-surface changes yet.
       and run `bun run gen-api`; confirm the new surface (pages
       endpoints, `SearchHit.source`/`path`, `config_snapshot`
       spelling contract) and `gen-api-check` current
-- [ ] The forced `SearchHit` sweep: every fixture/test hit gains
+- [x] The forced `SearchHit` sweep: every fixture/test hit gains
       `source: "doc"` and its real repo `path`; the fixture search
       handler emits `source` facet counts; typecheck is the
       completeness proof (required fields)

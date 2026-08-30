@@ -204,10 +204,12 @@ export function CommandPalette({
       return [];
     }
     return readRecentDocs().map((entry) => ({
+      source: "doc" as const,
       repo: entry.repo,
       doc_id: entry.docId,
       type: entry.type,
       title: entry.title,
+      path: "",
       status: "",
       author: "",
       snippet: "",

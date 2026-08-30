@@ -367,10 +367,12 @@ export const demoOrgHandlers = [
     const hits: SearchHit[] = matches
       .slice(offset, offset + limit)
       .map((doc) => ({
+        source: "doc" as const,
         repo: doc.repo,
         doc_id: doc.doc_id,
         type: doc.type,
         title: doc.title,
+        path: doc.path,
         status: doc.status,
         author: doc.author,
         snippet: snippetFor(doc, q),
@@ -395,6 +397,7 @@ export const demoOrgHandlers = [
         type: facet((doc) => doc.type),
         status: facet((doc) => doc.status),
         author: facet((doc) => doc.author),
+        source: facet(() => "doc"),
       },
     });
   }),

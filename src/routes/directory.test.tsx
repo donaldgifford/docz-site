@@ -25,10 +25,12 @@ function syntheticSearchHandler(total: number) {
     const offset = Number.parseInt(url.searchParams.get("offset") ?? "0", 10);
     const limit = Number.parseInt(url.searchParams.get("limit") ?? "20", 10);
     const hits: SearchHit[] = Array.from({ length: total }, (_, i) => ({
+      source: "doc" as const,
       repo: "acme/docs",
       doc_id: `DOC-${String(i).padStart(4, "0")}`,
       type: "guide",
       title: `Synthetic doc ${String(i)}`,
+      path: `docs/guide/${String(i).padStart(4, "0")}-synthetic.md`,
       status: "Draft",
       author: "someone",
       snippet: "",

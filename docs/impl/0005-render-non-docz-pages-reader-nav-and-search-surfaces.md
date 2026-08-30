@@ -147,13 +147,13 @@ and cross-links resolve before any discovery UI exists.
       (reserved-word comment mirroring the changelog entry); empty
       splat (`/pages`, `/pages/`) redirects to the repo home
       (design OQ-2a: the landing page IS the repo home)
-- [ ] `src/routes/page.tsx`: mounts in `RepoFrame` (breadcrumbs home
+- [x] `src/routes/page.tsx`: mounts in `RepoFrame` (breadcrumbs home
       · pages · path segments), four states (skeleton / content /
       NotFoundPanel / ErrorPanel-with-retry; 503 stays the retryable
       panel per DESIGN-0003), `useRenderedSource` with **h1 kept**,
       ToC rail, metadata footer line (`git_sha` short + source path)
       instead of the doc meta table
-- [ ] Splat → API call: pass the splat through
+- [x] Splat → API call: pass the splat through
       `encodeURIComponent` before the generated hook — orval's URL
       builder interpolates **raw** (verified), and the spec blesses
       the one-segment percent-encoded spelling; never string-build

@@ -251,6 +251,7 @@ describe("command palette", () => {
       "docz:recent-docs",
       JSON.stringify([
         {
+          kind: "doc",
           repo: "donaldgifford/docz-api",
           type: "design",
           docId: "DESIGN-0002",
@@ -280,6 +281,7 @@ describe("command palette", () => {
       "docz:recent-docs",
       JSON.stringify([
         {
+          kind: "doc",
           repo: "donaldgifford/docz-site",
           type: "impl",
           docId: "IMPL-0001",

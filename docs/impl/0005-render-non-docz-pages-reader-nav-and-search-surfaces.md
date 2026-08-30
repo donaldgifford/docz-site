@@ -167,7 +167,7 @@ and cross-links resolve before any discovery UI exists.
       source path (the reader's own-id drop generalized)
 - [x] Repo home relative-link base follows
       `apiConfig(snapshot)?.landingPage ?? docs_dir/index.md`
-- [ ] Recents schema (design OQ-5a): `RecentDoc` gains
+- [x] Recents schema (design OQ-5a): `RecentDoc` gains
       `kind: "doc" | "page"`; page entries carry the published path
       in the coordinates slot with per-segment validation (`/` split,
       each segment `SEGMENT`-checked); missing `kind` on stored

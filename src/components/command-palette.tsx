@@ -203,17 +203,19 @@ export function CommandPalette({
     if (!open || debouncedQ !== "") {
       return [];
     }
-    return readRecentDocs().map((entry) => ({
-      source: "doc" as const,
-      repo: entry.repo,
-      doc_id: entry.docId,
-      type: entry.type,
-      title: entry.title,
-      path: "",
-      status: "",
-      author: "",
-      snippet: "",
-    }));
+    return readRecentDocs()
+      .filter((entry) => entry.kind === "doc")
+      .map((entry) => ({
+        source: "doc" as const,
+        repo: entry.repo,
+        doc_id: entry.docId,
+        type: entry.type,
+        title: entry.title,
+        path: "",
+        status: "",
+        author: "",
+        snippet: "",
+      }));
   }, [open, debouncedQ]);
 
   const entries = useMemo(

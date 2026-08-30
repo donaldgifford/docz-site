@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Navigate, useParams } from "react-router";
 
 import { useGetRepo, useGetRepoPage } from "@/api/__generated__/docz-api";
@@ -13,6 +13,7 @@ import { RepoFrame } from "@/components/repo-frame";
 import { useRepoDocIndex } from "@/hooks/useRepoDocIndex";
 import { apiConfig } from "@/lib/apiConfig";
 import { pageSourceKeys, pageSourcePath } from "@/lib/pagePaths";
+import { recordRecentDoc } from "@/lib/recentDocs";
 import { useRenderedSource } from "@/markdown/useRenderedMarkdown";
 
 /*
@@ -91,6 +92,18 @@ export function Component() {
       base: sourceInputs.base,
     };
   }, [docIndex, sourceInputs]);
+
+  // Successful loads feed the palette's empty-query "recent" group.
+  useEffect(() => {
+    if (page !== undefined) {
+      recordRecentDoc({
+        kind: "page",
+        repo: page.repo,
+        path: page.path,
+        title: page.title,
+      });
+    }
+  }, [page]);
 
   const rendered = useRenderedSource(
     page === undefined

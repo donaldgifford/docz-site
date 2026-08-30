@@ -241,7 +241,7 @@ Pages become findable: nav tree, palette, directory.
 
 #### Tasks
 
-- [ ] Update CLAUDE.md (pages surface: reserved route, apiConfig
+- [x] Update CLAUDE.md (pages surface: reserved route, apiConfig
       gate, reconstruction rule, recents kind, orval raw-interpolation
       gotcha) and README (Pages section under the feature list)
 - [ ] File the additive upstream ask on docz-api: a `source` filter

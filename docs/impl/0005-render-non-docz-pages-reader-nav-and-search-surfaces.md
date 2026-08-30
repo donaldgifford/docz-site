@@ -121,7 +121,7 @@ config gate — no rendered-surface changes yet.
       pages via `?raw`, one nested file page, one root
       `additional_docs` entry (snapshot if not in-repo); non-opted
       fixture repo returns `{"pages": []}` and no `api:` block
-- [ ] Fixture realism pins: one repo carries `exclude`/
+- [x] Fixture realism pins: one repo carries `exclude`/
       `additional_docs: null` (the `arr()` path); fixture published
       paths cover a directory page (extensionless), a nested `.md`
       file page, and an `additional_docs` root file

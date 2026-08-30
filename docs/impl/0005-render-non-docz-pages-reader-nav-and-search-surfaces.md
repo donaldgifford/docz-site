@@ -222,7 +222,7 @@ Pages become findable: nav tree, palette, directory.
       + counts, prefetch wiring (landed with each surface's commit)
 - [x] Axe sweep entries: repo page with the Pages tree; directory
       with mixed doc/page hits
-- [ ] e2e journey (one spec): repo nav → Pages tree → open a page →
+- [x] e2e journey (one spec): repo nav → Pages tree → open a page →
       rendered markdown; assert the mermaid chunk stays off a
       diagram-free page
 

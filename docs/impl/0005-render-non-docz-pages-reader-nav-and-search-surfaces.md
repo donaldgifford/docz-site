@@ -173,7 +173,7 @@ and cross-links resolve before any discovery UI exists.
       each segment `SEGMENT`-checked); missing `kind` on stored
       entries is malformed → store resets; the page reader records on
       successful load
-- [ ] Tests: reconstruction unit table; reader four states + splat
+- [x] Tests: reconstruction unit table; reader four states + splat
       shapes (nested, percent-encodable, empty-splat redirect);
       reserved `pages` outranks `:type`; doc→page and page→doc link
       resolution end-to-end; own-path drop; XSS resolver-active

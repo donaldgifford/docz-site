@@ -113,7 +113,7 @@ config gate — no rendered-surface changes yet.
       Component 2 — lowercase spellings only, `enabled !== true` →
       undefined, `arr()` semantics for null lists, wrong shapes and
       stale capitalized snapshots read as "no pages surface"
-- [ ] Demo-org page fixtures: `listRepoPages`/`getRepoPage` resolvers
+- [x] Demo-org page fixtures: `listRepoPages`/`getRepoPage` resolvers
       layered before faker (fall-through outside the demo org, the
       existing pattern); api-block `config_snapshot` on the opted
       fixture repo; content is this repo's REAL markdown (OQ-2a):

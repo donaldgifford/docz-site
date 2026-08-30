@@ -250,7 +250,7 @@ Pages become findable: nav tree, palette, directory.
 - [x] Chart bump per convention: appVersion `0.5.0` → `0.6.0`
       (label `minor`, design OQ-6a), chart `0.1.6` → `0.1.7`,
       deployment unittest image-tag assert, helm-docs regenerated
-- [ ] Full local gate + changelog sync (`git fetch --tags`, regen,
+- [x] Full local gate + changelog sync (`git fetch --tags`, regen,
       cliff-skipped `chore(changelog):` commit **as the last branch
       commit** — the IMPL-0004 lesson)
 - [ ] PR `feat/impl-0005` labeled `minor`; merge on green;

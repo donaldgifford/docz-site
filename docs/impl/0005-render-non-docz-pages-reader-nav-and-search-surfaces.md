@@ -108,7 +108,7 @@ config gate — no rendered-surface changes yet.
       `source: "doc"` and its real repo `path`; the fixture search
       handler emits `source` facet counts; typecheck is the
       completeness proof (required fields)
-- [ ] `src/lib/apiConfig.ts` + tests: `apiConfig(snapshot)` →
+- [x] `src/lib/apiConfig.ts` + tests: `apiConfig(snapshot)` →
       `{landingPage, additionalDocs} | undefined` per DESIGN-0004
       Component 2 — lowercase spellings only, `enabled !== true` →
       undefined, `arr()` semantics for null lists, wrong shapes and

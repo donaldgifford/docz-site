@@ -216,11 +216,11 @@ Pages become findable: nav tree, palette, directory.
       from the `source` facet counts, page term omitted when Y = 0
       so non-opted deployments stay byte-identical (OQ-3a); row
       hover/focus prefetch
-- [ ] Tests: nav gating (absent without block — zero requests;
+- [x] Tests: nav gating (absent without block — zero requests;
       present with; collapse/expand; caret vs navigate), palette
       page-hit rendering + navigation + recents, directory page rows
-      + counts, prefetch wiring
-- [ ] Axe sweep entries: repo page with the Pages tree; directory
+      + counts, prefetch wiring (landed with each surface's commit)
+- [x] Axe sweep entries: repo page with the Pages tree; directory
       with mixed doc/page hits
 - [ ] e2e journey (one spec): repo nav → Pages tree → open a page →
       rendered markdown; assert the mermaid chunk stays off a

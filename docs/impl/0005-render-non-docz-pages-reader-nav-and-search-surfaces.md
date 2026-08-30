@@ -165,7 +165,7 @@ and cross-links resolve before any discovery UI exists.
       extensionless → both `README.md` and `index.md` keys); hrefs
       `/{owner}/{name}/pages/{path}`; page bodies drop their own
       source path (the reader's own-id drop generalized)
-- [ ] Repo home relative-link base follows
+- [x] Repo home relative-link base follows
       `apiConfig(snapshot)?.landingPage ?? docs_dir/index.md`
 - [ ] Recents schema (design OQ-5a): `RecentDoc` gains
       `kind: "doc" | "page"`; page entries carry the published path

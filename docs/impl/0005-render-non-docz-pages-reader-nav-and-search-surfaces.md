@@ -204,12 +204,12 @@ Pages become findable: nav tree, palette, directory.
       caret behavior and are links when a directory page exists;
       leaves link with `PageSummary` titles; the active route's
       branch auto-expands; hover/focus prefetches `getRepoPage`
-- [ ] Palette: page hits render with a neutral mono "page" marker
+- [x] Palette: page hits render with a neutral mono "page" marker
       (no type badge), title + repo + published path, navigate to
       the page route, highlighted-hit prefetch extends to
       `getRepoPage`; recents list renders `kind`-aware hrefs and the
       `recent:` value-prefix convention holds for page entries
-- [ ] Directory: page hits render inline — title links to the page
+- [x] Directory: page hits render inline — title links to the page
       route, `source` marker, "—" for type/status/author (the
       empty-string wire convention, like `updated_at`); the
       results-count line extends to "N results · X docs · Y pages"

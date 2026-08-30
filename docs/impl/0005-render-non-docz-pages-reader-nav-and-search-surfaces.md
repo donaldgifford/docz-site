@@ -197,7 +197,7 @@ Pages become findable: nav tree, palette, directory.
 
 #### Tasks
 
-- [ ] RepoNav Pages tree (design OQ-2a): section between the type
+- [x] RepoNav Pages tree (design OQ-2a): section between the type
       drawers and the changelog row, rendered only when `apiConfig`
       hits AND the list is non-empty; tree built from the flat list
       (path-split); directory nodes collapse with the type-drawer

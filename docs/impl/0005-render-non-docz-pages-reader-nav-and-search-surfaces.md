@@ -143,7 +143,7 @@ and cross-links resolve before any discovery UI exists.
 
 #### Tasks
 
-- [ ] Router: `:owner/:repo/pages/*` registered above `:type`
+- [x] Router: `:owner/:repo/pages/*` registered above `:type`
       (reserved-word comment mirroring the changelog entry); empty
       splat (`/pages`, `/pages/`) redirects to the repo home
       (design OQ-2a: the landing page IS the repo home)

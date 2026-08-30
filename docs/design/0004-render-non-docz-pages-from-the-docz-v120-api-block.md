@@ -25,7 +25,7 @@ created: 2026-08-30
   - [What the site already has](#what-the-site-already-has)
 - [Detailed Design](#detailed-design)
   - [Component 1: spec re-vendor at 1.4.0](#component-1-spec-re-vendor-at-140)
-  - [Component 2: snapshot readers and the casing fix](#component-2-snapshot-readers-and-the-casing-fix)
+  - [Component 2: the api-block snapshot reader](#component-2-the-api-block-snapshot-reader)
   - [Component 3: the page index and link resolution](#component-3-the-page-index-and-link-resolution)
   - [Component 4: routes, reader, and nav](#component-4-routes-reader-and-nav)
   - [Component 5: search surfaces](#component-5-search-surfaces)
@@ -46,10 +46,11 @@ markdown file a repo publishes beyond its docz documents — plus a
 `source` facet that joins pages into search. This design makes the site
 render that surface: a page reader under a reserved `/pages/*` route
 family, a Pages section in the repo nav, page hits in the palette and
-directory, and page paths joined into the relative-link resolver. It
-also fixes a found bug this research surfaced: the site's
-`config_snapshot` readers use the wrong key casing and never match a
-real docz-api response.
+directory, and page paths joined into the relative-link resolver. The
+research also surfaced a real bug — `config_snapshot`'s wire keys are
+Go field names, so the site's lowercase readers never match — which is
+being fixed **upstream first** (docz#89 → docz-api#25) so no
+compatibility layer ships here (OQ-1, answered).
 
 **Implements:** issue
 [#21](https://github.com/donaldgifford/docz-site/issues/21) (the
@@ -73,10 +74,10 @@ upstream coordination issue).
 - Pages join the link resolver: author-written relative links between
   docs and pages resolve to SPA routes through the same
   exact-match-whitelist transform docs use today.
-- Fix the `config_snapshot` key-casing bug (capitalized Go field
-  names on the wire; the site reads lowercase) for both the existing
-  `changelog:` gate and the new `api:` gate, with fixtures carrying
-  the real shape.
+- Get the `config_snapshot` key-casing bug fixed **upstream** (docz#89
+  → docz-api#25) before site work starts, so both the existing
+  `changelog:` gate and the new `api:` gate read one normalized shape
+  and no compatibility layer ships here (OQ-1, answered).
 - One `minor` release; no new chart values, env vars, or
   `__DOCZ_CONFIG__` keys — the feature is driven entirely by each
   repo's `.docz.yaml`, so the site detects it from API data alone.
@@ -178,8 +179,17 @@ resolved** (docz normalization backfills `<docs_dir>/index.md` at
 load, so the snapshot never carries an empty landing page while
 enabled).
 
-Resolution is OQ-1; the recommendation reads both casings and files
-the upstream stabilization ask.
+Resolution: **OQ-1, answered — fix upstream first.**
+[docz#89](https://github.com/donaldgifford/docz/issues/89) adds json
+tags mirroring the yaml spellings (purely additive there — docz never
+JSON-marshals `Config` itself);
+[docz-api#25](https://github.com/donaldgifford/docz-api/issues/25)
+bumps the pin and contract-pins the marshaled shape. Once the chain
+ships, `config_snapshot` carries the `.docz.yaml` spellings — which is
+what `changelogConfig` already reads, so the shipped gate starts
+working with **zero site changes**, and this design's new reader is
+written against the normalized shape only. No dual-casing
+compatibility layer gets baked in here.
 
 ### What the site already has
 
@@ -211,39 +221,36 @@ builds a `SearchHit` fails to typecheck until it carries
 handler starts emitting the `source` facet counts so palette/directory
 suites exercise the real shape.
 
-### Component 2: snapshot readers and the casing fix
+### Component 2: the api-block snapshot reader
 
-A tiny shared helper joins the two gates:
-
-```ts
-/** Case-tolerant block read: the snapshot's real casing is Go field
- *  names (no json tags upstream); fixtures and any future normalized
- *  snapshot use lowercase. Both spellings are accepted (OQ-1). */
-function snapshotBlock(snapshot: unknown, ...keys: string[]): unknown;
-```
-
-- `changelogConfig` switches to it (`"Changelog"`/`"changelog"`,
-  `"Enabled"`/`"enabled"`, `"File"`/`"file"`) — the bug fix. Behavior
-  is otherwise identical; the quiet-gate semantics stay.
-- New `src/lib/apiConfig.ts`, same defensive shape:
+Depends on the upstream normalization chain (docz#89 → docz-api#25;
+see the found-bug section): the snapshot's key spellings become the
+`.docz.yaml` ones, so `changelogConfig` needs **no change** (it
+already reads that shape) and the new reader targets it directly:
 
 ```ts
 export interface ApiBlockConfig {
   landingPage: string;        // resolved; "" only on wrong shapes
   additionalDocs: string[];   // normalized repo-relative paths
 }
-/** undefined unless the api: block is present AND Enabled === true;
- *  any wrong shape reads as "no pages surface". */
+/** undefined unless the api: block is present AND enabled === true;
+ *  any wrong shape — including a pre-normalization capitalized
+ *  snapshot from a not-yet-re-ingested repo — reads as "no pages
+ *  surface". */
 export function apiConfig(snapshot: unknown): ApiBlockConfig | undefined;
 ```
 
 `additionalDocs` runs through `arr()` semantics (null → `[]`). The
 reader is the **only** gate the nav and route need — a repo without an
-enabled block never fires a pages request.
+enabled block never fires a pages request. A stale capitalized
+snapshot (a repo that hasn't re-ingested since the docz-api bump)
+degrades to exactly today's behavior — no pages row, no requests —
+which is the quiet-gate semantics working as designed.
 
-Fixtures change to the REAL capitalized shape for one demo repo while
-the other keeps lowercase, so both spellings stay exercised (the
-`aliases: null` realism precedent).
+Fixtures stay lowercase, which is now the verified real shape; one
+fixture repo keeps `Exclude`/`AdditionalDocs`-style `null` slices so
+the `arr()` path stays exercised (the `aliases: null` realism
+precedent).
 
 ### Component 3: the page index and link resolution
 
@@ -366,7 +373,7 @@ Site-internal only; consumed API changes are spec `1.4.0`'s
 | Module | Change |
 | ------ | ------ |
 | `src/lib/apiConfig.ts` | new — defensive `api:` block reader |
-| `src/lib/changelogConfig.ts` | casing fix via shared `snapshotBlock` |
+| `src/lib/changelogConfig.ts` | unchanged — becomes correct when docz#89/docz-api#25 ship |
 | `src/hooks/useRepoDocIndex.ts` | pages join `byPath`; page-source reconstruction |
 | `src/routes/page.tsx` | new — page reader (splat route) |
 | `src/app/router.tsx` | `:owner/:repo/pages/*` reserved segment |
@@ -374,7 +381,7 @@ Site-internal only; consumed API changes are spec `1.4.0`'s
 | `src/components/command-palette.tsx` | page-hit rendering + prefetch |
 | `src/routes/directory.tsx` | page-hit rows; source facet counts |
 | `src/routes/repo-home.tsx` | relative-link base follows `landingPage` |
-| `src/mocks/fixtures.ts` | pages fixtures; real-casing snapshot; SearchHit `source`/`path` |
+| `src/mocks/fixtures.ts` | pages fixtures; api-block snapshots; SearchHit `source`/`path` |
 
 No chart, env, or `__DOCZ_CONFIG__` changes.
 
@@ -388,9 +395,9 @@ is the page tree built in-memory from the flat list, and the extended
 
 ## Testing Strategy
 
-- **Unit — readers:** `apiConfig`/`changelogConfig` table tests over
-  both casings, wrong shapes, `null` slices, disabled blocks; the
-  capitalized-fixture repo proves the real shape end-to-end.
+- **Unit — readers:** `apiConfig` table tests over wrong shapes,
+  `null` slices, disabled blocks, and a stale capitalized snapshot
+  (reads as "no pages surface" — the pre-re-ingest degradation).
 - **Unit — reconstruction:** published-path → source-path table
   (additional_docs member, `.md` file, extensionless directory page
   with both README/index keys).
@@ -415,16 +422,19 @@ is the page tree built in-memory from the flat list, and the extended
 
 ## Migration / Rollout Plan
 
-1. Land as one `minor` release (OQ-6): spec re-vendor first (fixtures
-   sweep), readers + casing fix, then routes/nav/search — sequencing
-   is the IMPL's business.
-2. The casing fix ships **before or with** everything else — it also
-   silently repairs the existing changelog row against real
-   deployments (worth its own line in the changelog).
-3. Upstream asks filed against docz-api (additive, non-blocking):
-   a `source` filter param on `searchDocs`; stabilize
-   `config_snapshot` key casing (json tags or a normalized marshal) —
-   the site reads both spellings either way.
+1. **Upstream first (blocking):** docz#89 (json tags) → a docz patch
+   release → docz-api#25 (pin bump + contract-pinned snapshot shape)
+   → a docz-api release. Site implementation starts after that chain
+   ships; existing repos pick up normalized snapshots on their next
+   ingest (a fleet nudge clears stragglers at current scale). The
+   shipped changelog row starts working at that point with zero site
+   changes — worth its own line in docz-api's changelog.
+2. Then land the site work as one `minor` release (OQ-6): spec
+   re-vendor first (fixtures sweep), reader, then routes/nav/search —
+   sequencing is the IMPL's business.
+3. Remaining upstream ask, additive and non-blocking: a `source`
+   filter param on `searchDocs` (unblocks the directory filter
+   control as a follow-up).
 4. Dogfood: docz-site's and docz-api's own repos enable the `api:`
    block upstream once deployed; the demo fixtures mirror that state.
 5. Close issue #21 on merge.
@@ -436,19 +446,26 @@ alternatives; write in your own option if none fits.
 
 **OQ-1 — The config_snapshot casing bug: how does the site read it?**
 
-- **a (recommended).** Read **both** casings via one shared helper
-  (`"API"`/`"api"`, `"Enabled"`/`"enabled"`, …), fix `changelogConfig`
-  the same way, split the demo fixtures across the two spellings, and
-  file the upstream stabilization ask. Works against every docz-api
-  version past and future, dies gracefully on garbage, and the helper
-  is ~10 lines — cheaper than coordinating a cross-repo contract
-  change.
-- b. Read the capitalized spelling only (match today's wire exactly)
-  and update all fixtures to it. Honest about reality but breaks the
-  day upstream normalizes to lowercase — a likely outcome of the ask.
-- c. Block this design on upstream normalizing the snapshot first.
-  Cleanest contract, slowest path, and the shipped changelog row
-  stays broken meanwhile.
+**Answered 2026-08-30 — other (upstream-first):** fix the root cause
+before any site work, so no compatibility layer gets baked in here.
+Filed as [docz#89](https://github.com/donaldgifford/docz/issues/89)
+(json tags mirroring the yaml spellings; purely additive — docz never
+JSON-marshals `Config` itself) and
+[docz-api#25](https://github.com/donaldgifford/docz-api/issues/25)
+(pin bump + contract-pin the marshaled shape; snapshots refresh on
+each repo's next ingest). The site then reads the normalized
+lowercase shape only; `changelogConfig` needs no change at all.
+Original options kept for the record:
+
+- a. Read **both** casings via one shared helper, split fixtures
+  across the two spellings, file the upstream ask as non-blocking.
+  Works against every docz-api version, but ships a compatibility
+  layer the site then carries (and later cleans up) forever.
+- b. Read the capitalized spelling only (match today's wire exactly).
+  Honest about reality but breaks the day upstream normalizes.
+- c. Block this design on upstream normalizing first — what was
+  chosen, minus a's helper: the casing chain is quick to ship
+  upstream and this design is already gated on answering its OQs.
 
 **OQ-2 — How does the repo nav present pages?**
 

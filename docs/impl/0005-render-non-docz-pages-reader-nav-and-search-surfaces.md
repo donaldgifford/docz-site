@@ -116,9 +116,11 @@ config gate — no rendered-surface changes yet.
 - [ ] Demo-org page fixtures: `listRepoPages`/`getRepoPage` resolvers
       layered before faker (fall-through outside the demo org, the
       existing pattern); api-block `config_snapshot` on the opted
-      fixture repo; page content per OQ-2 (real markdown, `?raw` or
-      snapshot); non-opted fixture repo returns `{"pages": []}` and
-      no `api:` block
+      fixture repo; content is this repo's REAL markdown (OQ-2a):
+      `docs/design/README.md` + `docs/impl/README.md` as directory
+      pages via `?raw`, one nested file page, one root
+      `additional_docs` entry (snapshot if not in-repo); non-opted
+      fixture repo returns `{"pages": []}` and no `api:` block
 - [ ] Fixture realism pins: one repo carries `exclude`/
       `additional_docs: null` (the `arr()` path); fixture published
       paths cover a directory page (extensionless), a nested `.md`
@@ -209,8 +211,11 @@ Pages become findable: nav tree, palette, directory.
       `recent:` value-prefix convention holds for page entries
 - [ ] Directory: page hits render inline — title links to the page
       route, `source` marker, "—" for type/status/author (the
-      empty-string wire convention, like `updated_at`); source
-      counts presented per OQ-3; row hover/focus prefetch
+      empty-string wire convention, like `updated_at`); the
+      results-count line extends to "N results · X docs · Y pages"
+      from the `source` facet counts, page term omitted when Y = 0
+      so non-opted deployments stay byte-identical (OQ-3a); row
+      hover/focus prefetch
 - [ ] Tests: nav gating (absent without block — zero requests;
       present with; collapse/expand; caret vs navigate), palette
       page-hit rendering + navigation + recents, directory page rows
@@ -323,6 +328,13 @@ Pages become findable: nav tree, palette, directory.
 
 Answer each with a letter — **a is the recommendation**, b onward are
 alternatives; write in your own option if none fits.
+
+**Reviewed 2026-08-30 — decided: 1a, 2a, 3a.** Options preserved
+below for the record. Consequences are folded into the phase tasks:
+one branch/PR (`feat/api-block-pages`) carries all four phases (1a);
+the demo fixtures serve this repo's real markdown mirroring the
+dogfood state (2a); the directory presents source counts on the
+results-count line, page term omitted at zero (3a).
 
 **OQ-1 — PR granularity?**
 

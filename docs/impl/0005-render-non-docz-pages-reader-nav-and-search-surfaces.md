@@ -244,9 +244,9 @@ Pages become findable: nav tree, palette, directory.
 - [x] Update CLAUDE.md (pages surface: reserved route, apiConfig
       gate, reconstruction rule, recents kind, orval raw-interpolation
       gotcha) and README (Pages section under the feature list)
-- [ ] File the additive upstream ask on docz-api: a `source` filter
+- [x] File the additive upstream ask on docz-api: a `source` filter
       param on `searchDocs` (unblocks the directory filter control
-      follow-up)
+      follow-up) — filed as donaldgifford/docz-api#27
 - [ ] Chart bump per convention: appVersion `0.5.0` → `0.6.0`
       (label `minor`, design OQ-6a), chart `0.1.6` → `0.1.7`,
       deployment unittest image-tag assert, helm-docs regenerated

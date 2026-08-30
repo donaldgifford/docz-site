@@ -158,7 +158,7 @@ and cross-links resolve before any discovery UI exists.
       builder interpolates **raw** (verified), and the spec blesses
       the one-segment percent-encoded spelling; never string-build
       the URL by hand
-- [ ] `useRepoDocIndex`: gated `listRepoPages` query (skipped
+- [x] `useRepoDocIndex`: gated `listRepoPages` query (skipped
       entirely without an `apiConfig` hit) joins the all-resolve
       barrier; `byPath` gains page entries per the reconstruction
       table (additional_docs member → itself; `.md` → docs_dir join;

@@ -247,7 +247,7 @@ Pages become findable: nav tree, palette, directory.
 - [x] File the additive upstream ask on docz-api: a `source` filter
       param on `searchDocs` (unblocks the directory filter control
       follow-up) — filed as donaldgifford/docz-api#27
-- [ ] Chart bump per convention: appVersion `0.5.0` → `0.6.0`
+- [x] Chart bump per convention: appVersion `0.5.0` → `0.6.0`
       (label `minor`, design OQ-6a), chart `0.1.6` → `0.1.7`,
       deployment unittest image-tag assert, helm-docs regenerated
 - [ ] Full local gate + changelog sync (`git fetch --tags`, regen,

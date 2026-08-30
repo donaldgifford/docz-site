@@ -267,7 +267,7 @@ function summary(doc: Document): Document {
   return rest;
 }
 
-function snippetFor(doc: Document, q: string): string {
+function snippetFor(doc: { raw_md?: string | null }, q: string): string {
   const body = (doc.raw_md ?? "").replace(/[#>`|-]/g, " ");
   const lower = body.toLowerCase();
   const at = q === "" ? -1 : lower.indexOf(q.toLowerCase());
@@ -489,13 +489,26 @@ export const demoOrgHandlers = [
       return haystack.includes(q.toLowerCase());
     });
 
+    // Pages ride the same index (spec 1.4.1): doc-only filters drop
+    // them, q matches title+body, and doc-only hit fields are "".
+    const pageMatches =
+      type !== null || status !== null || author !== null
+        ? []
+        : Object.values(DEMO_PAGES)
+            .flat()
+            .filter((page) => {
+              if (repo !== null && page.repo !== repo) return false;
+              if (q === "") return true;
+              const haystack = `${page.title}\n${page.raw_md}`.toLowerCase();
+              return haystack.includes(q.toLowerCase());
+            });
+
     // Facets and the estimated total cover the whole filtered set (as
     // Meilisearch does); only `hits` is the offset/limit window.
     const offset = intParam(url, "offset", 0);
     const limit = intParam(url, "limit", 20);
-    const hits: SearchHit[] = matches
-      .slice(offset, offset + limit)
-      .map((doc) => ({
+    const allHits: SearchHit[] = [
+      ...matches.map((doc) => ({
         source: "doc" as const,
         repo: doc.repo,
         doc_id: doc.doc_id,
@@ -505,7 +518,20 @@ export const demoOrgHandlers = [
         status: doc.status,
         author: doc.author,
         snippet: snippetFor(doc, q),
-      }));
+      })),
+      ...pageMatches.map((page) => ({
+        source: "page" as const,
+        repo: page.repo,
+        doc_id: "",
+        type: "",
+        title: page.title,
+        path: page.path,
+        status: "",
+        author: "",
+        snippet: snippetFor(page, q),
+      })),
+    ];
+    const hits = allHits.slice(offset, offset + limit);
 
     const facet = (key: (doc: Document) => string) =>
       Object.fromEntries(
@@ -516,17 +542,26 @@ export const demoOrgHandlers = [
           }, {}),
         ),
       );
+    // The repo facet spans docs AND pages; source counts omit zeros
+    // (facets never carry zero-hit keys).
+    const repoFacet = facet((doc) => doc.repo);
+    for (const page of pageMatches) {
+      repoFacet[page.repo] = (repoFacet[page.repo] ?? 0) + 1;
+    }
+    const sourceFacet: Record<string, number> = {};
+    if (matches.length > 0) sourceFacet.doc = matches.length;
+    if (pageMatches.length > 0) sourceFacet.page = pageMatches.length;
 
     return HttpResponse.json({
       query: q,
-      estimated_total_hits: matches.length,
+      estimated_total_hits: allHits.length,
       hits,
       facets: {
-        repo: facet((doc) => doc.repo),
+        repo: repoFacet,
         type: facet((doc) => doc.type),
         status: facet((doc) => doc.status),
         author: facet((doc) => doc.author),
-        source: facet(() => "doc"),
+        source: sourceFacet,
       },
     });
   }),

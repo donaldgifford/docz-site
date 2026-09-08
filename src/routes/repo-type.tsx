@@ -193,7 +193,7 @@ export function Component() {
         <TypeSkeleton />
       ) : (
         <article className="doc-prose">
-          <h1 className="mb-4 font-serif text-[clamp(1.7rem,4vw,2.3rem)] leading-[1.15] font-normal tracking-[-0.02em] text-fg-primary">
+          <h1 className="mb-4 font-sans text-[clamp(1.7rem,4vw,2.3rem)] leading-[1.15] font-medium tracking-[-0.02em] text-fg-primary">
             {docType.plural_label}
           </h1>
           <p className="mb-7 text-[14px] text-fg-tertiary">

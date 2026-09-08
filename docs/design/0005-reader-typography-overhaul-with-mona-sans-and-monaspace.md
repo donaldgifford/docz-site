@@ -514,11 +514,15 @@ One branch, `feat/reader-typography`, carrying this design, its IMPL
 doc, and the change. The IMPL doc phases the work so each step is
 independently revertable and screenshot-able:
 
-0. Mockup review (Component 6, done on this branch before the IMPL doc
-   exists): `mockup.html` renders the decided stack live so sizes,
-   measure, and ligature sets can be dialed in by editing one file.
-   Values tuned here are copied into the IMPL doc's tasks as the
-   numbers to implement; this design is amended if a decision changes.
+0. Live review (done on this branch before the IMPL doc exists): the
+   decided stack is applied to the app itself — Components 1–5 as CSS
+   and imports, no tests yet — so it can be reviewed on real documents
+   with `bun run dev:msw` (the demo org's own design docs and the
+   published guide page). `mockup.html` carries the same values so the
+   two do not drift. Dial-in edits happen in `tokens.css` and are
+   mirrored to the mockup; this design is amended if a decision
+   changes. The IMPL doc then tracks the remaining phases (tests,
+   documentation, e2e assertions, release).
 1. Font swap only (Component 1) — the stack changes, sizes do not.
    Screenshot.
 2. Prose sizes, faces, and the measure cap (Components 2 and 3).

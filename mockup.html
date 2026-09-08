@@ -4,14 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>docz · Security Engineering docs + rfcs</title>
+<!-- DESIGN-0005 typography: Mona Sans (prose + UI), Monaspace Neon (code),
+     Monaspace Xenon (section headings + pull quotes). This mockup is an
+     unshipped design artifact, so it may load from CDNs; the app self-hosts
+     the same faces via @fontsource (there the sans family is named
+     "Mona Sans Variable"). Keep the weights in sync with src/main.tsx. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mona+Sans:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@fontsource/monaspace-neon@5.3.0/400.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@fontsource/monaspace-neon@5.3.0/400-italic.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@fontsource/monaspace-neon@5.3.0/600.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@fontsource/monaspace-neon@5.3.0/700.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@fontsource/monaspace-xenon@5.3.0/600.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@fontsource/monaspace-xenon@5.3.0/400-italic.css" rel="stylesheet">
 <style>
   :root {
-    --font-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
-    --font-serif: "Source Serif 4", Georgia, serif;
+    --font-sans: "Mona Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "Monaspace Neon", ui-monospace, "SF Mono", Menlo, monospace;
+    --font-serif: "Monaspace Xenon", ui-monospace, Georgia, serif;
 
     --bg-base:      #0C1017;
     --bg-raised:    #121722;
@@ -265,8 +277,8 @@
   .number-line .crumb { color: var(--fg-muted); }
   .number-line::after { content: ""; flex: 1; height: 1px; background: linear-gradient(to right, var(--accent-border), transparent); }
   .doc-chead h1 {
-    font-family: var(--font-serif); font-size: clamp(1.9rem, 4.5vw, 2.6rem);
-    font-weight: 400; line-height: 1.14; letter-spacing: -0.02em; margin: 0 0 1.1rem;
+    font-family: var(--font-sans); font-size: clamp(1.9rem, 4.5vw, 2.6rem);
+    font-weight: 500; line-height: 1.14; letter-spacing: -0.02em; margin: 0 0 1.1rem;
   }
   .chead-meta { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; font-family: var(--font-mono); font-size: 12px; color: var(--fg-tertiary); }
   .chead-meta .divider { color: var(--fg-muted); }
@@ -291,27 +303,32 @@
   .banner a { color: var(--fg-primary); }
   .banner a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
-  /* prose — serif body, serif display h2 (hash reveals on hover) */
-  .doc-prose { font-size: 15.5px; line-height: 1.7; color: var(--fg-secondary); }
-  .doc-prose > p, .doc-prose li { font-family: var(--font-serif); font-size: 16px; }
-  .doc-prose p { margin: 0 0 1.1rem; }
+  /* prose — DESIGN-0005: Mona Sans body on a measured column, Xenon slab
+     section headings, quiet inline code (accent is reserved for links) */
+  .doc-prose { font-size: 16.5px; line-height: 1.65; color: var(--fg-secondary); }
+  .doc-prose > p, .doc-prose li { font-family: var(--font-sans); }
+  .doc-prose p { margin: 0 0 1.25rem; }
+  /* measure cap on text-bearing blocks only; code, tables, figures keep the column */
+  .doc-prose :is(p, ul, ol, dl, h1, h2, h3, h4, blockquote) { max-width: 72ch; }
   .doc-prose h2 {
-    font-family: var(--font-serif); font-size: 1.5rem; font-weight: 600;
-    letter-spacing: -0.015em; margin: 2.6rem 0 0.9rem; color: var(--fg-primary);
+    font-family: var(--font-serif); font-size: 1.35rem; font-weight: 600;
+    letter-spacing: -0.01em; margin: 2.6rem 0 0.9rem; color: var(--fg-primary);
     scroll-margin-top: 80px;
   }
   .doc-prose h2:first-child { margin-top: 0; }
   .doc-prose h2 .hash { color: var(--accent); font-family: var(--font-mono); font-size: 1rem; margin-right: 0.55rem; opacity: 0; transition: opacity 0.16s var(--ease); }
   .doc-prose h2:hover .hash { opacity: 1; }
-  .doc-prose h3 { font-family: var(--font-sans); font-size: 1.02rem; font-weight: 600; margin: 1.9rem 0 0.6rem; color: var(--fg-primary); }
+  .doc-prose h3 { font-family: var(--font-serif); font-size: 1.05rem; font-weight: 600; margin: 1.9rem 0 0.6rem; color: var(--fg-primary); }
+  .doc-prose h4 { font-family: var(--font-serif); font-size: 0.95rem; font-weight: 600; margin: 1.6rem 0 0.5rem; color: var(--fg-primary); }
   .doc-prose strong { color: var(--fg-primary); font-weight: 600; }
   .doc-prose em { color: var(--fg-secondary); }
   .doc-prose code {
-    font-family: var(--font-mono); font-size: 0.82em; color: var(--accent);
-    background: var(--code-bg); border: 1px solid var(--border-hairline); padding: 1px 5px;
+    font-family: var(--font-mono); font-size: 0.875em; color: var(--fg-primary);
+    background: var(--code-bg); padding: 0 0.3em;
   }
-  .doc-prose ul, .doc-prose ol { margin: 0 0 1.1rem 1.3rem; }
-  .doc-prose li { margin-bottom: 0.4rem; }
+  .doc-prose a code, .doc-prose .xref code { color: inherit; }
+  .doc-prose ul, .doc-prose ol { margin: 0 0 1.25rem 1.3rem; }
+  .doc-prose li { margin-bottom: 0.45rem; }
   .doc-prose li::marker { color: var(--fg-muted); }
   .doc-prose blockquote {
     margin: 1.5rem 0; padding: 1rem 1.4rem 1rem 2.5rem;
@@ -335,8 +352,11 @@
   .ctrl-table .enf.wiz { color: var(--t-framework); border-color: color-mix(in srgb, var(--t-framework) 30%, transparent); }
   .ctrl-table .enf.gate { color: var(--st-proposed); border-color: color-mix(in srgb, var(--st-proposed) 30%, transparent); }
 
-  pre.code { font-family: var(--font-mono); font-size: 12.5px; line-height: 1.55; background: var(--code-bg); border: 1px solid var(--border-default); padding: 1rem 1.1rem; overflow-x: auto; margin: 1rem 0; color: var(--fg-secondary); }
-  pre .cm { color: var(--fg-muted); }
+  /* code blocks — Monaspace Neon with every ligature set on (texture healing
+     via calt is a browser default); comments italic like Shiki's tokyo-night */
+  pre.code { font-family: var(--font-mono); font-size: 13px; line-height: 1.55; background: var(--code-bg); border: 1px solid var(--border-default); padding: 1rem 1.1rem; overflow-x: auto; margin: 1rem 0; color: var(--fg-secondary);
+    font-feature-settings: "ss01", "ss02", "ss03", "ss04", "ss05", "ss06", "ss07", "ss08", "ss09"; }
+  pre .cm { color: var(--fg-muted); font-style: italic; }
   pre .k  { color: #BB9AF7; }
   pre .s  { color: #9ECE6A; }
   pre .key { color: #F7768E; }
@@ -354,7 +374,7 @@
   }
   .xref:hover .preview-card { opacity: 1; visibility: visible; transform: translate(-50%, -8px); }
   .pc-num { display: block; font-family: var(--font-mono); font-size: 11px; color: var(--accent); letter-spacing: 0.04em; margin-bottom: 5px; }
-  .pc-title { display: block; font-family: var(--font-serif); font-size: 14.5px; line-height: 1.3; color: var(--fg-primary); margin-bottom: 8px; font-style: normal; }
+  .pc-title { display: block; font-family: var(--font-sans); font-weight: 500; font-size: 14.5px; line-height: 1.3; color: var(--fg-primary); margin-bottom: 8px; font-style: normal; }
   .pc-meta { display: flex; gap: 8px; align-items: center; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg-tertiary); flex-wrap: wrap; }
 
   /* references footer — bottom of the article */
@@ -548,7 +568,7 @@
   .repo-breadcrumb a { color: var(--fg-tertiary); }
   .repo-breadcrumb a:hover { color: var(--fg-primary); }
   .repo-breadcrumb .cur { color: var(--accent); overflow-wrap: anywhere; }
-  .repo-content .doc-prose h1 { font-family: var(--font-serif); font-size: clamp(1.7rem, 4vw, 2.3rem); font-weight: 400; letter-spacing: -0.02em; line-height: 1.15; margin: 0 0 1.1rem; color: var(--fg-primary); }
+  .repo-content .doc-prose h1 { font-family: var(--font-sans); font-size: clamp(1.7rem, 4vw, 2.3rem); font-weight: 500; letter-spacing: -0.02em; line-height: 1.15; margin: 0 0 1.1rem; color: var(--fg-primary); }
 
   .md-table { width: 100%; border-collapse: collapse; margin: 0 0 1.4rem; font-size: 13px; }
   .md-table th, .md-table td { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border-hairline); vertical-align: top; }
@@ -712,6 +732,16 @@
         <span class="status-badge" data-st="draft">draft</span>
         <span class="repo-cell">docs</span>
         <span class="upd-cell">3 days ago</span>
+      </div>
+      <div class="doc-row" data-type="working" data-repo="docs" onclick="openDoc('DESIGN-0002')">
+        <span class="type-badge" data-type="working">design</span>
+        <span class="doc-id">DESIGN-0002</span>
+        <div class="doc-title">Ownership digest delivery pipeline
+          <div class="labels"><span class="lab">backstage</span><span class="lab">slack</span><span class="lab">sloth</span></div>
+        </div>
+        <span class="status-badge" data-st="draft">draft</span>
+        <span class="repo-cell">docs</span>
+        <span class="upd-cell">just now</span>
       </div>
       <div class="doc-row" data-type="working" data-repo="docs" onclick="openDoc('DESIGN-0001')">
         <span class="type-badge" data-type="working">design</span>
@@ -1226,6 +1256,13 @@ $ docz-mcp --version
       meta:[['Owner','unassigned'],['Repo','docs · design/'],['Related',L('RFC-0002','RFC-0002')+' · '+L('MAN-0006','MAN-0006')],['Tags','<span class="tag">backstage</span><span class="tag">slack</span>']],
       body:'<p>A personal, ownership-scoped digest that correlates across systems and tells a person what needs their attention on the things they own — PRs awaiting review, Wiz findings, tickets, and SLO burn.</p><h2 id="x1"><span class="hash">#</span>The join</h2><p>Everything hinges on the ownership graph (Backstage + CODEOWNERS). The digest is its first real consumer — and it surfaces gaps, since a service with no owner gets nobody in the digest.</p>',
       toc:[['The join','#x1']],dates:{draft:'2026-06-20'},links:{draft:['commit 4e1a8b']}},
+    // DESIGN-0005 typography specimen: dense prose, inline-code density, a
+    // measured column, and a code block that exercises every ligature set.
+    'DESIGN-0002':{type:'design',repo:'docs',title:'Ownership digest delivery pipeline',status:'draft',
+      callout:{cls:'b-rfc',label:'refines →',target:'DESIGN-0001 · Ownership Digest',to:'DESIGN-0001'},
+      meta:[['Owner','unassigned'],['Repo','docs · design/'],['Refines',L('DESIGN-0001','DESIGN-0001')],['Related',L('RFC-0002','RFC-0002')+' · '+L('MAN-0006','MAN-0006')],['Tags','<span class="tag">backstage</span><span class="tag">slack</span><span class="tag">sloth</span>']],
+      body:'<p>The digest is assembled once per person per day from four upstream sources — GitHub pull requests awaiting their review, Wiz findings on systems they own, Jira tickets assigned to their team, and SLO burn from Sloth — and delivered wherever that person already looks. Nothing in the pipeline is new infrastructure: every source is already federated into Backstage through <code>catalog-info.yaml</code>, and the ownership graph that joins them is the same <code>CODEOWNERS</code> plus <code>MAINTAINERS.md</code> pair that <span class="xref" data-ref="RFC-0002">RFC-0002</span> made mandatory. What is new is the join itself, which is why this design spends most of its words on it.</p><h2 id="x1"><span class="hash">#</span>The join</h2><p>Every signal carries a system identifier of some kind: a repository for pull requests, a cloud resource for Wiz, a component for Jira, a service for Sloth. None of those identifiers agree with each other, so the first stage normalizes each one onto the Backstage entity ref (<code>component:default/payments-api</code>) and drops anything that does not resolve. Dropped signals are counted, not hidden — the <code>digest_unresolved_total</code> metric is the honest measure of how much of the fleet is still outside the ownership graph, and it is expected to be non-zero for a long time.</p><p>The second stage walks from the entity to people. An entity names an <strong>owner</strong> (a person), a set of maintainers, and a home team; the digest goes to the owner and the maintainers, and the team appears only as a fallback when a system has an owner record that no longer matches a directory account. That fallback is deliberate: a digest addressed to a team is a digest nobody reads, and the whole point of <span class="xref" data-ref="MAN-0006">MAN-0006</span> was to stop that from being the default.</p><h3 id="x2">Resolution rules</h3><ul><li>A pull request resolves through its repository; if the repository maps to several components, every owner gets the item once (deduplicated by <code>pr.node_id</code>).</li><li>A Wiz finding resolves through the resource tag <code>backstage.io/entity-ref</code>; untagged resources go to the unresolved bucket and to the platform team\'s weekly report, never to an individual.</li><li>Tickets resolve through the Jira component, which the catalog sync already writes; a ticket with no component is left out entirely rather than guessed at.</li><li>SLO burn resolves through the Sloth spec\'s <code>service</code> label, which is required by the <code>sloth-spec-lint</code> gate in CI.</li></ul><h2 id="x3"><span class="hash">#</span>Delivery</h2><p>Delivery is a pure function of the assembled digest: the same payload renders to a Slack DM, an email, and a JSON document under <code>/api/v1/digest/{login}</code> that the CLI reads. Rendering happens after the join so that a person who reads the JSON and a person who reads the DM see identical item ordering — PRs first (oldest awaiting review on top), then findings by severity, then tickets by age, then burn by remaining error budget. An item that appears in two categories appears twice on purpose; collapsing it would hide the second reason it needs attention.</p><pre class="code"><span class="cm">// digest/assemble.ts — the join, minus error handling</span>\n<span class="k">export</span> <span class="k">async function</span> assemble(login: <span class="k">string</span>, since: Date): Promise&lt;Digest&gt; {\n  <span class="k">const</span> owned = <span class="k">await</span> graph.systemsOwnedBy(login);            <span class="cm">// entity refs</span>\n  <span class="k">const</span> items = <span class="k">await</span> Promise.all(owned.map(ref =&gt; sources.collect(ref, since)));\n  <span class="k">const</span> flat  = items.flat().filter(i =&gt; i.owner !== <span class="k">null</span> &amp;&amp; i.age &gt;= MIN_AGE);\n  <span class="k">if</span> (flat.length === <span class="s">0</span>) <span class="k">return</span> Digest.empty(login);        <span class="cm">// nothing to say &lt;- say nothing</span>\n  <span class="k">return</span> Digest.from(flat).sortBy(rank).dedupe(i =&gt; i.id);  <span class="cm">// rank ::= category -&gt; age</span>\n}\n\n<span class="cm">// digest/policy.hcl — the only knob</span>\n<span class="key">min_age</span> = <span class="s">"4m"</span>   <span class="cm">## anything younger is not yet anyone\'s problem</span>\n<span class="key">deliver</span> = [<span class="s">"slack"</span>, <span class="s">"email"</span>, <span class="s">"api"</span>]   <span class="cm">## |&gt; same payload, three sinks</span></pre><p>The <code>min_age</code> guard is the only piece of policy in the assembler: a pull request opened four minutes ago is not yet anyone\'s problem, and a digest that nags about it teaches people to skim. Everything else — what counts as a finding, which severities matter, how burn is computed — belongs to the upstream source and is not re-decided here.</p><blockquote>The digest is the first real consumer of the ownership graph, and it surfaces gaps the moment it runs: a service with no owner gets nobody in the digest, and that absence is the report.</blockquote><h2 id="x4"><span class="hash">#</span>What this does not do</h2><p>It does not create tickets, page anyone, or change state in any upstream system. It is read-only by construction — the service account holds <code>read</code> scopes only, verified by the same <code>gate</code> that checks every other workload\'s permissions — and the one write it performs is the delivery itself.</p>',
+      toc:[['The join','#x1'],['Resolution rules','#x2'],['Delivery','#x3'],['What this does not do','#x4']],dates:{draft:'2026-06-22'},links:{draft:['commit 5c0d7e']}},
     'INV-0001':{type:'investigation',repo:'docs',title:'Repo Governance Tooling',status:'draft',
       callout:{cls:'b-rfc',label:'relates to →',target:'RFC-0002 · the ownership model',to:'RFC-0002'},
       meta:[['Owner','unassigned'],['Repo','docs · investigation/'],['Tags','<span class="tag">github-app</span><span class="tag">repo-guardian</span>']],
@@ -1273,7 +1310,8 @@ $ docz-mcp --version
     'FW-0001':{refs:[],refby:['POL-0001']},
     'RFC-0001':{refs:[],refby:['RFC-0002','PLAN-0001','MAN-0001']},
     'RFC-0002':{refs:['RFC-0001','MAN-0006'],refby:['DESIGN-0001','INV-0001']},
-    'DESIGN-0001':{refs:['RFC-0002','MAN-0006'],refby:[]},
+    'DESIGN-0001':{refs:['RFC-0002','MAN-0006'],refby:['DESIGN-0002']},
+    'DESIGN-0002':{refs:['DESIGN-0001','RFC-0002','MAN-0006'],refby:[]},
     'INV-0001':{refs:['RFC-0002'],refby:[]},
     'PLAN-0001':{refs:['RFC-0001'],refby:[]},
     'ADR-0001':{refs:[],refby:['IMPL-0001']},
@@ -1300,7 +1338,7 @@ $ docz-mcp --version
       types:['adr','design','impl','plan','investigation','rfc'], raw:['RECOMMENDATIONS.md'] }
   };
   var REPO_DOCS = {
-    'docs': { principle:[{id:'PRINCIPLE-0001'},{id:'PRINCIPLE-0009'}], mandate:[{id:'MAN-0001'},{id:'MAN-0006'}], guide:[{id:'GUIDE-0001'}], policy:[{id:'POL-0001'}], framework:[{id:'FW-0001'}], design:[{id:'DESIGN-0001'}], investigation:[{id:'INV-0001'}], plan:[{id:'PLAN-0001'}] },
+    'docs': { principle:[{id:'PRINCIPLE-0001'},{id:'PRINCIPLE-0009'}], mandate:[{id:'MAN-0001'},{id:'MAN-0006'}], guide:[{id:'GUIDE-0001'}], policy:[{id:'POL-0001'}], framework:[{id:'FW-0001'}], design:[{id:'DESIGN-0001'},{id:'DESIGN-0002'}], investigation:[{id:'INV-0001'}], plan:[{id:'PLAN-0001'}] },
     'rfcs': { rfc:[{id:'RFC-0001'},{id:'RFC-0002'}] },
     'claudelint': { rfc:[], adr:[{id:'ADR-0001'}],
       design:[{num:'DESIGN-0001',title:'claudelint linter architecture and rule engine',status:'draft',date:'2026-04-17'}],
@@ -1658,7 +1696,7 @@ $ claudelint rules --json</pre>
   }
   function openDoc(id){ if(!DOCS[id]) return; renderDoc(id); showView('doc'); }
 
-  renderDoc('FW-0001'); // populate default
+  renderDoc('DESIGN-0002'); // populate default — the DESIGN-0005 typography specimen
   buildRepoGrid();
 
   document.addEventListener('keydown', e => {

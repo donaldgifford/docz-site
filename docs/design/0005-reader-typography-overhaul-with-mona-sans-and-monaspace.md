@@ -1,7 +1,7 @@
 ---
 id: DESIGN-0005
 title: "Reader typography overhaul with Mona Sans and Monaspace"
-status: Draft
+status: In Review
 author: Donald Gifford
 created: 2026-09-08
 ---
@@ -10,7 +10,7 @@ created: 2026-09-08
 
 # DESIGN-0005: Reader typography overhaul with Mona Sans and Monaspace
 
-**Status:** Draft
+**Status:** In Review
 **Author:** Donald Gifford
 **Date:** 2026-09-08
 
@@ -55,7 +55,11 @@ tokens are untouched; the measurements below show body text already
 clears WCAG AAA, so contrast is not the lever.
 
 The work ships on `feat/reader-typography` together with the IMPL doc
-that executes this design.
+that executes this design. All eleven open questions were decided on
+2026-09-08 (recommendation (a) everywhere except OQ-6, which takes all
+nine ligature sets); `mockup.html` on the same branch already renders
+the decided look so it can be dialed in live before the IMPL doc is
+written.
 
 ## Goals and Non-Goals
 
@@ -263,7 +267,11 @@ import "@fontsource/monaspace-neon/400-italic.css";
 import "@fontsource/monaspace-neon/600.css";
 import "@fontsource/monaspace-neon/700.css";
 import "@fontsource/monaspace-xenon/600.css";
+import "@fontsource/monaspace-xenon/400-italic.css";
 ```
+
+Xenon's 400 italic is for blockquotes (Component 2); without it the
+browser would slant the 600 upright into a heavy faux italic.
 
 `package.json` swaps `@fontsource/ibm-plex-mono`,
 `@fontsource/ibm-plex-sans`, `@fontsource/source-serif-4` for
@@ -273,7 +281,7 @@ is deliberate: the `wdth`/`standard` files carry a width axis this
 design does not use and are 2.5× the size.
 
 Latin payload estimate: today ~215 KB across eleven files; after
-~310 KB across seven files (Neon's files are roughly three times Plex
+~355 KB across eight files (Neon's files are roughly three times Plex
 Mono's because of the healing alternates). Fonts sit outside the JS
 bundle budget and load with `swap`, so first paint is unaffected; the
 increase is the cost of ligatures and italics and is accepted.
@@ -381,17 +389,19 @@ is enforced rather than assumed.
   font-size: 13px;
   line-height: 1.55;
   font-feature-settings:
-    "ss01", "ss02", "ss03", "ss04", "ss07", "ss08", "ss09";
+    "ss01", "ss02", "ss03", "ss04", "ss05", "ss06", "ss07", "ss08", "ss09";
 }
 ```
 
 Size moves from 12.5px to 13px (Neon is slightly narrower per em than
-Plex Mono; the same 80-column snippet fits). The set list enables the
-operator, arrow, markup, colon, period, and comparison ligatures and
-deliberately omits `ss05` (F# pipes — `|>` is rare here and the ligature
-hides the pipe in shell samples) and `ss06` (repeated `#`, `+`, `_`,
-`=`, `&` — those are structural in Markdown, YAML, and shell, which is
-most of what docz repos contain). OQ-6 offers the alternatives.
+Plex Mono; the same 80-column snippet fits). All nine stylistic sets
+are on (OQ-6, decided (b)): operators, comparisons, arrows, markup,
+F# pipes, repeated `#`/`+`/`_`/`=`/`&`, colons, periods, and
+greater/less-with-equals. The recommendation had omitted `ss05` and
+`ss06` because `&&`, `##`, and `__` are structural in shell, Markdown,
+and Python; the decision accepts that as cosmetic. If a fused glyph
+ever misleads in a real sample, dropping a single set from this list is
+the whole fix.
 
 Italics need no CSS: Shiki already emits `font-style: italic` for the
 theme's italic scopes; loading `monaspace-neon/400-italic.css` makes
@@ -410,10 +420,19 @@ fit; Neon's capitals are slightly wider than Plex Mono's.
 
 `mockup.html` loads its fonts from Google Fonts, which is acceptable
 for an unshipped design artifact but cannot serve Monaspace. OQ-9
-decides between mirroring the new stack into the mockup (Mona Sans from
-Google Fonts, Monaspace from jsDelivr's copy of the fontsource
-packages) and formally moving the typography source of truth to
-`tokens.css`. Either way `CLAUDE.md`'s font paragraph is rewritten to
+(decided (a)) mirrors the new stack into the mockup: Mona Sans from
+its Google Fonts link (Google serves it with italics; the family is
+named `"Mona Sans"` there versus fontsource's `"Mona Sans Variable"`
+in the app) and Monaspace Neon/Xenon from jsDelivr's copy of the
+fontsource packages, pinned to `5.3.0` with the same weights
+`main.tsx` imports. The mockup carries every rule from Components 2–5
+verbatim, its demo comments render italic to stand in for Shiki's
+italic scopes, and it gains one dense specimen document
+(`DESIGN-0002 · Ownership digest delivery pipeline`, the reader's
+default) whose paragraphs, list, blockquote, and code block exercise
+the measure cap, inline-code density, and every ligature set. The
+mockup review is Phase 0 of the rollout; the mockup stays the visual
+source of truth. `CLAUDE.md`'s font paragraph is rewritten to
 name the new families, the weight-import rule, the "ligature sets in
 `pre` only" rule, and the measure cap, and `README.md`'s stack list is
 updated. The IMPL doc for this design records the before/after
@@ -495,6 +514,11 @@ One branch, `feat/reader-typography`, carrying this design, its IMPL
 doc, and the change. The IMPL doc phases the work so each step is
 independently revertable and screenshot-able:
 
+0. Mockup review (Component 6, done on this branch before the IMPL doc
+   exists): `mockup.html` renders the decided stack live so sizes,
+   measure, and ligature sets can be dialed in by editing one file.
+   Values tuned here are copied into the IMPL doc's tasks as the
+   numbers to implement; this design is amended if a decision changes.
 1. Font swap only (Component 1) — the stack changes, sizes do not.
    Screenshot.
 2. Prose sizes, faces, and the measure cap (Components 2 and 3).
@@ -510,9 +534,10 @@ a git revert; no data or configuration migrates.
 ## Open Questions
 
 Each question lists **(a)** as the recommendation and the alternatives
-after it. Answer with the letter, or write in a different choice.
+after it. **All decided 2026-09-08:** (a) for every question except
+OQ-6, which takes (b). The options are kept for the record.
 
-**OQ-1. Body face for prose and UI.**
+**OQ-1. Body face for prose and UI.** _Decided: (a)._
 
 - (a) Mona Sans, variable weight-only file (`wght.css` +
   `wght-italic.css`, ~82 KB latin). Designed as Monaspace's
@@ -527,7 +552,7 @@ after it. Answer with the letter, or write in a different choice.
   package at weight 450. Preserves the serif identity; does the least
   for the thin-on-dark problem.
 
-**OQ-2. Prose size and leading.**
+**OQ-2. Prose size and leading.** _Decided: (a)._
 
 - (a) 16.5px / line-height 1.65 / paragraph gap 1.25rem. Matches the
   Oxide reference's apparent size and keeps ~27px of leading.
@@ -535,7 +560,7 @@ after it. Answer with the letter, or write in a different choice.
 - (c) 17px / 1.6 / 1.25rem. Larger and slightly tighter; pushes the
   ≥1181px column to ~88 characters even before the cap.
 
-**OQ-3. Where the measure cap applies.**
+**OQ-3. Where the measure cap applies.** _Decided: (a)._
 
 - (a) Cap text-bearing children at `72ch` (paragraphs, lists,
   headings, blockquotes, admonitions); code blocks, tables, mermaid
@@ -549,7 +574,7 @@ after it. Answer with the letter, or write in a different choice.
 - (d) No cap; rely on the font change alone. Leaves the 120–145
   character lines in the 861px–1180px band.
 
-**OQ-4. Inline code treatment.**
+**OQ-4. Inline code treatment.** _Decided: (a)._
 
 - (a) `fg-primary` text on the faint `code-bg`, no border, no vertical
   padding, `0.875em`. Accent becomes link-only; line boxes stop
@@ -561,7 +586,7 @@ after it. Answer with the letter, or write in a different choice.
 - (d) Keep the accent color, drop only the border and padding. Keeps
   the mockup's blue but leaves links and code sharing a color.
 
-**OQ-5. Monaspace Xenon's slots (the former serif slots).**
+**OQ-5. Monaspace Xenon's slots (the former serif slots).** _Decided: (a)._
 
 - (a) Xenon 600 for `h2`–`h4` section headings and blockquote pull
   quotes; the doc title and page h1s in Mona Sans 500. Long titles wrap
@@ -573,7 +598,7 @@ after it. Answer with the letter, or write in a different choice.
   deleted, one fewer family (~45 KB saved). Cleanest stack; loses the
   slab accent entirely.
 
-**OQ-6. Ligature sets enabled in code blocks.**
+**OQ-6. Ligature sets enabled in code blocks.** _Decided: (b)._
 
 - (a) `ss01 ss02 ss03 ss04 ss07 ss08 ss09` — operators, comparisons,
   arrows, markup, colons, periods. Omits `ss05` (F# pipes) and `ss06`
@@ -586,7 +611,7 @@ after it. Answer with the letter, or write in a different choice.
 Inline code and UI mono labels get no sets under every option; that is
 a decision, not a question.
 
-**OQ-7. Monaspace Neon weights to load.**
+**OQ-7. Monaspace Neon weights to load.** _Decided: (a)._
 
 - (a) 400, 400 italic, 600, 700 (~182 KB latin). Covers `font-mono`
   paired with `font-semibold` (2 usages) and `font-bold` (1 usage, the
@@ -597,7 +622,7 @@ a decision, not a question.
 - (c) Add 500 for the `.lang` badge's `font-medium` (~45 KB more). It
   resolves to 400 today and nobody has noticed; not recommended.
 
-**OQ-8. UI text after the sans swap.**
+**OQ-8. UI text after the sans swap.** _Decided: (a)._
 
 - (a) Keep every non-prose size as-is, review the topbar, directory,
   palette, and RepoNav on the demo org, and adjust only where Mona
@@ -605,7 +630,7 @@ a decision, not a question.
 - (b) Drop `body` from 15px to 14.5px globally to compensate for the
   x-height, then review. More uniform, more churn in the diff.
 
-**OQ-9. Keeping `mockup.html` truthful.**
+**OQ-9. Keeping `mockup.html` truthful.** _Decided: (a)._
 
 - (a) Update the mockup: Mona Sans via its existing Google Fonts link
   (Google serves it), Monaspace Neon/Xenon via jsDelivr's copy of the
@@ -619,7 +644,7 @@ a decision, not a question.
 - (c) Vendor the woff2 files into the repository for the mockup. Adds
   ~300 KB of binaries to git for a design artifact; not recommended.
 
-**OQ-10. Body text color.**
+**OQ-10. Body text color.** _Decided: (a)._
 
 - (a) Keep `fg-secondary` (#afb6c2, 9.34:1). The face and measure
   changes are expected to remove the perceived dimness; re-evaluate on
@@ -630,7 +655,7 @@ a decision, not a question.
 - (c) Set prose in `fg-primary` (15.9:1). Brightest; `strong` loses
   its color contrast against body and must rely on weight alone.
 
-**OQ-11. Release versioning.**
+**OQ-11. Release versioning.** _Decided: (a)._
 
 - (a) Minor: docz-site `v0.7.0`, chart `0.1.8` / `appVersion 0.7.0`.
   A visible presentation change users will notice.

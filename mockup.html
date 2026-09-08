@@ -305,22 +305,18 @@
 
   /* prose — DESIGN-0005: Mona Sans body on a measured column, Xenon slab
      section headings, quiet inline code (accent is reserved for links) */
-  .doc-prose { font-size: 16.5px; line-height: 1.65; color: var(--fg-secondary); counter-reset: section; }
+  .doc-prose { font-size: 16.5px; line-height: 1.65; color: var(--fg-secondary); }
   .doc-prose > p, .doc-prose li { font-family: var(--font-sans); }
   .doc-prose p { margin: 0 0 1.25rem; }
   /* measure cap on text-bearing blocks only; code, tables, figures keep the column */
   .doc-prose :is(p, ul, ol, dl, h1, h2, h3, h4, blockquote) { max-width: 72ch; }
-  /* sections break structurally: hairline rule across the measure, air above,
-     numbered mono eyebrow in the doc-id label style (never colored heading text) */
+  /* sections break structurally: hairline rule across the column and air
+     above each h2 (never colored heading text, never numbers) */
   .doc-prose h2 {
     font-family: var(--font-serif); font-size: 1.5rem; font-weight: 600;
     letter-spacing: -0.01em; margin: 3.4rem 0 0.9rem; padding-top: 1.4rem;
     border-top: 1px solid var(--border-hairline); color: var(--fg-primary);
-    counter-increment: section; scroll-margin-top: 80px;
-  }
-  .doc-prose h2::before {
-    content: counter(section, decimal-leading-zero) / ""; display: block; margin-bottom: 0.55rem;
-    font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.14em; color: var(--accent);
+    scroll-margin-top: 80px;
   }
   .doc-prose h2:first-child { margin-top: 0; padding-top: 0; border-top: none; }
   .doc-prose h2 .hash { color: var(--accent); font-family: var(--font-mono); font-size: 1rem; margin-right: 0.55rem; opacity: 0; transition: opacity 0.16s var(--ease); }

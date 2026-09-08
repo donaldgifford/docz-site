@@ -316,27 +316,18 @@ rejected (the accent now means link; any other hue needs a new
 contrast-gated token). Sections break structurally instead, in the
 site's existing vocabulary:
 
-| Rule                | Amended value                                                                                                |
-| ------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `h2`                | 1.5rem; margin-top 3.4rem; padding-top 1.4rem; hairline `border-top`; `counter-increment: section`           |
-| `h2::before`        | `counter(section, decimal-leading-zero) / ""` as a block eyebrow: mono 11px, 500, tracked 0.14em, `accent`   |
-| `h2:first-child`    | no rule, no padding (sits directly under the header's own rule)                                              |
-| `h3`                | 1.15rem; margin-top 2.2rem                                                                                   |
-| `strong`            | weight 500 (the color step to `fg-primary` carries the emphasis; 600 competed with h3)                       |
-| `.doc-prose` (root) | `counter-reset: section` so every consumer restarts at 01                                                    |
+| Rule             | Amended value                                                                          |
+| ---------------- | -------------------------------------------------------------------------------------- |
+| `h2`             | 1.5rem; margin-top 3.4rem; padding-top 1.4rem; hairline `border-top`                   |
+| `h2:first-child` | no rule, no padding (sits directly under the header's own rule)                        |
+| `h3`             | 1.15rem; margin-top 2.2rem                                                             |
+| `strong`         | weight 500 (the color step to `fg-primary` carries the emphasis; 600 competed with h3) |
 
-The eyebrow uses the alternative-text form of `content` with an empty
-string so the number never enters the heading's accessible name
-(Chromium would otherwise read "01 Overview"; jsdom ignores generated
-content, so unit assertions are unaffected either way). The accent on
-the eyebrow is consistent with the doc-id line and codeblock badge —
-accent is reserved for links *within prose text*; tracked mono labels
-were always allowed. The changelog opts out of numbering with a
-`doc-prose-unnumbered` modifier (version headers are not sections) and
-keeps the rule. Documents that number their own headings ("Phase 1",
-"Component 1") show "01" above "Component 1" — accepted. The rail
-`TocList` does not yet show the numbers; that is a small follow-up in
-the IMPL doc.
+A numbered mono eyebrow above each h2 (a CSS counter rendering "01",
+"02" in the doc-id label style, Oxide-fashion) was tried in the same
+pass and **rejected on review** — the rule and the size steps do the
+job without it. It is recorded here so it is not proposed again; the
+changelog needed an opt-out modifier for it, which went with it.
 
 The doc title (`DocHeader` in `doc.tsx`) and the three page-level h1s
 that use the `font-serif` utility switch to `font-sans` at weight 500:

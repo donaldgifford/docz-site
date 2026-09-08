@@ -185,12 +185,7 @@ export function Component() {
     if (rendered.data === undefined) {
       return <ChangelogSkeleton />;
     }
-    // Version headers are not sections: keep the h2 rule, drop the number.
-    return (
-      <article className="doc-prose doc-prose-unnumbered">
-        {rendered.data.content}
-      </article>
-    );
+    return <article className="doc-prose">{rendered.data.content}</article>;
   })();
 
   return (

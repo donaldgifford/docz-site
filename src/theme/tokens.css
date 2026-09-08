@@ -122,9 +122,6 @@
     font-size: 16.5px;
     line-height: 1.65;
     color: var(--color-fg-secondary);
-    /* Numbered h2 sections (DESIGN-0005 dial-in): the counter lives on
-       the article so every consumer restarts at 01. */
-    counter-reset: section;
   }
   /* DESIGN-0005: the measure cap applies to text-bearing blocks only —
      code blocks, tables, and figures keep the full column so wide
@@ -150,10 +147,8 @@
   }
   /* Section headings in the Xenon slab (DESIGN-0005 OQ-5): short
      strings only — titles stay in the sans. Sections are broken up
-     structurally, not by color: a hairline rule spanning the measure,
-     extra air above, and a numbered mono eyebrow (the same tracked
-     label style as the doc-id line). The eyebrow is generated content
-     with empty alt text so heading names stay clean for AT and tests. */
+     structurally, not by color: a hairline rule spanning the column
+     and extra air above each h2. */
   .doc-prose h2 {
     font-family: var(--font-serif);
     font-size: 1.5rem;
@@ -163,27 +158,11 @@
     padding-top: 1.4rem;
     border-top: 1px solid var(--color-border-hairline);
     color: var(--color-fg-primary);
-    counter-increment: section;
-  }
-  .doc-prose h2::before {
-    content: counter(section, decimal-leading-zero) / "";
-    display: block;
-    margin-bottom: 0.55rem;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.14em;
-    color: var(--color-accent);
   }
   .doc-prose h2:first-child {
     margin-top: 0;
     padding-top: 0;
     border-top: none;
-  }
-  /* Surfaces whose h2s are not sections (the changelog's version
-     headers) keep the rule and spacing but drop the number. */
-  .doc-prose-unnumbered h2::before {
-    content: none;
   }
   .doc-prose h3 {
     font-family: var(--font-serif);

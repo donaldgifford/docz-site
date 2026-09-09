@@ -39,6 +39,7 @@
     --fg-secondary: #AFB6C2;
     --fg-tertiary:  #7A8396;
     --fg-muted:     #505867;
+    --fg-prose:     #C6CCD6;   /* reader body text: brighter than secondary, below primary */
 
     --accent:        #7DCFFF;
     --accent-dim:    #3D7FB8;
@@ -305,7 +306,7 @@
 
   /* prose — DESIGN-0005: Mona Sans body on a measured column, Xenon slab
      section headings, quiet inline code (accent is reserved for links) */
-  .doc-prose { font-size: 16.5px; line-height: 1.65; color: var(--fg-secondary); }
+  .doc-prose { font-size: 16.5px; line-height: 1.65; color: var(--fg-prose); }
   .doc-prose > p, .doc-prose li { font-family: var(--font-sans); }
   .doc-prose p { margin: 0 0 1.25rem; }
   /* measure cap on text-bearing blocks only; code, tables, figures keep the column */
@@ -325,11 +326,12 @@
   .doc-prose h4 { font-family: var(--font-serif); font-size: 0.95rem; font-weight: 600; margin: 1.6rem 0 0.5rem; color: var(--fg-primary); }
   .doc-prose strong { color: var(--fg-primary); font-weight: 500; }
   .doc-prose em { color: var(--fg-secondary); }
+  /* neutral chip for plain code; only linked code takes the accent (Oxide convention) */
   .doc-prose code {
-    font-family: var(--font-mono); font-size: 0.875em; color: var(--accent);
-    background: var(--code-bg); border: 1px solid var(--border-hairline); padding: 0 0.35em;
+    font-family: var(--font-mono); font-size: 0.875em; color: var(--fg-primary);
+    background: var(--bg-elevated); border: 1px solid var(--border-default); padding: 0 0.35em;
   }
-  .doc-prose a code, .doc-prose .xref code { color: inherit; }
+  .doc-prose a code, .doc-prose .xref code { color: inherit; border-color: var(--accent-border); background: var(--accent-bg); }
   .doc-prose ul, .doc-prose ol { margin: 0 0 1.25rem 1.3rem; }
   .doc-prose li { margin-bottom: 0.45rem; }
   .doc-prose li::marker { color: var(--fg-muted); }
@@ -349,7 +351,7 @@
   .doc-prose blockquote {
     margin: 1.5rem 0; padding: 1rem 1.4rem 1rem 2.5rem;
     background: var(--bg-raised); border: 1px solid var(--border-hairline);
-    color: var(--fg-secondary); font-style: italic; font-family: var(--font-serif); position: relative;
+    color: var(--fg-prose); font-style: italic; font-family: var(--font-serif); position: relative;
   }
   .doc-prose blockquote::before {
     content: "\201C"; position: absolute; top: 4px; left: 12px;

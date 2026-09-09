@@ -40,6 +40,11 @@
   --color-fg-secondary: #afb6c2;
   --color-fg-tertiary: #8a92a5;
   --color-fg-muted: #7e8695;
+  /* Reader body text (DESIGN-0005 OQ-10, amended on review): a step
+     brighter than fg-secondary so long-form prose holds up on dark
+     without touching UI secondary text; still a visible step below
+     fg-primary so bold and headings keep their lift. ~11.8:1 on base. */
+  --color-fg-prose: #c6ccd6;
 
   /* Accent */
   --color-accent: #7dcfff;
@@ -121,7 +126,7 @@
   .doc-prose {
     font-size: 16.5px;
     line-height: 1.65;
-    color: var(--color-fg-secondary);
+    color: var(--color-fg-prose);
   }
   /* DESIGN-0005: the measure cap applies to text-bearing blocks only —
      code blocks, tables, and figures keep the full column so wide
@@ -202,21 +207,24 @@
   .doc-prose a:hover {
     text-decoration-color: var(--color-accent);
   }
-  /* Inline code (DESIGN-0005 OQ-4, amended on review): the blue-on-blue
-     chip from before the redesign — accent text on the code surface
-     with a hairline border — kept at 0.875em with no vertical padding
-     so the line box stays even. Code inside a link inherits the link
-     color. */
+  /* Inline code (DESIGN-0005 OQ-4, amended twice on review): a neutral
+     chip — primary text on the elevated surface with a visible border —
+     so plain code reads as text, at 0.875em with no vertical padding so
+     the line box stays even. Only code that IS a link takes the accent:
+     inherited link color plus accent-tinted border and fill, so the
+     color carries meaning (Oxide's convention). */
   .doc-prose code {
     font-family: var(--font-mono);
     font-size: 0.875em;
-    color: var(--color-accent);
-    background: var(--color-code-bg);
-    border: 1px solid var(--color-border-hairline);
+    color: var(--color-fg-primary);
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-border-default);
     padding: 0 0.35em;
   }
   .doc-prose a code {
     color: inherit;
+    border-color: var(--color-accent-border);
+    background: var(--color-accent-bg);
   }
   .doc-prose ul,
   .doc-prose ol {
@@ -272,7 +280,7 @@
     padding: 1rem 1.4rem;
     background: var(--color-bg-raised);
     border: 1px solid var(--color-border-hairline);
-    color: var(--color-fg-secondary);
+    color: var(--color-fg-prose);
     font-style: italic;
     font-family: var(--font-serif);
   }
@@ -313,7 +321,7 @@
   .doc-prose .admonition p {
     display: inline;
     margin: 0;
-    color: var(--color-fg-secondary);
+    color: var(--color-fg-prose);
   }
   .doc-prose .admonition p + p {
     display: block;

@@ -428,6 +428,26 @@ left margin into the marker gutter so wrapped lines stay aligned with
 ordinary items. The inputs stay `disabled`, so nothing becomes
 interactive and the axe sweep is unaffected.
 
+**Second amendment (2026-09-09, against the Oxide reference).** The
+restored blue-on-blue was "too much blue" once every identifier in a
+dense paragraph wore it. Oxide's convention is adopted instead:
+
+- Plain inline code is a **neutral chip** — `fg-primary` text on
+  `bg-elevated` with a `border-default` border (visible, unlike the
+  hairline), so an identifier reads as text with a box around it.
+- Code that **is a link** keeps the inherited accent text and gains an
+  accent-tinted border (`accent-border`) and fill (`accent-bg`), so
+  the color now carries meaning: blue chip means "this goes somewhere".
+  The anchor's underline stays (axe link-in-text-block).
+- **Body text brightens** via a new `--color-fg-prose` token
+  (#c6ccd6, ~11.8:1 on base, 10.3:1 on elevated) used by `.doc-prose`,
+  blockquotes, and admonition bodies. It is a deliberate step below
+  `fg-primary` so bold and headings keep their lift, and it is scoped
+  to prose so UI secondary text is untouched. This resolves OQ-10 as a
+  variant of (b). The `fg-` prefix puts the token under
+  `contrast.test.ts`'s existing sweep automatically; the admonition
+  body assertion moves from `fg-secondary` to `fg-prose`.
+
 ### Component 5: code blocks, ligatures, italics
 
 ```css

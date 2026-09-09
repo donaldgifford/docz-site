@@ -306,7 +306,7 @@
 
   /* prose — DESIGN-0005: Mona Sans body on a measured column, Xenon slab
      section headings, quiet inline code (accent is reserved for links) */
-  .doc-prose { font-size: 16.5px; line-height: 1.65; font-weight: 450; color: var(--fg-prose); }
+  .doc-prose { font-size: 16.5px; line-height: 1.65; font-weight: 450; color: var(--fg-prose); overflow-wrap: break-word; }
   .doc-prose > p, .doc-prose li { font-family: var(--font-sans); }
   .doc-prose p { margin: 0 0 1.25rem; }
   /* measure cap on text-bearing blocks only; code, tables, figures keep the column */
@@ -325,6 +325,9 @@
   .doc-prose h3 { font-family: var(--font-serif); font-size: 1.15rem; font-weight: 600; margin: 2.2rem 0 0.6rem; color: var(--fg-primary); }
   .doc-prose h4 { font-family: var(--font-serif); font-size: 0.95rem; font-weight: 600; margin: 1.6rem 0 0.5rem; color: var(--fg-primary); }
   .doc-prose strong { color: var(--fg-primary); font-weight: 600; }
+  .doc-prose h5, .doc-prose h6 { font-family: var(--font-sans); font-size: 0.95rem; font-weight: 600; margin: 1.4rem 0 0.4rem; color: var(--fg-primary); }
+  .doc-prose h6 { font-size: 0.8rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--fg-secondary); }
+  .doc-prose .table-wrap { overflow-x: auto; margin: 0 0 1.4rem; } /* wrap-table.ts */
   .doc-prose em { color: var(--fg-secondary); }
   /* neutral chip for plain code; only linked code takes the accent (Oxide convention) */
   .doc-prose code {

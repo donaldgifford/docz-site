@@ -131,12 +131,16 @@
        makes this a free dial). */
     font-weight: 450;
     color: var(--color-fg-prose);
+    /* Unbroken tokens (long paths, URLs, inline code) wrap instead of
+       pushing into the rail. Inherited; <pre> keeps white-space: pre. */
+    overflow-wrap: break-word;
   }
   /* DESIGN-0005: the measure cap applies to text-bearing blocks only —
      code blocks, tables, and figures keep the full column so wide
      content is never squeezed. 72ch is measured in each element's own
      face: ~80–85 characters of Mona Sans, ~700px at 16.5px. */
-  .doc-prose :is(p, ul, ol, dl, h1, h2, h3, h4, blockquote, .admonition, hr) {
+  .doc-prose
+    :is(p, ul, ol, dl, h1, h2, h3, h4, h5, h6, blockquote, .admonition, hr) {
     max-width: 72ch;
   }
   .doc-prose p {
@@ -187,10 +191,28 @@
     margin: 1.6rem 0 0.5rem;
     color: var(--color-fg-primary);
   }
+  /* h5/h6 stay out of the ToC and get no copy link (markdown-heading
+     maps h2–h4), but they still need to read as headings. */
+  .doc-prose h5,
+  .doc-prose h6 {
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 1.4rem 0 0.4rem;
+    color: var(--color-fg-primary);
+  }
+  .doc-prose h6 {
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-fg-secondary);
+  }
   .doc-prose h1,
   .doc-prose h2,
   .doc-prose h3,
-  .doc-prose h4 {
+  .doc-prose h4,
+  .doc-prose h5,
+  .doc-prose h6 {
     /* Anchor targets land below the sticky topbar. */
     scroll-margin-top: 80px;
   }
@@ -392,10 +414,16 @@
     content: "\2715";
     background: var(--color-st-rejected);
   }
+  /* wrap-table.ts puts every table in this scroll container: a table
+     wider than the column scrolls here instead of widening the page. */
+  .doc-prose .table-wrap {
+    overflow-x: auto;
+    margin: 0 0 1.4rem;
+  }
   .doc-prose table {
     width: 100%;
     border-collapse: collapse;
-    margin: 0 0 1.4rem;
+    margin: 0;
     font-size: 13px;
   }
   .doc-prose th,

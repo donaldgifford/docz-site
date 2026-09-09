@@ -83,11 +83,17 @@ Bun is the package manager and script runner (pinned in `mise.toml`).
   kinds) → capture-code-meta (fence meta → `metastring` property) →
   remark-rehype allowDangerousHtml → rehype-raw → **rehype-sanitize
   with `schema.ts`** → double-clobber collapse → rehype-slug + ToC
-  collector → Shiki core highlighter, tokyo-night, slim lazy grammar
-  set, chrome transformer stamping data-language/data-caption →
-  wrap-codeblock (div.codeblock header chrome; skips mermaid) →
-  xref linkify → hast-to-JSX). Sanitize AFTER rehype-raw, highlight
-  AFTER sanitize. Mermaid: `mermaid-marker` runs post-sanitize/
+  collector → Shiki core highlighter, tokyo-night run through
+  `theme-contrast.ts` (every token color failing 4.5:1 on `code-bg`
+  is nudged toward white — the comment family is ~2.5:1 raw; the test
+  pins `CODE_BG` to tokens.css), slim lazy grammar set, chrome
+  transformer stamping data-language/data-caption → wrap-codeblock
+  (div.codeblock header chrome; skips mermaid) → wrap-table
+  (div.table-wrap, overflow-x scroll; className unforgeable
+  post-sanitize) → xref linkify → hast-to-JSX, where task-list
+  `input`s map to `MarkdownInput` for an aria-label — axe's "label"
+  rule is critical and the schema strips aria-* from inputs). Sanitize
+  AFTER rehype-raw, highlight AFTER sanitize. Mermaid: `mermaid-marker` runs post-sanitize/
   pre-Shiki (strips language-mermaid so Shiki can't replace the pre,
   moves source onto `data-mermaid-source`), and MarkdownPre routes
   marked pres to `MermaidBlock` (`src/markdown/mermaid-block.tsx`),
@@ -142,6 +148,16 @@ Bun is the package manager and script runner (pinned in `mise.toml`).
   handlers in both `src/test/server.ts` and `src/mocks/browser.ts`.
   Fixture resolvers return `undefined` to fall through to faker for
   anything outside the demo org.
+- Rendering specimen: `docs/guides/markdown-specimen.md` is the
+  kitchen sink — every construct the pipeline renders on one page. It
+  is a `?raw` fixture page (`/donaldgifford/docz-site/pages/guides/
+  markdown-specimen.md` under `dev:msw`) AND a real published page in
+  production, because `.docz.yaml` now carries the `api:` block
+  (docz-site dogfoods DESIGN-0004: README, type-dir indexes,
+  `docs/input.md`, and `docs/guides/*` all publish). Both axe sweeps
+  render it (jsdom with mermaid mocked to the fallback; e2e with the
+  real diagrams). When a pipeline feature lands, add a section to the
+  specimen in the same commit; judge typography changes there first.
 - Auth UX (Phase 5): `/login` (`src/routes/login.tsx`) renders provider
   buttons as REAL `<a href="/auth/login?provider=…">` anchors — the
   OAuth 302 must reach the browser, so never convert them to router

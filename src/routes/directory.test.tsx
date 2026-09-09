@@ -76,8 +76,8 @@ describe("directory route", () => {
     }
 
     // SearchHit has no updated_at (additive ask) — every row renders
-    // "—" there; the 5 page rows add a second "—" in the doc-id column.
-    expect(screen.getAllByText("—")).toHaveLength(15);
+    // "—" there; the 6 page rows add a second "—" in the doc-id column.
+    expect(screen.getAllByText("—")).toHaveLength(17);
 
     // Rows link straight into the reader.
     expect(
@@ -102,7 +102,7 @@ describe("directory route", () => {
 
     // The count line splits by source when pages are present (OQ-3a).
     expect(screen.getByTestId("results-count")).toHaveTextContent(
-      "showing 10 of 10 · 5 docs · 5 pages",
+      "showing 11 of 11 · 5 docs · 6 pages",
     );
   });
 
@@ -211,7 +211,7 @@ describe("directory route", () => {
     await screen.findByText(SITE_DESIGN_TITLE);
 
     expect(screen.getByTestId("results-count")).toHaveTextContent(
-      "showing 10 of 10 · 5 docs · 5 pages",
+      "showing 11 of 11 · 5 docs · 6 pages",
     );
 
     // Chips are the union of type facet values, plus the all-types reset.
@@ -225,10 +225,10 @@ describe("directory route", () => {
     await user.click(screen.getByRole("button", { name: /repo:/ }));
     // Repo counts span docs AND pages — they describe result rows.
     expect(
-      screen.getByRole("button", { name: "all repos 10" }),
+      screen.getByRole("button", { name: "all repos 11" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "donaldgifford/docz-site 7" }),
+      screen.getByRole("button", { name: "donaldgifford/docz-site 8" }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "donaldgifford/docz-api 3" }),

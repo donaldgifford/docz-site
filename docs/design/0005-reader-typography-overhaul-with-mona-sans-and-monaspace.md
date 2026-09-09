@@ -551,6 +551,20 @@ None.
 
 ## Testing Strategy
 
+- **Rendering specimen (added 2026-09-09)**:
+  `docs/guides/markdown-specimen.md` renders every construct the
+  pipeline handles on one published page — a `?raw` fixture page under
+  `dev:msw` and a real page in production, since `.docz.yaml` now
+  carries the `api:` block — and both axe sweeps render it. Its first
+  run surfaced three pre-existing defects, fixed alongside it:
+  task-list checkboxes had no accessible name (critical; now
+  `MarkdownInput` labels them Done / Not done), tokyo-night's comment
+  family sat at ~2.5:1 on `code-bg` (serious; `theme-contrast.ts` lifts
+  every failing token color to AA at highlighter load, keeping italics),
+  and wide tables pushed into the rail instead of scrolling
+  (`wrap-table.ts`). Long unbroken tokens now wrap
+  (`overflow-wrap: break-word` on `.doc-prose`) and h5/h6 gained
+  styles. Judge typography changes on the specimen first.
 - **Contrast (`src/theme/contrast.test.ts`)**: unchanged tokens keep
   the existing assertions; add the `fg-primary` on `code-bg` pair that
   Component 4 introduces. If OQ-10 lifts `fg-secondary`, the existing

@@ -126,6 +126,10 @@
   .doc-prose {
     font-size: 16.5px;
     line-height: 1.65;
+    /* DESIGN-0005: 450, not 400 — light-on-dark thins strokes, and Mona
+       Sans's regular read as hairline in live review (the variable axis
+       makes this a free dial). */
+    font-weight: 450;
     color: var(--color-fg-prose);
   }
   /* DESIGN-0005: the measure cap applies to text-bearing blocks only —
@@ -194,7 +198,7 @@
      color step to fg-primary does the emphasis work. */
   .doc-prose strong {
     color: var(--color-fg-primary);
-    font-weight: 500;
+    font-weight: 600;
   }
   .doc-prose a {
     color: var(--color-accent);

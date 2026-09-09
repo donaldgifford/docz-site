@@ -329,6 +329,15 @@ pass and **rejected on review** — the rule and the size steps do the
 job without it. It is recorded here so it is not proposed again; the
 changelog needed an opt-out modifier for it, which went with it.
 
+**Third amendment (2026-09-09, weight).** On the live page the 400
+body read as hairline while the 500 run-ins in the same screenshot read
+comfortably — the classic light-on-dark thinning, not color (`fg-prose`
+was already at 11.8:1). Body weight moves to 450 and `strong` to 600;
+the variable axis makes 450 free, and the `strong` row of the dial-in
+table above is superseded. A same-page comparison against Inter at 450
+is recorded as OQ-12, because weight alone still leaves Mona Sans's
+wide, rounded texture behind the Oxide reference.
+
 The doc title (`DocHeader` in `doc.tsx`) and the three page-level h1s
 that use the `font-serif` utility switch to `font-sans` at weight 500:
 long titles set in a monospace slab wrap to three lines in a 784px
@@ -731,6 +740,22 @@ a decision, not a question.
 - (a) Minor: docz-site `v0.7.0`, chart `0.1.8` / `appVersion 0.7.0`.
   A visible presentation change users will notice.
 - (b) Patch: `v0.6.1`, chart `0.1.8`. Nothing functional changed.
+
+**OQ-12. Body face after live review.** _Open._ Raised by the third
+amendment under Component 2: at 450 the page is sturdier but still
+reads "airy" next to Oxide's RFD site, whose body is Suisse Int'l, a
+neo-grotesque with a tall x-height and low stroke contrast.
+
+- (a) Switch the sans to Inter (`@fontsource-variable/inter`, OFL), the
+  nearest open neighbor to Suisse. Injected on the same page at 450 it
+  is the closest match to the reference texture, and its narrower
+  letterforms fit ~5% more words into the 72ch measure. Mona Sans drops
+  from the stack entirely (UI and h1 follow), the mockup's Google Fonts
+  link swaps, and this document's title becomes historical.
+- (b) Keep Mona Sans at 450 (what is applied). No further churn; the
+  wide, rounded letterforms remain the residual airiness.
+- (c) Mona Sans at 500 with `strong` at 650. Reads solid in the same
+  comparison, but the page goes monotone-heavy; last resort before (a).
 
 ## References
 

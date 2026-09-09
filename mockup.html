@@ -306,15 +306,15 @@
 
   /* prose — DESIGN-0005: Mona Sans body on a measured column, Xenon slab
      section headings, quiet inline code (accent is reserved for links) */
-  .doc-prose { font-size: 16.5px; line-height: 1.65; font-weight: 450; color: var(--fg-prose); overflow-wrap: break-word; }
+  .doc-prose { font-size: 18px; line-height: 1.6; font-weight: 450; color: var(--fg-prose); overflow-wrap: break-word; }
   .doc-prose > p, .doc-prose li { font-family: var(--font-sans); }
   .doc-prose p { margin: 0 0 1.25rem; }
   /* measure cap on text-bearing blocks only; code, tables, figures keep the column */
-  .doc-prose :is(p, ul, ol, dl, h1, h2, h3, h4, blockquote) { max-width: 72ch; }
+  .doc-prose :is(p, ul, ol, dl, h1, h2, h3, h4, h5, h6, blockquote) { max-width: 60ch; }
   /* sections break structurally: hairline rule across the column and air
      above each h2 (never colored heading text, never numbers) */
   .doc-prose h2 {
-    font-family: var(--font-serif); font-size: 1.5rem; font-weight: 600;
+    font-family: var(--font-serif); font-size: 1.4em; font-weight: 600;
     letter-spacing: -0.01em; margin: 3.4rem 0 0.9rem; padding-top: 1.4rem;
     border-top: 1px solid var(--border-hairline); color: var(--fg-primary);
     scroll-margin-top: 80px;
@@ -322,11 +322,11 @@
   .doc-prose h2:first-child { margin-top: 0; padding-top: 0; border-top: none; }
   .doc-prose h2 .hash { color: var(--accent); font-family: var(--font-mono); font-size: 1rem; margin-right: 0.55rem; opacity: 0; transition: opacity 0.16s var(--ease); }
   .doc-prose h2:hover .hash { opacity: 1; }
-  .doc-prose h3 { font-family: var(--font-serif); font-size: 1.15rem; font-weight: 600; margin: 2.2rem 0 0.6rem; color: var(--fg-primary); }
-  .doc-prose h4 { font-family: var(--font-serif); font-size: 0.95rem; font-weight: 600; margin: 1.6rem 0 0.5rem; color: var(--fg-primary); }
+  .doc-prose h3 { font-family: var(--font-serif); font-size: 1.15em; font-weight: 600; margin: 2.2rem 0 0.6rem; color: var(--fg-primary); }
+  .doc-prose h4 { font-family: var(--font-serif); font-size: 1em; font-weight: 600; margin: 1.6rem 0 0.5rem; color: var(--fg-primary); }
   .doc-prose strong { color: var(--fg-primary); font-weight: 600; }
-  .doc-prose h5, .doc-prose h6 { font-family: var(--font-sans); font-size: 0.95rem; font-weight: 600; margin: 1.4rem 0 0.4rem; color: var(--fg-primary); }
-  .doc-prose h6 { font-size: 0.8rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--fg-secondary); }
+  .doc-prose h5, .doc-prose h6 { font-family: var(--font-sans); font-size: 0.95em; font-weight: 600; margin: 1.4rem 0 0.4rem; color: var(--fg-primary); }
+  .doc-prose h6 { font-size: 0.8em; letter-spacing: 0.04em; text-transform: uppercase; color: var(--fg-secondary); }
   .doc-prose .table-wrap { overflow-x: auto; margin: 0 0 1.4rem; } /* wrap-table.ts */
   .doc-prose em { color: var(--fg-secondary); }
   /* neutral chip for plain code; only linked code takes the accent (Oxide convention) */
@@ -375,7 +375,7 @@
 
   /* code blocks — Monaspace Neon with every ligature set on (texture healing
      via calt is a browser default); comments italic like Shiki's tokyo-night */
-  pre.code { font-family: var(--font-mono); font-size: 13px; line-height: 1.55; background: var(--code-bg); border: 1px solid var(--border-default); padding: 1rem 1.1rem; overflow-x: auto; margin: 1rem 0; color: var(--fg-secondary);
+  pre.code { font-family: var(--font-mono); font-size: 14px; line-height: 1.55; background: var(--code-bg); border: 1px solid var(--border-default); padding: 1rem 1.1rem; overflow-x: auto; margin: 1rem 0; color: var(--fg-secondary);
     font-feature-settings: "ss01", "ss02", "ss03", "ss04", "ss05", "ss06", "ss07", "ss08", "ss09"; }
   pre .cm { color: var(--fg-muted); font-style: italic; }
   pre .k  { color: #BB9AF7; }

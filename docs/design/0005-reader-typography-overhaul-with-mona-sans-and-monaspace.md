@@ -338,6 +338,17 @@ table above is superseded. A same-page comparison against Inter at 450
 is recorded as OQ-12, because weight alone still leaves Mona Sans's
 wide, rounded texture behind the Oxide reference.
 
+**Fourth amendment (2026-09-09, size).** Live review still read as small
+next to PlanetScale's blog — a monospace body measured at ~14–15px with
+~76 characters per line, so what reads as "bigger" there is a uniform
+mono rhythm on a shorter line. Body moves to 18px / 1.6 and the measure
+to 60ch (~78 characters of Mona Sans, the line length both reference
+sites settle on); h2–h6 switch from rem to em (1.4 / 1.15 / 1 / 0.95 /
+0.8) so the hierarchy scales with the body instead of collapsing into
+it; code blocks move 13px → 14px. A same-page comparison against Inter
+17px and a Monaspace Argon 16px mono body is filed under OQ-12, which
+gains option (d).
+
 The doc title (`DocHeader` in `doc.tsx`) and the three page-level h1s
 that use the `font-serif` utility switch to `font-sans` at weight 500:
 long titles set in a monospace slab wrap to three lines in a 784px
@@ -770,6 +781,15 @@ neo-grotesque with a tall x-height and low stroke contrast.
   wide, rounded letterforms remain the residual airiness.
 - (c) Mona Sans at 500 with `strong` at 650. Reads solid in the same
   comparison, but the page goes monotone-heavy; last resort before (a).
+- (d) Monospace body — **recommended after the size review.** Monaspace
+  Argon 16px / 1.65 as the body face, 76ch measure, Neon kept for code,
+  Xenon for headings: the shape of PlanetScale's blog and the request
+  this design originally argued away from. On the specimen it reads
+  calm and cohesive with the site's mono chrome; the costs are ~20%
+  taller documents and inline code chips distinguished from body only
+  by their box (Argon and Neon share metrics, so the seam is invisible).
+  Adds `@fontsource/monaspace-argon` 400 / 400-italic / 600 (~135 KB of
+  woff2 as CSS assets, outside the JS budget).
 
 ## References
 

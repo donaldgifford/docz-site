@@ -124,8 +124,11 @@
      selectors because the content is pipeline-rendered markdown we
      can't annotate with utility classes. */
   .doc-prose {
-    font-size: 16.5px;
-    line-height: 1.65;
+    /* DESIGN-0005 fourth amendment: 18px after live review kept reading
+       as small next to the reference sites; headings below are in em so
+       the hierarchy scales with this number. */
+    font-size: 18px;
+    line-height: 1.6;
     /* DESIGN-0005: 450, not 400 — light-on-dark thins strokes, and Mona
        Sans's regular read as hairline in live review (the variable axis
        makes this a free dial). */
@@ -137,11 +140,12 @@
   }
   /* DESIGN-0005: the measure cap applies to text-bearing blocks only —
      code blocks, tables, and figures keep the full column so wide
-     content is never squeezed. 72ch is measured in each element's own
-     face: ~80–85 characters of Mona Sans, ~700px at 16.5px. */
+     content is never squeezed. ch is measured in each element's own
+     face: 60ch is ~78 characters of Mona Sans (~665px at 18px), the
+     line length the reference sites settle on. */
   .doc-prose
     :is(p, ul, ol, dl, h1, h2, h3, h4, h5, h6, blockquote, .admonition, hr) {
-    max-width: 72ch;
+    max-width: 60ch;
   }
   .doc-prose p {
     margin: 0 0 1.25rem;
@@ -164,7 +168,7 @@
      and extra air above each h2. */
   .doc-prose h2 {
     font-family: var(--font-serif);
-    font-size: 1.5rem;
+    font-size: 1.4em;
     font-weight: 600;
     letter-spacing: -0.01em;
     margin: 3.4rem 0 0.9rem;
@@ -179,14 +183,14 @@
   }
   .doc-prose h3 {
     font-family: var(--font-serif);
-    font-size: 1.15rem;
+    font-size: 1.15em;
     font-weight: 600;
     margin: 2.2rem 0 0.6rem;
     color: var(--color-fg-primary);
   }
   .doc-prose h4 {
     font-family: var(--font-serif);
-    font-size: 0.95rem;
+    font-size: 1em;
     font-weight: 600;
     margin: 1.6rem 0 0.5rem;
     color: var(--color-fg-primary);
@@ -196,13 +200,13 @@
   .doc-prose h5,
   .doc-prose h6 {
     font-family: var(--font-sans);
-    font-size: 0.95rem;
+    font-size: 0.95em;
     font-weight: 600;
     margin: 1.4rem 0 0.4rem;
     color: var(--color-fg-primary);
   }
   .doc-prose h6 {
-    font-size: 0.8rem;
+    font-size: 0.8em;
     letter-spacing: 0.04em;
     text-transform: uppercase;
     color: var(--color-fg-secondary);
@@ -448,7 +452,7 @@
      inline, and the loaded Neon italic renders them for real. */
   .doc-prose pre {
     font-family: var(--font-mono);
-    font-size: 13px;
+    font-size: 14px;
     line-height: 1.55;
     font-feature-settings:
       "ss01", "ss02", "ss03", "ss04", "ss05", "ss06", "ss07", "ss08", "ss09";

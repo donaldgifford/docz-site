@@ -202,16 +202,18 @@
   .doc-prose a:hover {
     text-decoration-color: var(--color-accent);
   }
-  /* Inline code is quiet (DESIGN-0005 OQ-4): body color on the faint
-     code surface, no border, no vertical padding so the line box never
-     grows. The accent is reserved for links — a code span inside a
-     link inherits the link color so that rule has no exception. */
+  /* Inline code (DESIGN-0005 OQ-4, amended on review): the blue-on-blue
+     chip from before the redesign — accent text on the code surface
+     with a hairline border — kept at 0.875em with no vertical padding
+     so the line box stays even. Code inside a link inherits the link
+     color. */
   .doc-prose code {
     font-family: var(--font-mono);
     font-size: 0.875em;
-    color: var(--color-fg-primary);
+    color: var(--color-accent);
     background: var(--color-code-bg);
-    padding: 0 0.3em;
+    border: 1px solid var(--color-border-hairline);
+    padding: 0 0.35em;
   }
   .doc-prose a code {
     color: inherit;
@@ -231,6 +233,39 @@
   }
   .doc-prose li::marker {
     color: var(--color-fg-muted);
+  }
+  /* GFM task lists (DESIGN-0005 dial-in): the sanitizer keeps the
+     disabled checkbox inputs, and browsers draw disabled controls
+     grey-on-grey. Draw them ourselves in the accent instead — unchecked
+     is the pill outline, checked is a filled accent box with a
+     bg-colored tick — and let the box take the bullet's place. */
+  .doc-prose li:has(> input[type="checkbox"], > p > input[type="checkbox"]) {
+    list-style: none;
+  }
+  .doc-prose input[type="checkbox"] {
+    appearance: none;
+    display: inline-grid;
+    place-content: center;
+    width: 0.95em;
+    height: 0.95em;
+    margin: 0 0.5em 0 -1.35em;
+    vertical-align: -0.12em;
+    border: 1px solid var(--color-accent-border);
+    background: var(--color-accent-bg);
+    color: var(--color-bg-base);
+    cursor: default;
+  }
+  .doc-prose input[type="checkbox"]:checked {
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+  }
+  .doc-prose input[type="checkbox"]:checked::before {
+    content: "";
+    width: 0.5em;
+    height: 0.28em;
+    border-left: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: translateY(-0.1em) rotate(-45deg);
   }
   .doc-prose blockquote {
     margin: 1.5rem 0;

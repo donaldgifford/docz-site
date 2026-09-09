@@ -402,6 +402,32 @@ not enumerate today (`code-bg` is not one of the three enforced
 surfaces). The ratio is ~14:1; the test gains the pair so the invariant
 is enforced rather than assumed.
 
+**Amendment (2026-09-09, live review).** The quiet treatment was
+rejected on sight: the blue-on-blue chip of the shipped site (accent
+text, `code-bg`, hairline border) is the preferred look. Restored as
+`color: accent; border: 1px solid border-hairline; padding: 0 0.35em`
+at 0.875em — the size lift and the removal of vertical padding stay,
+so the line box still does not grow. Consequences: the "accent means
+link only" goal is withdrawn (links remain distinguishable by their
+underline, which axe already requires); the contrast pair to add to
+`contrast.test.ts` becomes `accent` on `code-bg` (~10.9:1) rather than
+`fg-primary` on `code-bg`; OQ-4 is effectively option (b) with the
+padding change.
+
+**Task-list checkboxes (same review).** GFM `- [x]` items render as
+disabled `<input type="checkbox">` elements (the default sanitize
+schema keeps `type`, `disabled`, and `checked`), and browsers draw
+disabled controls grey-on-grey, which is unreadable on the dark
+surfaces. `.doc-prose` now draws them with `appearance: none`:
+unchecked is the pill outline (`accent-border` on `accent-bg`), checked
+is a filled `accent` box with a `bg-base` tick drawn by a rotated
+`::before` border, and the box takes the bullet's place — the `li` that
+directly contains a checkbox (or whose first paragraph does, for loose
+lists) drops its marker via `:has()`, and the input carries a negative
+left margin into the marker gutter so wrapped lines stay aligned with
+ordinary items. The inputs stay `disabled`, so nothing becomes
+interactive and the axe sweep is unaffected.
+
 ### Component 5: code blocks, ligatures, italics
 
 ```css

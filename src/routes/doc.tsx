@@ -118,7 +118,7 @@ function DocHeader({ doc }: { doc: Document }) {
         <span>{parts ? `${parts[0]} / ${parts[1]}` : doc.doc_id}</span>
       </div>
 
-      <h1 className="font-sans text-[clamp(1.9rem,4.5vw,2.6rem)] leading-[1.14] font-medium tracking-[-0.02em] text-fg-primary">
+      <h1 className="font-serif text-[clamp(1.9rem,4.5vw,2.6rem)] leading-[1.14] font-bold text-fg-primary">
         {doc.title}
       </h1>
 

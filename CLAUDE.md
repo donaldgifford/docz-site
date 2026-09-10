@@ -41,15 +41,20 @@ Bun is the package manager and script runner (pinned in `mise.toml`).
   Route modules live in `src/routes/*` and export a named `Component`;
   register new routes with `lazy: () => import("@/routes/<name>")` so
   each stays its own chunk.
-- Fonts are self-hosted `@fontsource` imports in `src/main.tsx`
-  (DESIGN-0005: Mona Sans Variable for prose/UI, Monaspace Neon for
-  code and mono labels, Monaspace Xenon for h2–h4 and pull quotes —
-  Xenon is a slab-serif MONO, so it takes short strings only) — never
-  add a third-party font URL. New weights = new per-weight CSS import
-  there. Prose sizing is dialed in on the specimen page, not in the
-  abstract: body 18px/1.6 on a 60ch measure, headings in em so the
-  hierarchy scales with the body, chrome one step above the mockup's
-  original 10–13.5px scale.
+- Fonts are self-hosted `@fontsource` imports in `src/main.tsx` —
+  never add a third-party font URL (mockup.html may use CDN links; it
+  ships nowhere). DESIGN-0005 as amended: **Source Serif 4 Variable**
+  (`--font-serif`) sets the article — reader prose, the headings inside
+  it, pull quotes, and article titles; **Mona Sans Variable**
+  (`--font-sans`) sets UI chrome and the heroes outside the article;
+  **Monaspace Neon** (`--font-mono`) sets every mono surface, and its
+  true italic is required for Shiki's italic scopes. Monaspace Xenon
+  was removed with the seventh amendment — a mono can't set body text.
+  Both variable families need the wght AND wght-italic imports.
+  Prose sizing is dialed in on the specimen page, not in the abstract:
+  body 19px/1.78 on a 66ch measure, headings in em so the hierarchy
+  scales with the body, chrome one step above the mockup's original
+  10–13.5px scale.
 - `src/theme/tokens.css` — the single global stylesheet: Tailwind v4
   import + `@theme static` tokens ported from `mockup.html` `:root`.
   Token names keep mockup prefixes, so utilities read `bg-bg-raised`,

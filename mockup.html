@@ -17,13 +17,13 @@
 <link href="https://cdn.jsdelivr.net/npm/@fontsource/monaspace-neon@5.3.0/400-italic.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/@fontsource/monaspace-neon@5.3.0/600.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/@fontsource/monaspace-neon@5.3.0/700.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/@fontsource/monaspace-xenon@5.3.0/600.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/@fontsource/monaspace-xenon@5.3.0/400-italic.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@fontsource-variable/source-serif-4@5.3.0/wght.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@fontsource-variable/source-serif-4@5.3.0/wght-italic.css" rel="stylesheet">
 <style>
   :root {
     --font-sans: "Mona Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
     --font-mono: "Monaspace Neon", ui-monospace, "SF Mono", Menlo, monospace;
-    --font-serif: "Monaspace Xenon", ui-monospace, Georgia, serif;
+    --font-serif: "Source Serif 4 Variable", Charter, Georgia, serif;
 
     --bg-base:      #0C1017;
     --bg-raised:    #121722;
@@ -306,25 +306,23 @@
 
   /* prose — DESIGN-0005: Mona Sans body on a measured column, Xenon slab
      section headings, quiet inline code (accent is reserved for links) */
-  .doc-prose { font-size: 18px; line-height: 1.6; font-weight: 450; color: var(--fg-prose); overflow-wrap: break-word; }
-  .doc-prose > p, .doc-prose li { font-family: var(--font-sans); }
-  .doc-prose p { margin: 0 0 1.25rem; }
+  .doc-prose { font-family: var(--font-serif); font-size: 19px; line-height: 1.78; font-weight: 400; color: var(--fg-prose); overflow-wrap: break-word; }
+  .doc-prose p { margin: 0 0 1.65rem; }
   /* measure cap on text-bearing blocks only; code, tables, figures keep the column */
-  .doc-prose :is(p, ul, ol, dl, h1, h2, h3, h4, h5, h6, blockquote) { max-width: 60ch; }
+  .doc-prose :is(p, ul, ol, dl, h1, h2, h3, h4, h5, h6, blockquote) { max-width: 66ch; }
   /* sections break structurally: hairline rule across the column and air
      above each h2 (never colored heading text, never numbers) */
   .doc-prose h2 {
-    font-family: var(--font-serif); font-size: 1.4em; font-weight: 600;
-    letter-spacing: -0.01em; margin: 3.4rem 0 0.9rem; padding-top: 1.4rem;
+    font-size: 1.45em; font-weight: 700;
+    margin: 4rem 0 1.2rem; padding-top: 1.8rem;
     border-top: 1px solid var(--border-hairline); color: var(--fg-primary);
-    scroll-margin-top: 80px;
   }
   .doc-prose h2:first-child { margin-top: 0; padding-top: 0; border-top: none; }
   .doc-prose h2 .hash { color: var(--accent); font-family: var(--font-mono); font-size: 1rem; margin-right: 0.55rem; opacity: 0; transition: opacity 0.16s var(--ease); }
   .doc-prose h2:hover .hash { opacity: 1; }
-  .doc-prose h3 { font-family: var(--font-serif); font-size: 1.15em; font-weight: 600; margin: 2.2rem 0 0.6rem; color: var(--fg-primary); }
-  .doc-prose h4 { font-family: var(--font-serif); font-size: 1em; font-weight: 600; margin: 1.6rem 0 0.5rem; color: var(--fg-primary); }
-  .doc-prose strong { color: var(--fg-primary); font-weight: 600; }
+  .doc-prose h3 { font-size: 1.2em; font-weight: 700; margin: 2.8rem 0 0.8rem; color: var(--fg-primary); }
+  .doc-prose h4 { font-size: 1em; font-weight: 700; margin: 1.8rem 0 0.5rem; color: var(--fg-primary); }
+  .doc-prose strong { color: var(--fg-primary); font-weight: 650; }
   .doc-prose h5, .doc-prose h6 { font-family: var(--font-sans); font-size: 0.95em; font-weight: 600; margin: 1.4rem 0 0.4rem; color: var(--fg-primary); }
   .doc-prose h6 { font-size: 0.8em; letter-spacing: 0.04em; text-transform: uppercase; color: var(--fg-secondary); }
   .doc-prose .table-wrap { overflow-x: auto; margin: 0 0 1.4rem; } /* wrap-table.ts */
@@ -338,8 +336,8 @@
     padding: 0.15em 0.35em 0.04em;
   }
   .doc-prose a code, .doc-prose .xref code { color: inherit; border-color: var(--accent-border); background: var(--accent-bg); }
-  .doc-prose ul, .doc-prose ol { margin: 0 0 1.25rem 1.3rem; }
-  .doc-prose li { margin-bottom: 0.45rem; }
+  .doc-prose ul, .doc-prose ol { margin: 0 0 1.65rem 1.3rem; }
+  .doc-prose li { margin-bottom: 0.6rem; }
   .doc-prose li::marker { color: var(--fg-muted); }
   /* GFM task lists: accent-drawn checkboxes in the bullet's place (browsers
      render disabled controls grey-on-grey) */
@@ -592,7 +590,7 @@
   .repo-breadcrumb a { color: var(--fg-tertiary); }
   .repo-breadcrumb a:hover { color: var(--fg-primary); }
   .repo-breadcrumb .cur { color: var(--accent); overflow-wrap: anywhere; }
-  .repo-content .doc-prose h1 { font-family: var(--font-sans); font-size: clamp(1.7rem, 4vw, 2.3rem); font-weight: 500; letter-spacing: -0.02em; line-height: 1.15; margin: 0 0 1.1rem; color: var(--fg-primary); }
+  .repo-content .doc-prose h1 { font-size: clamp(1.7rem, 4vw, 2.3rem); font-weight: 700; line-height: 1.15; margin: 0 0 1.1rem; color: var(--fg-primary); }
 
   .md-table { width: 100%; border-collapse: collapse; margin: 0 0 1.4rem; font-size: 14px; }
   .md-table th, .md-table td { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border-hairline); vertical-align: top; }

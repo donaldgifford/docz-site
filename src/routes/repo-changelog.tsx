@@ -24,7 +24,7 @@ import { useRenderedSource } from "@/markdown/useRenderedMarkdown";
  */
 
 const TITLE_CLASS =
-  "mb-4 font-sans text-[clamp(1.7rem,4vw,2.3rem)] leading-[1.15] font-medium tracking-[-0.02em] text-fg-primary";
+  "mb-4 font-serif text-[clamp(1.7rem,4vw,2.3rem)] leading-[1.15] font-bold text-fg-primary";
 
 function ChangelogSkeleton() {
   return (

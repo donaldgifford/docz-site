@@ -395,6 +395,30 @@ groups gain `inconclusive`, the one docz status that had no mapping.
 This surface is now the first place docz-site has deliberately diverged
 from `mockup.html`, which keeps leading for prose and chrome tokens.
 
+**Seventh amendment (2026-09-10, the serif body — OQ-12 RESOLVED).**
+Four candidates were rendered on a real design doc and compared:
+today's Mona Sans at 1.6, Mona Sans on the reference's airier rhythm,
+Source Serif 4, and a Monaspace body. **Source Serif 4 wins**, which
+reverses this design's original decision to drop the serif body
+outright, and closes OQ-12 on an option none of (a)-(d) named.
+
+The original diagnosis was not wrong, it was incomplete: the old reader
+was hard to read because a 16px serif sat at `fg-secondary` grey on a
+full-width unmeasured column. Fixing the color, the measure, the size,
+and the leading fixes the serif — the face was never the problem. What
+the sans could not fix was voice: with prose in Mona Sans, the Xenon
+slab headings read as a second family on every page.
+
+The article is now one family. Body is Source Serif 4 Variable at 19px
+on 1.78 leading over a 66ch measure; h1-h4 are the same serif at 700;
+pull quotes are its italic; `strong` is 650, since a serif's bold sits
+closer to its regular than Mona Sans's did. Monaspace Xenon is removed
+from the stack entirely. Mona Sans keeps every UI surface, so the
+chrome still reads as an application around a document, and Monaspace
+Neon is untouched. Article titles (reader, repo home, type, changelog)
+join the serif; the directory and repos heroes stay sans, because they
+label the app rather than a document.
+
 
 
 The doc title (`DocHeader` in `doc.tsx`) and the three page-level h1s
@@ -829,6 +853,9 @@ neo-grotesque with a tall x-height and low stroke contrast.
   wide, rounded letterforms remain the residual airiness.
 - (c) Mona Sans at 500 with `strong` at 650. Reads solid in the same
   comparison, but the page goes monotone-heavy; last resort before (a).
+
+**RESOLVED 2026-09-10: none of the above — Source Serif 4, see the
+seventh amendment.**
 - (d) Monospace body — **recommended after the size review.** Monaspace
   Argon 16px / 1.65 as the body face, 76ch measure, Neon kept for code,
   Xenon for headings: the shape of PlanetScale's blog and the request

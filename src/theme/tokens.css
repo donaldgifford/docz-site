@@ -12,13 +12,16 @@
  * var(), so the full set is a runtime contract, not dead CSS. */
 @theme static {
   /* Font stacks — families self-hosted via @fontsource in main.tsx
-     (DESIGN-0005). --font-serif is Monaspace Xenon, a slab-serif MONO:
-     it carries section headings and pull quotes only, never body text
-     or long titles (fixed pitch wraps them badly). */
+     (DESIGN-0005, seventh amendment). --font-serif is a REAL serif now
+     (Source Serif 4, variable): it carries reader prose, the headings
+     inside an article, and pull quotes. --font-sans carries UI chrome
+     and the page titles that sit outside the article. The earlier
+     Monaspace Xenon slab is gone — a mono can't set body text, and
+     mono headings on a serif page read as a second voice. */
   --font-sans:
     "Mona Sans Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "Monaspace Neon", ui-monospace, "SF Mono", Menlo, monospace;
-  --font-serif: "Monaspace Xenon", ui-monospace, Georgia, serif;
+  --font-serif: "Source Serif 4 Variable", Charter, Georgia, serif;
 
   /* Background scale */
   --color-bg-base: #0c1017;
@@ -124,15 +127,17 @@
      selectors because the content is pipeline-rendered markdown we
      can't annotate with utility classes. */
   .doc-prose {
-    /* DESIGN-0005 fourth amendment: 18px after live review kept reading
-       as small next to the reference sites; headings below are in em so
-       the hierarchy scales with this number. */
-    font-size: 18px;
-    line-height: 1.6;
-    /* DESIGN-0005: 450, not 400 — light-on-dark thins strokes, and Mona
-       Sans's regular read as hairline in live review (the variable axis
-       makes this a free dial). */
-    font-weight: 450;
+    /* DESIGN-0005 seventh amendment: the article is set in the serif at
+       19px on 1.78 leading, the rhythm of the long-form reference sites
+       this design was measured against. Headings below are in em so the
+       hierarchy scales with this number. */
+    font-family: var(--font-serif);
+    font-size: 19px;
+    line-height: 1.78;
+    /* A serif at this size needs no weight compensation — the earlier
+       450 existed because Mona Sans's regular read as hairline on
+       dark. Source Serif's regular has the stroke for it. */
+    font-weight: 400;
     color: var(--color-fg-prose);
     /* Unbroken tokens (long paths, URLs, inline code) wrap instead of
        pushing into the rail. Inherited; <pre> keeps white-space: pre. */
@@ -141,38 +146,34 @@
   /* DESIGN-0005: the measure cap applies to text-bearing blocks only —
      code blocks, tables, and figures keep the full column so wide
      content is never squeezed. ch is measured in each element's own
-     face: 60ch is ~78 characters of Mona Sans (~665px at 18px), the
-     line length the reference sites settle on. */
+     face: 66ch of Source Serif is ~78 characters (~660px at 19px), the
+     line length the long-form reference sites settle on. */
   .doc-prose
     :is(p, ul, ol, dl, h1, h2, h3, h4, h5, h6, blockquote, .admonition, hr) {
-    max-width: 60ch;
+    max-width: 66ch;
   }
   .doc-prose p {
-    margin: 0 0 1.25rem;
+    margin: 0 0 1.65rem;
   }
   /* h1 appears only on the repo home (the reader strips body h1s and
      renders its own header) — style it like the reader's doc title so
      index.md-driven homes match. */
   .doc-prose h1 {
-    font-family: var(--font-sans);
     font-size: 2rem;
-    font-weight: 500;
-    letter-spacing: -0.02em;
-    line-height: 1.25;
+    font-weight: 700;
+    line-height: 1.2;
     margin: 0 0 1.1rem;
     color: var(--color-fg-primary);
   }
-  /* Section headings in the Xenon slab (DESIGN-0005 OQ-5): short
-     strings only — titles stay in the sans. Sections are broken up
-     structurally, not by color: a hairline rule spanning the column
-     and extra air above each h2. */
+  /* Section headings share the body's serif at bold weight: one voice
+     per article (DESIGN-0005 seventh amendment — the Xenon slab read as
+     a second family). Sections are broken up structurally, not by
+     color: a hairline rule spanning the column and air above each h2. */
   .doc-prose h2 {
-    font-family: var(--font-serif);
-    font-size: 1.4em;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    margin: 3.4rem 0 0.9rem;
-    padding-top: 1.4rem;
+    font-size: 1.45em;
+    font-weight: 700;
+    margin: 4rem 0 1.2rem;
+    padding-top: 1.8rem;
     border-top: 1px solid var(--color-border-hairline);
     color: var(--color-fg-primary);
   }
@@ -182,17 +183,15 @@
     border-top: none;
   }
   .doc-prose h3 {
-    font-family: var(--font-serif);
-    font-size: 1.15em;
-    font-weight: 600;
-    margin: 2.2rem 0 0.6rem;
+    font-size: 1.2em;
+    font-weight: 700;
+    margin: 2.8rem 0 0.8rem;
     color: var(--color-fg-primary);
   }
   .doc-prose h4 {
-    font-family: var(--font-serif);
     font-size: 1em;
-    font-weight: 600;
-    margin: 1.6rem 0 0.5rem;
+    font-weight: 700;
+    margin: 1.8rem 0 0.5rem;
     color: var(--color-fg-primary);
   }
   /* h5/h6 stay out of the ToC and get no copy link (markdown-heading
@@ -224,7 +223,7 @@
      color step to fg-primary does the emphasis work. */
   .doc-prose strong {
     color: var(--color-fg-primary);
-    font-weight: 600;
+    font-weight: 650;
   }
   .doc-prose a {
     color: var(--color-accent);
@@ -266,7 +265,7 @@
   }
   .doc-prose ul,
   .doc-prose ol {
-    margin: 0 0 1.25rem 1.3rem;
+    margin: 0 0 1.65rem 1.3rem;
   }
   .doc-prose ul {
     list-style: disc;
@@ -275,7 +274,7 @@
     list-style: decimal;
   }
   .doc-prose li {
-    margin-bottom: 0.45rem;
+    margin-bottom: 0.6rem;
   }
   .doc-prose li::marker {
     color: var(--color-fg-muted);
@@ -320,7 +319,6 @@
     border: 1px solid var(--color-border-hairline);
     color: var(--color-fg-prose);
     font-style: italic;
-    font-family: var(--font-serif);
   }
   /* GitHub-alert admonitions (IMPL-0002 Phase 3; restyled in the
      DESIGN-0005 dial-in). Divs, not blockquotes — the pull-quote

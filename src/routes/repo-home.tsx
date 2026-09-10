@@ -44,7 +44,7 @@ function GeneratedHome({ detail }: { detail: RepoDetail }) {
   const { facts } = useRepoFacts(detail.repo);
   return (
     <div>
-      <h1 className="mb-4 font-sans text-[clamp(1.7rem,4vw,2.3rem)] leading-[1.15] font-medium tracking-[-0.02em] text-fg-primary">
+      <h1 className="mb-4 font-serif text-[clamp(1.7rem,4vw,2.3rem)] leading-[1.15] font-bold text-fg-primary">
         {detail.repo.split("/").at(-1) ?? detail.repo}
       </h1>
       <p className="mb-8 text-[14px] text-fg-tertiary">

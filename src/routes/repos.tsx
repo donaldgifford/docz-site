@@ -30,7 +30,7 @@ function RepoCard({ repo }: { repo: RepoSummary }) {
         <span className="font-mono text-[14px] font-semibold text-fg-primary">
           {repo.repo}
         </span>
-        <span className="border border-border-default px-[7px] py-px font-mono text-[11.5px] text-fg-muted">
+        <span className="mono-chip-y border border-border-default px-[7px] font-mono text-[11.5px] text-fg-muted">
           {repo.default_branch}
         </span>
       </div>

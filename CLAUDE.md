@@ -55,6 +55,14 @@ Bun is the package manager and script runner (pinned in `mise.toml`).
   body 19px/1.78 on a 66ch measure, headings in em so the hierarchy
   scales with the body, chrome one step above the mockup's original
   10–13.5px scale.
+- Bordered mono chips MUST use `.mono-chip-y` (tokens.css) for their
+  vertical padding and MUST NOT carry a `py-*` utility beside it —
+  Tailwind's utilities layer would win. An inline box is as tall as the
+  font's ascent+descent, and Monaspace Neon leaves 0.032em above its
+  capitals against 0.19em below the baseline, so symmetric padding
+  renders every chip visibly high. The class holds the compensating
+  difference; `.doc-prose code` carries its own copy with descender
+  clearance. Verify by measuring, not by eye.
 - `src/theme/tokens.css` — the single global stylesheet: Tailwind v4
   import + `@theme static` tokens ported from `mockup.html` `:root`.
   Token names keep mockup prefixes, so utilities read `bg-bg-raised`,

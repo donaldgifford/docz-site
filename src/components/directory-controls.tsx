@@ -151,7 +151,7 @@ function Chip({
       type="button"
       aria-pressed={pressed}
       onClick={onClick}
-      className={`inline-flex items-center gap-[0.4rem] border px-[0.7rem] py-[0.25rem] font-mono text-[12.5px] tracking-[0.04em] uppercase ${
+      className={`mono-chip-y inline-flex items-center gap-[0.4rem] border px-[0.7rem] font-mono text-[12.5px] tracking-[0.04em] uppercase ${
         pressed
           ? "border-border-strong bg-bg-raised text-fg-primary"
           : "border-border-default text-fg-tertiary hover:text-fg-secondary"

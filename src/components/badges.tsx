@@ -44,7 +44,7 @@ export function StatusPill({ status }: { status: string }) {
   return (
     <span
       style={colorVar(statusColor(status))}
-      className="w-max border border-[color-mix(in_srgb,var(--c)_38%,transparent)] bg-[color-mix(in_srgb,var(--c)_8%,transparent)] px-[9px] py-[2px] font-mono text-[12px] tracking-[0.06em] uppercase text-(--c)"
+      className="mono-chip-y w-max border border-[color-mix(in_srgb,var(--c)_38%,transparent)] bg-[color-mix(in_srgb,var(--c)_8%,transparent)] px-[9px] font-mono text-[12px] tracking-[0.06em] uppercase text-(--c)"
     >
       {status}
     </span>

@@ -100,7 +100,7 @@ function PillButton({
       type="button"
       aria-pressed={active}
       onClick={onClick}
-      className={`border px-[0.6rem] py-[0.2rem] font-mono text-[12.5px] ${
+      className={`mono-chip-y border px-[0.6rem] font-mono text-[12.5px] ${
         active
           ? "border-(--color-accent-border) bg-(--color-accent-bg) text-accent"
           : "border-border-default text-fg-tertiary hover:text-fg-secondary"

@@ -123,6 +123,34 @@
 }
 
 @layer components {
+  /*
+   * MONO_CHIP_OFFSET — why every bordered mono chip needs lopsided
+   * vertical padding.
+   *
+   * An inline box is as tall as the font's ascent plus descent, never
+   * its line-height, and the glyphs sit inside that box wherever the
+   * font's metrics put them. Monaspace Neon at any size leaves
+   * 0.032em of air above its capitals and 0.19em below the baseline.
+   * Symmetric padding therefore renders every chip with its text
+   * jammed against the top edge — the complaint that produced this
+   * comment, twice.
+   *
+   * Centering the cap band means making the paddings differ by
+   * 0.19 - 0.032 = 0.159em. This class carries that difference and is
+   * the ONLY vertical padding its elements should have: do not add a
+   * py-* utility beside it. Retuning the height is fine as long as the
+   * difference survives. Uppercase chips center exactly; mixed-case
+   * chips get descender clearance out of the bottom value.
+   */
+  .mono-chip-y {
+    /* 0.169em apart rather than the bare 0.159em: the browser rounds
+       the font's ascent and descent to whole pixels, which biases the
+       gap downward at small sizes. Measured residual across the chip
+       sizes in use is now under half a pixel. */
+    padding-top: 0.31em;
+    padding-bottom: 0.141em;
+  }
+
   /* Reader prose, ported from mockup .doc-prose. Scoped descendant
      selectors because the content is pipeline-rendered markdown we
      can't annotate with utility classes. */
@@ -248,15 +276,14 @@
     color: var(--color-fg-primary);
     background: var(--color-bg-elevated);
     border: 1px solid var(--color-border-default);
-    /* Vertical padding is ASYMMETRIC on purpose. An inline box is as
-       tall as the font's ascent+descent, not its line-height, and
-       Monaspace Neon leaves ~0.5px above the capitals but ~3px below
-       the baseline: with even padding the text jams against the top
-       edge and the chip reads bottom-heavy. The extra top padding
-       optically centers the cap band; the small bottom value keeps
-       descenders off the border. Inline padding overflows the line
-       box without moving neighboring lines, so the rhythm is safe. */
-    padding: 0.15em 0.35em 0.04em;
+    /* Vertical padding is ASYMMETRIC on purpose — see MONO_CHIP_OFFSET
+       below for the arithmetic. Monaspace Neon leaves 0.032em above
+       its capitals inside the inline box and 0.19em below the
+       baseline, so the two paddings must differ by 0.159em for the cap
+       band to sit centered. Inline padding overflows the line box
+       without moving neighboring lines, so the rhythm is safe, and the
+       0.06em floor keeps descenders clear of the border. */
+    padding: 0.25em 0.35em 0.06em;
   }
   .doc-prose a code {
     color: inherit;

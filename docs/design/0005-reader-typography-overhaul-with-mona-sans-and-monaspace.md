@@ -380,6 +380,22 @@ specimen page:
   where mermaid puts it: a document's own `classDef`, which outranks the
   stylesheet because mermaid scopes those rules by render id.
 
+**Sixth amendment (2026-09-10, the directory).** Review asked for the
+discovery page to follow the RFD-index shape: cards rather than table
+rows, and the document's STATE as the only colored thing in the row.
+Hit rows now carry the doc id over the title, a bordered status pill in
+the middle, and the repo on the right. The type badge is gone
+everywhere — the doc id already spells the type out, and two colored
+chips per row read as two competing signals. Type color still exists
+and still identifies the filter chips, so DESIGN-0001's color system is
+intact; only the badge is retired. `SearchHit` has no date field at
+all, so the reference's date column has nothing to render and the repo
+takes that slot until the additive `updated_at` ask lands. The status
+groups gain `inconclusive`, the one docz status that had no mapping.
+This surface is now the first place docz-site has deliberately diverged
+from `mockup.html`, which keeps leading for prose and chrome tokens.
+
+
 
 The doc title (`DocHeader` in `doc.tsx`) and the three page-level h1s
 that use the `font-serif` utility switch to `font-sans` at weight 500:

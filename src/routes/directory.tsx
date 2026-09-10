@@ -4,7 +4,7 @@ import { Link, useSearchParams } from "react-router";
 
 import { useSearchDocs } from "@/api/__generated__/docz-api";
 import { SessionRequiredError } from "@/api/fetcher";
-import { StatusBadge, TypeBadge } from "@/components/badges";
+import { StatusPill } from "@/components/badges";
 import { RepoPicker, TypeChips } from "@/components/directory-controls";
 import { ErrorPanel, SessionRequiredRedirect } from "@/components/query-states";
 import { usePrefetchDoc } from "@/hooks/usePrefetchDoc";
@@ -31,9 +31,15 @@ const Q_DEBOUNCE_MS = 200;
  * except the debounce buffer inside SearchBox.
  */
 
-// Mockup .doc-row grid; narrow viewports collapse to type/title/status.
-const ROW_GRID =
-  "grid grid-cols-[92px_minmax(0,1fr)_auto] items-center gap-[0.8rem] border-b border-border-hairline px-[0.4rem] py-[0.7rem] md:grid-cols-[116px_86px_minmax(0,1fr)_110px_150px_70px]";
+/*
+ * Hit rows are cards, not table rows (DESIGN-0005 dial-in, replacing
+ * the mockup's six-column `.doc-row`): id over title on the left, the
+ * status pill in the middle, the repo on the right. Status is the only
+ * color in the row — the type badge that used to lead it competed with
+ * it, and the doc id already spells the type out.
+ */
+const ROW_CARD =
+  "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border border-border-hairline bg-bg-raised px-4 py-3 transition-colors hover:border-border-default hover:bg-bg-elevated md:grid-cols-[minmax(0,1fr)_132px_150px] md:gap-6";
 
 function DirectoryHero({ repo }: { repo: string | null }) {
   return (
@@ -127,41 +133,34 @@ function HitRow({ hit }: { hit: SearchHit }) {
         to={`/${hitKey(hit)}`}
         onMouseEnter={prefetch}
         onFocus={prefetch}
-        className={`${ROW_GRID} transition-colors hover:bg-bg-raised`}
+        className={ROW_CARD}
       >
-        {/* Pages carry the neutral source marker, never a type badge
-            (DESIGN-0004 OQ-3a); doc-only columns render "—". */}
-        {isPage ? (
-          <span className="font-mono text-[12px] text-fg-muted">page</span>
-        ) : (
-          <TypeBadge type={hit.type} />
-        )}
-        <span
-          title={isPage ? hit.path : undefined}
-          className="hidden font-mono text-[13.5px] text-fg-tertiary md:block"
-        >
-          {isPage ? "—" : hit.doc_id}
+        <span className="min-w-0">
+          {/* Pages have no doc id, so they keep the neutral source
+              marker in its place (DESIGN-0004 OQ-3a). */}
+          <span
+            title={isPage ? hit.path : undefined}
+            className="block font-mono text-[12px] tracking-[0.08em] text-fg-muted uppercase"
+          >
+            {isPage ? "page" : hit.doc_id}
+          </span>
+          <span className="mt-[3px] block truncate text-[16px] text-fg-primary">
+            {hit.title}
+          </span>
         </span>
-        <span className="truncate text-[14px] text-fg-primary">
-          {hit.title}
-        </span>
-        {hit.status === "" ? (
-          <span aria-hidden />
-        ) : (
-          <StatusBadge status={hit.status} />
-        )}
-        <span
-          title={hit.repo}
-          className="hidden truncate font-mono text-[12.5px] text-fg-tertiary before:text-fg-muted before:content-['›_'] md:block"
-        >
-          {repoName}
+        <span className="justify-self-start md:justify-self-center">
+          {hit.status !== "" && <StatusPill status={hit.status} />}
         </span>
         {/*
-         * SearchHit carries no updated_at yet (additive ask in
-         * DESIGN-0001); formatRelativeTime takes over when it lands.
+         * SearchHit carries no date field at all (updated_at is an
+         * additive ask in DESIGN-0001), so the right column is the
+         * repo — the fact that actually varies in a cross-repo list.
          */}
-        <span className="hidden text-right font-mono text-[12px] text-fg-muted md:block">
-          —
+        <span
+          title={hit.repo}
+          className="hidden truncate text-right font-mono text-[12.5px] text-fg-tertiary md:block"
+        >
+          {repoName}
         </span>
       </Link>
     </li>
@@ -173,19 +172,19 @@ function SkeletonRows() {
     <div
       aria-hidden
       data-testid="directory-skeleton"
-      className="mt-4 animate-pulse border-t border-border-hairline"
+      className="mt-4 animate-pulse space-y-2"
     >
       {Array.from({ length: 6 }, (_, i) => (
-        <div key={i} className={ROW_GRID}>
-          <div className="h-4 w-16 bg-bg-elevated" />
-          <div className="hidden h-3 w-14 bg-bg-raised md:block" />
-          <div
-            className="h-3 bg-bg-elevated"
-            style={{ width: `${String(88 - (i % 3) * 14)}%` }}
-          />
-          <div className="h-3 w-12 bg-bg-raised" />
-          <div className="hidden h-3 w-20 bg-bg-raised md:block" />
-          <div className="hidden h-3 w-10 justify-self-end bg-bg-raised md:block" />
+        <div key={i} className={ROW_CARD}>
+          <div>
+            <div className="h-3 w-20 bg-bg-elevated" />
+            <div
+              className="mt-2 h-4 bg-bg-elevated"
+              style={{ width: `${String(72 - (i % 3) * 14)}%` }}
+            />
+          </div>
+          <div className="h-5 w-20 bg-bg-elevated md:justify-self-center" />
+          <div className="hidden h-3 w-20 justify-self-end bg-bg-elevated md:block" />
         </div>
       ))}
     </div>
@@ -346,7 +345,7 @@ export function Component() {
         )
       ) : (
         <div className="mt-4 mb-16">
-          <ul className="border-t border-border-hairline">
+          <ul className="space-y-2">
             {result.hits.map((hit) => (
               <HitRow key={hitKey(hit)} hit={hit} />
             ))}

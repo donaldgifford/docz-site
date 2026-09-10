@@ -2,7 +2,7 @@ import { Link, useParams } from "react-router";
 
 import { useGetRepo, useListDocs } from "@/api/__generated__/docz-api";
 import { NotFoundError, SessionRequiredError } from "@/api/fetcher";
-import { StatusBadge } from "@/components/badges";
+import { StatusPill } from "@/components/badges";
 import { TocList } from "@/components/doc-rail";
 import {
   ErrorPanel,
@@ -82,7 +82,7 @@ function DocsTable({
                 {doc.status === "" ? (
                   <span className="text-fg-muted">—</span>
                 ) : (
-                  <StatusBadge status={doc.status} />
+                  <StatusPill status={doc.status} />
                 )}
               </td>
               <td className="border-b border-border-hairline px-[0.7rem] py-2 align-top font-mono text-[12.5px] text-fg-tertiary">

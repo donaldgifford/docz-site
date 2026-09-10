@@ -63,7 +63,7 @@ function mountAt(path: string) {
 }
 
 describe("directory route", () => {
-  it("lists every demo doc for the empty query, updated column unset", async () => {
+  it("lists every demo doc for the empty query, with no date column", async () => {
     mountAt("/");
 
     expect(await screen.findByText(SITE_DESIGN_TITLE)).toBeInTheDocument();
@@ -75,9 +75,11 @@ describe("directory route", () => {
       expect(screen.getByText(title)).toBeInTheDocument();
     }
 
-    // SearchHit has no updated_at (additive ask) — every row renders
-    // "—" there; the 6 page rows add a second "—" in the doc-id column.
-    expect(screen.getAllByText("—")).toHaveLength(17);
+    // SearchHit carries no date field at all (updated_at is an additive
+    // ask), so the card rows show the repo there instead of a column of
+    // placeholder dashes — there must be none left anywhere.
+    expect(screen.queryAllByText("—")).toHaveLength(0);
+    expect(screen.getAllByText("docz-site").length).toBeGreaterThan(0);
 
     // Rows link straight into the reader.
     expect(

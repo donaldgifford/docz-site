@@ -241,8 +241,15 @@ Bun is the package manager and script runner (pinned in `mise.toml`).
   `aria-current="location"` — it returns undefined where the observer
   is missing (jsdom) and HOLDS the last heading when a long section
   fills the band, so the rail never flickers to nothing.
-- Directory (`src/routes/directory.tsx`): the URL is the only source of
-  filter truth — read via `parseSearchParams`, write via
+- Directory (`src/routes/directory.tsx`): hit rows are CARDS since the
+  DESIGN-0005 dial-in — doc id over title, `StatusPill` in the middle,
+  repo on the right — NOT the mockup's six-column `.doc-row`, which
+  this surface has now diverged from (mockup.html still leads for prose
+  and chrome tokens). There is no type badge anywhere: the doc id
+  already spells the type out and a second colored chip fought the
+  status for attention. Type color survives on the filter chips only.
+  `SearchHit` carries no date field at all, so there is no date column
+  to fill. The URL is the only source of filter truth — read via `parseSearchParams`, write via
   `serializeSearchState` (`src/lib/searchParams.ts`; its
   `toSearchDocsParams` maps state → API params, first-of-array facets).
   Typed queries debounce ~200 ms and commit with `replace: true`;

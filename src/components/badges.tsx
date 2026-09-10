@@ -18,7 +18,7 @@ export function TypeBadge({ type }: { type: string }) {
   return (
     <span
       style={colorVar(typeColor(type))}
-      className="w-max border border-[color-mix(in_srgb,var(--c)_35%,transparent)] bg-[color-mix(in_srgb,var(--c)_9%,transparent)] px-[7px] py-[2px] font-mono text-[10.5px] tracking-[0.05em] uppercase text-(--c)"
+      className="w-max border border-[color-mix(in_srgb,var(--c)_35%,transparent)] bg-[color-mix(in_srgb,var(--c)_9%,transparent)] px-[7px] py-[2px] font-mono text-[11.5px] tracking-[0.05em] uppercase text-(--c)"
     >
       {type}
     </span>
@@ -30,7 +30,7 @@ export function StatusBadge({ status }: { status: string }) {
   return (
     <span
       style={colorVar(statusColor(status))}
-      className="inline-flex items-center gap-[5px] font-mono text-[11px] tracking-[0.03em] text-(--c)"
+      className="inline-flex items-center gap-[5px] font-mono text-[12px] tracking-[0.03em] text-(--c)"
     >
       <span
         aria-hidden
@@ -47,7 +47,7 @@ export function StatusPill({ status }: { status: string }) {
   return (
     <span
       style={colorVar(statusColor(status))}
-      className="border border-[color-mix(in_srgb,var(--c)_38%,transparent)] bg-[color-mix(in_srgb,var(--c)_8%,transparent)] px-[9px] py-[2px] font-mono text-[11px] tracking-[0.06em] uppercase text-(--c)"
+      className="border border-[color-mix(in_srgb,var(--c)_38%,transparent)] bg-[color-mix(in_srgb,var(--c)_8%,transparent)] px-[9px] py-[2px] font-mono text-[12px] tracking-[0.06em] uppercase text-(--c)"
     >
       {status}
     </span>

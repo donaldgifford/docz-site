@@ -27,7 +27,7 @@ import type { DocType, Document } from "@/api/__generated__/docz-api.schemas";
 
 function GenMarker({ children }: { children: string }) {
   return (
-    <div className="my-6 flex items-center gap-3 font-mono text-[10px] tracking-[0.14em] text-fg-muted uppercase before:h-px before:flex-1 before:bg-border-hairline before:content-[''] after:h-px after:flex-1 after:bg-border-hairline after:content-['']">
+    <div className="my-6 flex items-center gap-3 font-mono text-[11px] tracking-[0.14em] text-fg-muted uppercase before:h-px before:flex-1 before:bg-border-hairline before:content-[''] after:h-px after:flex-1 after:bg-border-hairline after:content-['']">
       {children}
     </div>
   );
@@ -44,13 +44,13 @@ function DocsTable({
 }) {
   const prefetchDoc = usePrefetchDoc();
   return (
-    <table className="w-full border-collapse text-[13px]">
+    <table className="w-full border-collapse text-[14px]">
       <thead>
         <tr>
           {["ID", "Title", "Status", "Date", "Link"].map((heading) => (
             <th
               key={heading}
-              className="border-b border-border-default px-[0.7rem] py-2 text-left font-mono text-[11px] font-normal tracking-[0.05em] text-fg-muted uppercase"
+              className="border-b border-border-default px-[0.7rem] py-2 text-left font-mono text-[12px] font-normal tracking-[0.05em] text-fg-muted uppercase"
             >
               {heading}
             </th>
@@ -70,7 +70,7 @@ function DocsTable({
                   to={`/${repoId}/${docType.name}/${doc.doc_id}`}
                   onMouseEnter={prefetch}
                   onFocus={prefetch}
-                  className="font-mono text-[12px] text-accent hover:underline"
+                  className="font-mono text-[13px] text-accent hover:underline"
                 >
                   {doc.doc_id}
                 </Link>
@@ -85,10 +85,10 @@ function DocsTable({
                   <StatusBadge status={doc.status} />
                 )}
               </td>
-              <td className="border-b border-border-hairline px-[0.7rem] py-2 align-top font-mono text-[11.5px] text-fg-tertiary">
+              <td className="border-b border-border-hairline px-[0.7rem] py-2 align-top font-mono text-[12.5px] text-fg-tertiary">
                 {doc.created === "" ? "—" : doc.created}
               </td>
-              <td className="border-b border-border-hairline px-[0.7rem] py-2 align-top font-mono text-[11.5px] break-all text-fg-tertiary">
+              <td className="border-b border-border-hairline px-[0.7rem] py-2 align-top font-mono text-[12.5px] break-all text-fg-tertiary">
                 {doc.path.split("/").at(-1) ?? doc.path}
               </td>
             </tr>
@@ -182,7 +182,7 @@ export function Component() {
       ]}
       rail={
         <>
-          <div className="mb-3 border-b border-border-hairline pb-2 font-mono text-[10px] tracking-[0.14em] text-fg-muted uppercase">
+          <div className="mb-3 border-b border-border-hairline pb-2 font-mono text-[11px] tracking-[0.14em] text-fg-muted uppercase">
             On this page
           </div>
           <TocList toc={toc} />
@@ -216,7 +216,7 @@ export function Component() {
           <GenMarker>begin docz auto-generated</GenMarker>
           <h2 id="all">All {docType.plural_label}</h2>
           {docs.length === 0 ? (
-            <p className="font-mono text-[13px] text-fg-muted">
+            <p className="font-mono text-[14px] text-fg-muted">
               No {docType.name} documents yet —{" "}
               <code>docz create {docType.name}</code> scaffolds the first one.
             </p>

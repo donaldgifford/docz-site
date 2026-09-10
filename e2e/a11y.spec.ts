@@ -52,7 +52,7 @@ test("markdown specimen page passes full-rule axe", async ({ page }) => {
       name: "Markdown rendering specimen",
     }),
   ).toBeVisible();
-  await expect(page.locator("figure.mermaid-figure svg")).toHaveCount(2, {
+  await expect(page.locator("figure.mermaid-figure svg")).toHaveCount(3, {
     timeout: 15_000,
   });
   await expectNoBlockingViolations(page);

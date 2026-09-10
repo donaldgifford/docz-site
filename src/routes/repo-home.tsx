@@ -61,13 +61,13 @@ function GeneratedHome({ detail }: { detail: RepoDetail }) {
           >
             <h2 className="mb-1 text-[17px] font-semibold text-fg-primary">
               {docType.plural_label}{" "}
-              <span className="font-mono text-[12px] font-normal text-fg-muted">
+              <span className="font-mono text-[13px] font-normal text-fg-muted">
                 {count}
               </span>
             </h2>
             <Link
               to={`/${detail.repo}/${docType.name}`}
-              className="font-mono text-[12.5px] text-accent hover:underline"
+              className="font-mono text-[13.5px] text-accent hover:underline"
             >
               browse {docType.dir}/ →
             </Link>
@@ -192,7 +192,7 @@ export function Component() {
       crumbs={[{ label: repoId }]}
       rail={
         <>
-          <div className="mb-3 border-b border-border-hairline pb-2 font-mono text-[10px] tracking-[0.14em] text-fg-muted uppercase">
+          <div className="mb-3 border-b border-border-hairline pb-2 font-mono text-[11px] tracking-[0.14em] text-fg-muted uppercase">
             On this page
           </div>
           <TocList toc={rendered.data?.toc ?? []} />

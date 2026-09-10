@@ -349,6 +349,38 @@ it; code blocks move 13px → 14px. A same-page comparison against Inter
 17px and a Monaspace Argon 16px mono body is filed under OQ-12, which
 gains option (d).
 
+**Fifth amendment (2026-09-09, chrome and components).** Raising prose
+exposed everything that had not moved with it, all found on the
+specimen page:
+
+- **Chrome scale.** Nav, outline, breadcrumbs, and meta lines were still
+  on the mockup's 10-13.5px scale against 18px prose. Every arbitrary
+  text size in the app, the matching tokens.css rules, and the body base
+  go up one step.
+- **Inline code chips.** They read bottom-heavy because an inline box is
+  as tall as the font's ascent and descent, not its line-height:
+  Monaspace Neon leaves ~0.5px above the capitals against ~3px below the
+  baseline, so even padding pins the text to the top edge. Vertical
+  padding is asymmetric now (0.15em over 0.04em).
+- **Admonitions.** The filled icon discs read as stickers next to
+  everything else on the page. They are gone, replaced by the mockup's
+  banner idiom: thin tinted rule, quiet fill, mono uppercase run-in
+  label, one step down in size and leading. The precomputed tint tokens
+  are untouched, so the contrast pairs still hold.
+- **Nav and outline rails.** In-group nav rows and outline rows hang off
+  a hairline, and the active row colors a 2px segment of it. The outline
+  needs to know what is being read, so `useActiveHeading` adds an
+  IntersectionObserver scroll spy over the heading ids; it holds the
+  last heading when a long section fills the band and no-ops where the
+  observer is missing.
+- **Diagrams.** The reference the review compared against turned out to
+  be a hand-drawn SVG in the old portal's mockup, not a mermaid render,
+  so there is nothing to port. Instead the figure gets real inset, the
+  labels get the mono face and a readable fill, and per-node color stays
+  where mermaid puts it: a document's own `classDef`, which outranks the
+  stylesheet because mermaid scopes those rules by render id.
+
+
 The doc title (`DocHeader` in `doc.tsx`) and the three page-level h1s
 that use the `font-serif` utility switch to `font-sans` at weight 500:
 long titles set in a monospace slab wrap to three lines in a 784px

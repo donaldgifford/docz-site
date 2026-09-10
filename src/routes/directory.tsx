@@ -38,7 +38,7 @@ const ROW_GRID =
 function DirectoryHero({ repo }: { repo: string | null }) {
   return (
     <header className="pt-10 pb-2">
-      <div className="font-mono text-[12.5px] tracking-[0.05em] text-accent">
+      <div className="font-mono text-[13.5px] tracking-[0.05em] text-accent">
         / docz <span className="text-fg-muted">/</span> {repo ?? "all repos"}
       </div>
       <h1 className="mt-2 mb-1 text-[clamp(1.6rem,4vw,2rem)] font-semibold tracking-[-0.01em] text-fg-primary">
@@ -96,7 +96,7 @@ function SearchBox({
       onChange={(event) => {
         setDraft(event.target.value);
       }}
-      className="mt-5 w-full border border-border-default bg-bg-raised px-3 py-2 font-mono text-[13px] text-fg-primary placeholder:text-fg-muted focus:border-border-strong focus:outline-none"
+      className="mt-5 w-full border border-border-default bg-bg-raised px-3 py-2 font-mono text-[14px] text-fg-primary placeholder:text-fg-muted focus:border-border-strong focus:outline-none"
     />
   );
 }
@@ -132,13 +132,13 @@ function HitRow({ hit }: { hit: SearchHit }) {
         {/* Pages carry the neutral source marker, never a type badge
             (DESIGN-0004 OQ-3a); doc-only columns render "—". */}
         {isPage ? (
-          <span className="font-mono text-[11px] text-fg-muted">page</span>
+          <span className="font-mono text-[12px] text-fg-muted">page</span>
         ) : (
           <TypeBadge type={hit.type} />
         )}
         <span
           title={isPage ? hit.path : undefined}
-          className="hidden font-mono text-[12.5px] text-fg-tertiary md:block"
+          className="hidden font-mono text-[13.5px] text-fg-tertiary md:block"
         >
           {isPage ? "—" : hit.doc_id}
         </span>
@@ -152,7 +152,7 @@ function HitRow({ hit }: { hit: SearchHit }) {
         )}
         <span
           title={hit.repo}
-          className="hidden truncate font-mono text-[11.5px] text-fg-tertiary before:text-fg-muted before:content-['›_'] md:block"
+          className="hidden truncate font-mono text-[12.5px] text-fg-tertiary before:text-fg-muted before:content-['›_'] md:block"
         >
           {repoName}
         </span>
@@ -160,7 +160,7 @@ function HitRow({ hit }: { hit: SearchHit }) {
          * SearchHit carries no updated_at yet (additive ask in
          * DESIGN-0001); formatRelativeTime takes over when it lands.
          */}
-        <span className="hidden text-right font-mono text-[11px] text-fg-muted md:block">
+        <span className="hidden text-right font-mono text-[12px] text-fg-muted md:block">
           —
         </span>
       </Link>
@@ -273,7 +273,7 @@ export function Component() {
             onClick={() => {
               applyFilters(EMPTY_SEARCH_STATE);
             }}
-            className="font-mono text-[11.5px] text-fg-muted hover:text-fg-primary"
+            className="font-mono text-[12.5px] text-fg-muted hover:text-fg-primary"
           >
             clear filters ✕
           </button>
@@ -281,7 +281,7 @@ export function Component() {
         {result !== undefined && (
           <div
             data-testid="results-count"
-            className="ml-auto font-mono text-[12px] text-fg-tertiary"
+            className="ml-auto font-mono text-[13px] text-fg-tertiary"
           >
             showing{" "}
             <b className="font-medium text-fg-secondary">
@@ -321,7 +321,7 @@ export function Component() {
       ) : result.hits.length === 0 ? (
         hasActiveFilters(state) ? (
           <div className="mx-auto my-16 w-max max-w-full border border-border-default bg-bg-raised px-8 py-6 text-center">
-            <p className="font-mono text-[13px] text-fg-secondary">
+            <p className="font-mono text-[14px] text-fg-secondary">
               No matches
             </p>
             <button
@@ -329,17 +329,17 @@ export function Component() {
               onClick={() => {
                 applyFilters(EMPTY_SEARCH_STATE);
               }}
-              className="mt-3 border border-border-strong px-4 py-1 font-mono text-[12px] text-fg-secondary hover:bg-bg-hover"
+              className="mt-3 border border-border-strong px-4 py-1 font-mono text-[13px] text-fg-secondary hover:bg-bg-hover"
             >
               clear filters
             </button>
           </div>
         ) : (
           <div className="mx-auto my-16 w-max max-w-full border border-border-default bg-bg-raised px-8 py-6 text-center">
-            <p className="font-mono text-[13px] text-fg-secondary">
+            <p className="font-mono text-[14px] text-fg-secondary">
               No documents yet
             </p>
-            <p className="mt-2 max-w-96 text-[13px] text-fg-tertiary">
+            <p className="mt-2 max-w-96 text-[14px] text-fg-tertiary">
               Onboard a repo with the docz GitHub App to index its docs here.
             </p>
           </div>
@@ -364,7 +364,7 @@ export function Component() {
                   }),
                 );
               }}
-              className="mx-auto mt-6 block border border-border-default px-5 py-[0.45rem] font-mono text-[12px] text-fg-secondary hover:border-border-strong hover:text-fg-primary disabled:opacity-50"
+              className="mx-auto mt-6 block border border-border-default px-5 py-[0.45rem] font-mono text-[13px] text-fg-secondary hover:border-border-strong hover:text-fg-primary disabled:opacity-50"
             >
               {searchQuery.isFetching
                 ? "loading…"

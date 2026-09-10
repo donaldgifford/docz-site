@@ -142,11 +142,11 @@ describe("axe: core views", () => {
       { level: 1, name: "Markdown rendering specimen" },
       { timeout: 10_000 },
     );
-    // Both mermaid fences must settle on the fallback before the sweep.
+    // Every mermaid fence must settle on the fallback before the sweep.
     await waitFor(() => {
       expect(
         container.querySelectorAll('[data-mermaid-fallback="failed"]'),
-      ).toHaveLength(2);
+      ).toHaveLength(3);
     });
     await expectNoAxeViolations();
   });

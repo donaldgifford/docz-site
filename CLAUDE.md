@@ -41,9 +41,15 @@ Bun is the package manager and script runner (pinned in `mise.toml`).
   Route modules live in `src/routes/*` and export a named `Component`;
   register new routes with `lazy: () => import("@/routes/<name>")` so
   each stays its own chunk.
-- Fonts are self-hosted `@fontsource` imports in `src/main.tsx` (IBM
-  Plex Sans/Mono, Source Serif 4) — never add a third-party font URL.
-  New weights = new per-weight CSS import there.
+- Fonts are self-hosted `@fontsource` imports in `src/main.tsx`
+  (DESIGN-0005: Mona Sans Variable for prose/UI, Monaspace Neon for
+  code and mono labels, Monaspace Xenon for h2–h4 and pull quotes —
+  Xenon is a slab-serif MONO, so it takes short strings only) — never
+  add a third-party font URL. New weights = new per-weight CSS import
+  there. Prose sizing is dialed in on the specimen page, not in the
+  abstract: body 18px/1.6 on a 60ch measure, headings in em so the
+  hierarchy scales with the body, chrome one step above the mockup's
+  original 10–13.5px scale.
 - `src/theme/tokens.css` — the single global stylesheet: Tailwind v4
   import + `@theme static` tokens ported from `mockup.html` `:root`.
   Token names keep mockup prefixes, so utilities read `bg-bg-raised`,
@@ -103,6 +109,12 @@ Bun is the package manager and script runner (pinned in `mise.toml`).
   `securityLevel: "strict"` AND `htmlLabels: false` — BOTH required
   (strict alone still materializes purified `<img src>` elements in
   foreignObject labels); render failure keeps the source visible.
+  Diagrams are MONOCHROME unless the document says otherwise: tokens.css
+  pins only label font-family and fill, and mermaid scopes a diagram's
+  own `classDef` rules by render id, so those outrank the stylesheet —
+  that's the supported way to color nodes (see the specimen's Figure 2).
+  themeVariables stay the minimal documented v11 set with an ASCII font
+  name; extras break `mermaid.render` silently.
   h2–h4 map to `markdown-heading.tsx`, which appends the
   hover/focus-revealed copy-link button (a labeled BUTTON, not a
   link — the underline rule for prose links stays untouched).
@@ -223,7 +235,12 @@ Bun is the package manager and script runner (pinned in `mise.toml`).
   the lifecycle is a closed-by-default `<details>` owned by
   `LifecycleRail` (renders nothing — shell included — for unknown
   types). Gated mockup rows (relationships, tags) slot into the table
-  when the DESIGN-0001 API asks land.
+  when the DESIGN-0001 API asks land. `TocList` runs a scroll spy
+  (`src/hooks/useActiveHeading.ts`, IntersectionObserver over the
+  heading ids, top-of-viewport band) and marks the current row
+  `aria-current="location"` — it returns undefined where the observer
+  is missing (jsdom) and HOLDS the last heading when a long section
+  fills the band, so the rail never flickers to nothing.
 - Directory (`src/routes/directory.tsx`): the URL is the only source of
   filter truth — read via `parseSearchParams`, write via
   `serializeSearchState` (`src/lib/searchParams.ts`; its
@@ -247,7 +264,11 @@ Bun is the package manager and script runner (pinned in `mise.toml`).
   `:type` auto-expands, the caret button peeks without navigating, and
   listDocs only fires for open drawers. Facets omit zero-hit types —
   a missing typeCounts key after facts load means 0, which also
-  disables the caret. The repo home is the ONLY surface rendering an
+  disables the caret. In-group rows (type drawers, pages tree) share
+  the left rail from `src/components/nav-rail.ts` — the group draws a
+  hairline, each row a 2px border over it, active rows color it in.
+  Both files import from there, never from each other (RepoNav renders
+  the pages section, so the other direction is a cycle). The repo home is the ONLY surface rendering an
   h1 inside `.doc-prose` (the reader strips body h1s) — its style
   lives in tokens.css; don't remove it as "unused".
   URL `{type}` resolves by name/id_prefix/alias via

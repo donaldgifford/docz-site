@@ -249,7 +249,15 @@
     color: var(--color-fg-primary);
     background: var(--color-bg-elevated);
     border: 1px solid var(--color-border-default);
-    padding: 0 0.35em;
+    /* Vertical padding is ASYMMETRIC on purpose. An inline box is as
+       tall as the font's ascent+descent, not its line-height, and
+       Monaspace Neon leaves ~0.5px above the capitals but ~3px below
+       the baseline: with even padding the text jams against the top
+       edge and the chip reads bottom-heavy. The extra top padding
+       optically centers the cap band; the small bottom value keeps
+       descenders off the border. Inline padding overflows the line
+       box without moving neighboring lines, so the rhythm is safe. */
+    padding: 0.15em 0.35em 0.04em;
   }
   .doc-prose a code {
     color: inherit;
@@ -314,39 +322,34 @@
     font-style: italic;
     font-family: var(--font-serif);
   }
-  /* GitHub-alert admonitions (IMPL-0002 Phase 3). Divs, not
-     blockquotes — the pull-quote treatment above never cascades in.
-     Backgrounds are the precomputed adm-*-bg tints; labels use the
-     matching status color (both pairs enforced in contrast.test.ts). */
+  /* GitHub-alert admonitions (IMPL-0002 Phase 3; restyled in the
+     DESIGN-0005 dial-in). Divs, not blockquotes — the pull-quote
+     treatment above never cascades in. The look follows the mockup's
+     `.banner`: a thin tinted rule around a quiet fill, with the kind
+     carried by a mono uppercase run-in label instead of a filled icon
+     disc (the discs read as stickers next to everything else on the
+     page). Backgrounds are the precomputed adm-*-bg tints; labels use
+     the matching status color (both pairs enforced in
+     contrast.test.ts). */
   .doc-prose .admonition {
-    position: relative;
-    margin: 1.5rem 0;
-    padding: 0.9rem 1.25rem 0.9rem 3.4rem;
+    margin: 1.6rem 0;
+    padding: 0.8rem 1.1rem;
     border: 1px solid var(--color-border-hairline);
-    line-height: 1.6;
-  }
-  .doc-prose .admonition::before {
-    position: absolute;
-    top: 0.85rem;
-    left: 1rem;
-    display: grid;
-    place-items: center;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    color: var(--color-bg-base);
-    font-family: var(--font-mono);
-    font-size: 13px;
-    font-weight: 700;
+    /* An aside, not the main line: a step down in size and leading so
+       the eye can skip it, matching the mockup banner's density. */
+    font-size: 0.95em;
+    line-height: 1.55;
   }
   .doc-prose .admonition .adm-label {
-    display: inline-flex;
-    margin-right: 0.5rem;
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: 0.75em;
     font-weight: 500;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.09em;
     text-transform: uppercase;
+    /* The label is a run-in: it shares the first line with the text,
+       so it must not be a flex box (that would force its own line). */
+    margin-right: 0.7rem;
+    white-space: nowrap;
   }
   .doc-prose .admonition p {
     display: inline;
@@ -357,6 +360,13 @@
     display: block;
     margin-top: 0.6rem;
   }
+  /* Nested blocks sit flush with the box's own bottom padding. */
+  .doc-prose .admonition > :last-child {
+    margin-bottom: 0;
+  }
+  .doc-prose .admonition :is(ul, ol) {
+    margin-top: 0.5rem;
+  }
   .doc-prose .admonition.note {
     background: var(--color-adm-note-bg);
     border-color: color-mix(in srgb, var(--color-st-proposed) 30%, transparent);
@@ -364,22 +374,12 @@
   .doc-prose .admonition.note .adm-label {
     color: var(--color-st-proposed);
   }
-  .doc-prose .admonition.note::before {
-    content: "i";
-    background: var(--color-st-proposed);
-    font-family: var(--font-serif);
-    font-style: italic;
-  }
   .doc-prose .admonition.tip {
     background: var(--color-adm-tip-bg);
     border-color: color-mix(in srgb, var(--color-st-accepted) 30%, transparent);
   }
   .doc-prose .admonition.tip .adm-label {
     color: var(--color-st-accepted);
-  }
-  .doc-prose .admonition.tip::before {
-    content: "\2713";
-    background: var(--color-st-accepted);
   }
   .doc-prose .admonition.important {
     background: var(--color-adm-important-bg);
@@ -392,10 +392,6 @@
   .doc-prose .admonition.important .adm-label {
     color: var(--color-st-superseded);
   }
-  .doc-prose .admonition.important::before {
-    content: "\2726";
-    background: var(--color-st-superseded);
-  }
   .doc-prose .admonition.warning {
     background: var(--color-adm-warning-bg);
     border-color: color-mix(in srgb, var(--color-st-draft) 30%, transparent);
@@ -403,20 +399,12 @@
   .doc-prose .admonition.warning .adm-label {
     color: var(--color-st-draft);
   }
-  .doc-prose .admonition.warning::before {
-    content: "!";
-    background: var(--color-st-draft);
-  }
   .doc-prose .admonition.caution {
     background: var(--color-adm-caution-bg);
     border-color: color-mix(in srgb, var(--color-st-rejected) 30%, transparent);
   }
   .doc-prose .admonition.caution .adm-label {
     color: var(--color-st-rejected);
-  }
-  .doc-prose .admonition.caution::before {
-    content: "\2715";
-    background: var(--color-st-rejected);
   }
   /* wrap-table.ts puts every table in this scroll container: a table
      wider than the column scrolls here instead of widening the page. */
@@ -428,7 +416,7 @@
     width: 100%;
     border-collapse: collapse;
     margin: 0;
-    font-size: 13px;
+    font-size: 14px;
   }
   .doc-prose th,
   .doc-prose td {
@@ -439,7 +427,7 @@
   }
   .doc-prose th {
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--color-fg-muted);
@@ -488,7 +476,7 @@
     background: var(--color-bg-raised);
     border-bottom: 1px solid var(--color-border-hairline);
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.14em;
   }
@@ -498,7 +486,7 @@
   }
   .doc-prose .codeblock-header .caption {
     color: var(--color-fg-tertiary);
-    font-size: 11px;
+    font-size: 12px;
     letter-spacing: 0.01em;
     text-transform: none;
     overflow: hidden;
@@ -514,7 +502,10 @@
      block via MarkdownPre semantics. */
   .doc-prose .mermaid-figure {
     margin: 1.5rem 0;
-    padding: 1rem;
+    /* Diagrams need room to read as a figure rather than a boxed
+       screenshot; the generous inset is the one thing the old portal
+       got visibly right. */
+    padding: 1.75rem 1.25rem;
     border: 1px solid var(--color-border-hairline);
     background: var(--color-bg-raised);
   }
@@ -524,11 +515,25 @@
     height: auto;
     margin: 0 auto;
   }
+  /* Under htmlLabels:false mermaid draws labels as SVG <text>, which
+     otherwise inherits the library's sans default and drifts from the
+     page. Pin the family and a readable fill. A diagram's own
+     `classDef` still wins: mermaid scopes those rules by the render
+     id, and an id selector outranks this one — which is how a document
+     colors individual nodes (see the specimen's styled flowchart). */
+  .doc-prose .mermaid-figure svg :is(.nodeLabel, .label) {
+    font-family: var(--font-mono);
+    fill: var(--color-fg-primary);
+  }
+  .doc-prose .mermaid-figure svg .edgeLabel {
+    font-family: var(--font-mono);
+    fill: var(--color-fg-tertiary);
+  }
   .doc-prose .mermaid-figure figcaption {
     margin-top: 0.6rem;
     text-align: center;
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: 12px;
     color: var(--color-fg-tertiary);
   }
   .doc-prose img {
@@ -588,7 +593,7 @@
     background: var(--color-bg-base);
     color: var(--color-fg-primary);
     font-family: var(--font-sans);
-    font-size: 15px;
+    font-size: 16px;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
   }

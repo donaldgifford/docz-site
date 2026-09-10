@@ -308,6 +308,24 @@ sequenceDiagram
   S-->>B: rendered page
 ```
 
+Nodes take their own colors from `classDef`, which the site stylesheet
+deliberately does not override. Diagrams are monochrome unless the
+author says otherwise:
+
+```mermaid Figure 2: coloring individual nodes
+flowchart TD
+  T[tick every 10 min] --> F[fetch repo at main]
+  F --> D{changed?}
+  D -->|yes| U[parse and upsert]
+  D -->|no| S[skip]
+  classDef begin stroke:#9ece6a,color:#9ece6a
+  classDef decide stroke:#e0af68,color:#e0af68
+  classDef work stroke:#7dcfff,color:#7dcfff
+  class T begin
+  class D decide
+  class U work
+```
+
 ## Tables
 
 | Left aligned | Centered | Right aligned |

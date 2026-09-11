@@ -516,7 +516,14 @@ export const demoOrgHandlers = [
     // Meilisearch does); only `hits` is the offset/limit window.
     const offset = intParam(url, "offset", 0);
     const limit = intParam(url, "limit", 20);
-    const allHits: SearchHit[] = [
+    /*
+     * `updated_at` is NOT in the SearchHit schema — it is the open
+     * additive ask (see src/lib/updatedAt.ts). The demo org forwards
+     * the document's own stamp anyway, so the directory's updated
+     * column is reviewable here; against a real docz-api it renders
+     * the em dash, exactly as page hits do in both places.
+     */
+    const allHits: (SearchHit & { updated_at: string })[] = [
       ...matches.map((doc) => ({
         source: "doc" as const,
         repo: doc.repo,
@@ -527,6 +534,7 @@ export const demoOrgHandlers = [
         status: doc.status,
         author: doc.author,
         snippet: snippetFor(doc, q),
+        updated_at: doc.updated_at,
       })),
       ...pageMatches.map((page) => ({
         source: "page" as const,
@@ -538,6 +546,7 @@ export const demoOrgHandlers = [
         status: "",
         author: "",
         snippet: snippetFor(page, q),
+        updated_at: "",
       })),
     ];
     const hits = allHits.slice(offset, offset + limit);

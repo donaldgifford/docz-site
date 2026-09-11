@@ -419,6 +419,36 @@ Neon is untouched. Article titles (reader, repo home, type, changelog)
 join the serif; the directory and repos heroes stay sans, because they
 label the app rather than a document.
 
+**Eighth amendment (2026-09-11, the card's two ends).** Review asked
+for the repo to join the id rather than sit across the card from it,
+and for the vacated right-hand column to carry the updated stamp the
+RFD-index references show. Both ends of the row are now two lines that
+align with each other: `DESIGN-0001 / docz-site` over the title on the
+left, `Sep 10, 2026` over `1:52 PM` on the right. The coordinate reads
+as one phrase instead of asking the eye to travel sideways and
+reassemble it, and the separator inherits `fg-muted` rather than taking
+a border token, so every color in the line is one the contrast gate
+already gets to see.
+
+This supersedes the sixth amendment's "the repo takes that slot", but
+not its reasoning about why the slot was empty. `SearchHit` still has
+no timestamp property. The finding that changes the ask: docz-api
+already HAS the value — `internal/search/types.go` stores `updated_at`
+(Unix seconds) on the Meilisearch record and `internal/search/
+client.go` declares it a sortable attribute — and `decodeHits` simply
+never copies it onto the wire struct, so it never reaches the schema or
+the generated type. The upstream ask is therefore two lines of Go plus
+an additive schema property, not an indexing change.
+
+Until it lands, `hitUpdatedAt` (`src/lib/updatedAt.ts`) reads the
+property defensively, the way `apiConfig` and `changelogConfig` read
+`config_snapshot`, and the column renders the em dash. The demo
+fixtures forward each document's own `updated_at` so the surface is
+reviewable under `dev:msw`; page hits send `""` there too, because
+nothing in the contract dates a published page. The stamp formats in
+the reader's own zone with the locale pinned to en-US, so month
+abbreviations and the 12-hour clock cannot drift per machine.
+
 
 
 The doc title (`DocHeader` in `doc.tsx`) and the three page-level h1s

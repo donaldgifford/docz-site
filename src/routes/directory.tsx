@@ -17,6 +17,7 @@ import {
   toSearchDocsParams,
   type DirectorySearchState,
 } from "@/lib/searchParams";
+import { formatUpdatedStamp, hitUpdatedAt } from "@/lib/updatedAt";
 
 import type { SearchHit } from "@/api/__generated__/docz-api.schemas";
 
@@ -33,13 +34,15 @@ const Q_DEBOUNCE_MS = 200;
 
 /*
  * Hit rows are cards, not table rows (DESIGN-0005 dial-in, replacing
- * the mockup's six-column `.doc-row`): id over title on the left, the
- * status pill in the middle, the repo on the right. Status is the only
- * color in the row — the type badge that used to lead it competed with
- * it, and the doc id already spells the type out.
+ * the mockup's six-column `.doc-row`): "DOC-ID / repo" over the title
+ * on the left, the status pill in the middle, the updated stamp on the
+ * right. Status is the only color in the row — the type badge that used
+ * to lead it competed with it, and the doc id already spells the type
+ * out. Both outer columns are two lines, so they align with each other
+ * rather than floating against a taller middle.
  */
 const ROW_CARD =
-  "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border border-border-hairline bg-bg-raised px-4 py-3 transition-colors hover:border-border-default hover:bg-bg-elevated md:grid-cols-[minmax(0,1fr)_132px_150px] md:gap-6";
+  "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border border-border-hairline bg-bg-raised px-4 py-3 transition-colors hover:border-border-default hover:bg-bg-elevated md:grid-cols-[minmax(0,1fr)_132px_118px] md:gap-6";
 
 function DirectoryHero({ repo }: { repo: string | null }) {
   return (
@@ -114,6 +117,34 @@ function hitKey(hit: SearchHit): string {
     : `${hit.repo}/${hit.type}/${hit.doc_id}`;
 }
 
+/**
+ * Right-hand stamp: date over time, mirroring the id/title pair on the
+ * left. Against a real docz-api this is the em dash today — see
+ * `hitUpdatedAt` for why, and for what makes it light up.
+ */
+function UpdatedCell({ hit }: { hit: SearchHit }) {
+  const iso = hitUpdatedAt(hit);
+  const stamp = formatUpdatedStamp(iso);
+  if (stamp === undefined) {
+    return (
+      <span className="hidden text-right font-mono text-[12.5px] text-fg-muted md:block">
+        —
+      </span>
+    );
+  }
+  return (
+    <time
+      dateTime={iso}
+      className="hidden text-right font-mono text-[12.5px] whitespace-nowrap text-fg-tertiary md:block"
+    >
+      {stamp.date}
+      <span className="mt-[3px] block text-[11.5px] text-fg-muted">
+        {stamp.time}
+      </span>
+    </time>
+  );
+}
+
 function HitRow({ hit }: { hit: SearchHit }) {
   const repoName = hit.repo.split("/").at(-1) ?? hit.repo;
   const prefetchDoc = usePrefetchDoc();
@@ -137,12 +168,22 @@ function HitRow({ hit }: { hit: SearchHit }) {
       >
         <span className="min-w-0">
           {/* Pages have no doc id, so they keep the neutral source
-              marker in its place (DESIGN-0004 OQ-3a). */}
+              marker in its place (DESIGN-0004 OQ-3a). The repo rides
+              the same line: "DESIGN-0001 / docz-site" is one
+              coordinate, and splitting it across the card made the
+              reader scan sideways to assemble it. */}
           <span
-            title={isPage ? hit.path : undefined}
-            className="block font-mono text-[12px] tracking-[0.08em] text-fg-muted uppercase"
+            title={isPage ? `${hit.repo}/${hit.path}` : hit.repo}
+            className="block truncate font-mono text-[12px] tracking-[0.08em] text-fg-muted uppercase"
           >
             {isPage ? "page" : hit.doc_id}
+            {/* Inherits fg-muted: every token in this line is
+                contrast-checked, and a dimmer separator would only be
+                one the e2e axe sweep rejects. */}
+            <span aria-hidden className="px-[0.4em]">
+              /
+            </span>
+            <span className="normal-case">{repoName}</span>
           </span>
           <span className="mt-[3px] block truncate text-[16px] text-fg-primary">
             {hit.title}
@@ -151,17 +192,7 @@ function HitRow({ hit }: { hit: SearchHit }) {
         <span className="justify-self-start md:justify-self-center">
           {hit.status !== "" && <StatusPill status={hit.status} />}
         </span>
-        {/*
-         * SearchHit carries no date field at all (updated_at is an
-         * additive ask in DESIGN-0001), so the right column is the
-         * repo — the fact that actually varies in a cross-repo list.
-         */}
-        <span
-          title={hit.repo}
-          className="hidden truncate text-right font-mono text-[12.5px] text-fg-tertiary md:block"
-        >
-          {repoName}
-        </span>
+        <UpdatedCell hit={hit} />
       </Link>
     </li>
   );
@@ -184,7 +215,10 @@ function SkeletonRows() {
             />
           </div>
           <div className="h-5 w-20 bg-bg-elevated md:justify-self-center" />
-          <div className="hidden h-3 w-20 justify-self-end bg-bg-elevated md:block" />
+          <div className="hidden justify-self-end md:block">
+            <div className="h-3 w-[88px] bg-bg-elevated" />
+            <div className="mt-2 ml-auto h-3 w-14 bg-bg-elevated" />
+          </div>
         </div>
       ))}
     </div>

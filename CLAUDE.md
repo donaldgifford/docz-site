@@ -255,21 +255,34 @@ Bun is the package manager and script runner (pinned in `mise.toml`).
   is missing (jsdom) and HOLDS the last heading when a long section
   fills the band, so the rail never flickers to nothing.
 - Directory (`src/routes/directory.tsx`): hit rows are CARDS since the
-  DESIGN-0005 dial-in — doc id over title, `StatusPill` in the middle,
-  repo on the right — NOT the mockup's six-column `.doc-row`, which
-  this surface has now diverged from (mockup.html still leads for prose
-  and chrome tokens). There is no type badge anywhere: the doc id
-  already spells the type out and a second colored chip fought the
-  status for attention. Type color survives on the filter chips only.
-  `SearchHit` carries no date field at all, so there is no date column
-  to fill. The URL is the only source of filter truth — read via `parseSearchParams`, write via
+  DESIGN-0005 dial-in — `DOC-ID / repo` over the title, `StatusPill` in
+  the middle, the updated stamp (date over time) on the right — NOT the
+  mockup's six-column `.doc-row`, which this surface has now diverged
+  from (mockup.html still leads for prose and chrome tokens). Both
+  outer columns are two lines so they align with each other. There is
+  no type badge anywhere: the doc id already spells the type out and a
+  second colored chip fought the status for attention. Type color
+  survives on the filter chips only. The URL is the only source of
+  filter truth — read via `parseSearchParams`, write via
   `serializeSearchState` (`src/lib/searchParams.ts`; its
   `toSearchDocsParams` maps state → API params, first-of-array facets).
   Typed queries debounce ~200 ms and commit with `replace: true`;
   discrete filter actions must push so back/forward walks history.
-  `SearchHit` has NO `updated_at` (additive ask in DESIGN-0001) — the
-  updated column renders "—"; `src/lib/relativeTime.ts` takes over when
-  the field lands.
+- The updated column: `SearchHit` still has NO `updated_at` property,
+  so against a real docz-api every row renders "—". docz-api ALREADY
+  indexes the value (`internal/search/types.go` stores `updated_at` in
+  Unix seconds; `client.go` makes it sortable) — `decodeHits` just
+  never copies it onto the wire struct, so the ask upstream is a decode
+  + an additive schema property, not an indexing change.
+  `src/lib/updatedAt.ts` is the whole surface: `hitUpdatedAt` reads the
+  property defensively (same posture as `apiConfig`/`changelogConfig`
+  over `config_snapshot`) so the column lights up with no further
+  change here, `formatUpdatedStamp` splits RFC3339 into the two lines
+  (locale pinned en-US, zone is the reader's, `timeZone` arg for
+  tests), and `formatRelativeTime` stays for surfaces wanting relative.
+  Demo fixtures forward each doc's own `updated_at` so the column is
+  reviewable under `dev:msw`; page hits send "" — nothing in the
+  contract dates a published page.
 - Faceted controls exclude their own dimension via separate limit-0
   searchDocs queries (directory picker/chips AND palette pills) so
   every option stays offered while one is selected. URL `offset` means

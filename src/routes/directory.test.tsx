@@ -7,6 +7,7 @@ import { createMemoryRouter, RouterProvider } from "react-router";
 import { describe, expect, it } from "vitest";
 
 import { routes } from "@/app/router";
+import { formatUpdatedStamp } from "@/lib/updatedAt";
 import { server } from "@/test/server";
 
 import type { SearchHit } from "@/api/__generated__/docz-api.schemas";
@@ -17,6 +18,8 @@ const SITE_IMPL_TITLE =
 const API_DESIGN_TITLE =
   "docz-api cross-repo docz registry and ingestion service";
 const API_CONTRACT_TITLE = "OpenAPI contract for docz-api and the docz-site";
+/** That fixture doc's `updated_at`, which the demo search forwards. */
+const API_CONTRACT_UPDATED_AT = "2026-07-06T15:30:00Z";
 
 /** A search handler over `total` synthetic docs honoring offset/limit. */
 function syntheticSearchHandler(total: number) {
@@ -63,7 +66,7 @@ function mountAt(path: string) {
 }
 
 describe("directory route", () => {
-  it("lists every demo doc for the empty query, with no date column", async () => {
+  it("lists every demo doc for the empty query, dated and repo-tagged", async () => {
     mountAt("/");
 
     expect(await screen.findByText(SITE_DESIGN_TITLE)).toBeInTheDocument();
@@ -75,11 +78,22 @@ describe("directory route", () => {
       expect(screen.getByText(title)).toBeInTheDocument();
     }
 
-    // SearchHit carries no date field at all (updated_at is an additive
-    // ask), so the card rows show the repo there instead of a column of
-    // placeholder dashes — there must be none left anywhere.
-    expect(screen.queryAllByText("—")).toHaveLength(0);
+    // The repo rides the id line ("DESIGN-0001 / docz-site"), so it is
+    // still on every row after the date took the right-hand column.
     expect(screen.getAllByText("docz-site").length).toBeGreaterThan(0);
+
+    // Doc hits carry the demo org's own stamp; page hits have none
+    // anywhere in the contract, so they keep the em dash.
+    const dated = screen.getByRole("link", {
+      name: new RegExp(API_CONTRACT_TITLE),
+    });
+    // Formatted in the runner's own zone, as in the browser — the
+    // format itself is pinned in updatedAt.test.ts.
+    const stamp = formatUpdatedStamp(API_CONTRACT_UPDATED_AT);
+    expect(stamp).toBeDefined();
+    expect(within(dated).getByText(stamp?.date ?? "")).toBeInTheDocument();
+    expect(within(dated).getByText(stamp?.time ?? "")).toBeInTheDocument();
+    expect(screen.getAllByText("—").length).toBeGreaterThan(0);
 
     // Rows link straight into the reader.
     expect(

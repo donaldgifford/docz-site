@@ -14,6 +14,7 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 - *(reader)* Raise prose to 18px with a 60ch measure and em headings
 - *(directory)* Card rows led by document status, no type badge
 - *(reader)* Set the article in Source Serif 4
+- *(directory)* Pair the id with its repo and date the card
 
 ### Bug Fixes
 

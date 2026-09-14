@@ -5,9 +5,10 @@ import { expect, test } from "@playwright/test";
  * preview build. The DESIGN-0777 fixture is served by a browser-worker
  * override behind the docz:e2e:rendering-doc flag (see
  * src/mocks/browser.ts) — it carries an alert, a captioned go fence,
- * and a mermaid diagram whose node label is a hostile <img> payload,
- * so this is also where the REAL mermaid strict-mode render gets its
- * security assertion.
+ * and two mermaid diagrams whose node labels are hostile <img>
+ * payloads, the second of which also tries to disable the protection
+ * through its own front matter, so this is also where the REAL mermaid
+ * strict-mode render gets its security assertion.
  */
 
 test("alerts, code chrome, and mermaid render on one doc", async ({ page }) => {
@@ -46,18 +47,22 @@ test("alerts, code chrome, and mermaid render on one doc", async ({ page }) => {
     "internal/ingest/parse.go",
   );
 
-  // Mermaid: the lazy chunk loads and the diagram lands as SVG.
-  await expect(page.locator("figure.mermaid-figure svg")).toBeVisible({
+  // Mermaid: the lazy chunk loads and both diagrams land as SVG.
+  await expect(page.locator("figure.mermaid-figure svg")).toHaveCount(2, {
     timeout: 15_000,
   });
-  await expect(page.locator("figure.mermaid-figure figcaption")).toHaveText(
+  await expect(page.locator("figure.mermaid-figure figcaption")).toHaveText([
     "fig 1 - order flow",
-  );
+    "fig 2 - hostile front matter",
+  ]);
   expect(mermaidRequests.length).toBeGreaterThan(0);
 
   // strict + htmlLabels:false — the hostile node label stays literal
   // SVG text: no element (not even a purified <img src>) materializes
   // from document text, no foreignObject HTML islands, nothing runs.
+  // Figure 2 additionally carries front matter trying to set
+  // htmlLabels/securityLevel itself; `secure` keeps it inert, so these
+  // same counts cover it.
   expect(await page.locator(".doc-prose img").count()).toBe(0);
   expect(await page.locator(".doc-prose foreignObject").count()).toBe(0);
   expect(await page.locator(".doc-prose script").count()).toBe(0);

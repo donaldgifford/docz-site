@@ -124,7 +124,17 @@ Bun is the package manager and script runner (pinned in `mise.toml`).
   innerHTML in the codebase: mermaid.render() output under
   `securityLevel: "strict"` AND `htmlLabels: false` — BOTH required
   (strict alone still materializes purified `<img src>` elements in
-  foreignObject labels); render failure keeps the source visible.
+  foreignObject labels) — AND `secure: MERMAID_SECURE_KEYS`, because
+  mermaid's own secure list omits `htmlLabels`, so without it a
+  diagram's YAML front matter turns the labels back on at BOTH the
+  global and the nested `flowchart` path (audited on 11.16.0; one
+  top-level entry covers both, the sanitizer recurses). That list
+  restates mermaid's defaults in full rather than appending to them —
+  the array union is an implementation detail — and
+  `mermaid-config.test.ts` asserts the EFFECTIVE list stays a superset
+  of the installed mermaid's, so a version that protects a new key
+  fails CI. The config lives in `mermaidInitConfig()`, exported so the
+  test exercises what ships. Render failure keeps the source visible.
   Diagrams are MONOCHROME unless the document says otherwise: tokens.css
   pins only label font-family and fill, and mermaid scopes a diagram's
   own `classDef` rules by render id, so those outrank the stylesheet —

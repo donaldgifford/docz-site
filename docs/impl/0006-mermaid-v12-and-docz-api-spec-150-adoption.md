@@ -316,18 +316,27 @@ per-flowchart.
 
 #### Tasks
 
-- [ ] **Audit the `secure` list first, before the upgrade** — see
-      [OQ-11](#oq-11-answered-b). In the installed mermaid 11.16.0 the default is
-      `["secure", "securityLevel", "startOnLoad", "maxTextSize",
-      "suppressErrorRendering", "maxEdges"]`, which does **not** include
-      `htmlLabels`. Determine by test whether a diagram's own front
-      matter can therefore set `htmlLabels: true` — globally or nested
-      under `flowchart` — and re-enable the exact vector
-      `htmlLabels: false` exists to close. Record the answer either way.
-- [ ] If the audit confirms it, pass an explicit `secure` array in
+- [x] **Audit the `secure` list first, before the upgrade** — see
+      [OQ-11](#oq-11-answered-b). **Confirmed on 11.16.0: a diagram's own
+      front matter could set `htmlLabels: true` at both the global and
+      the nested `flowchart` path**, with `securityLevel` correctly held
+      at `strict` throughout. Full write-up, including the config path
+      and the merge semantics that shaped the fix, in
+      [the OQ-11 finding](#finding-2026-09-14-mermaid-11160-before-the-v12-bump).
+- [x] If the audit confirms it, pass an explicit `secure` array in
       `initialize()` covering `htmlLabels` and the nested path, and add
       a hostile-front-matter row to the XSS suite. `secure` is itself in
       the secure list, so a document cannot unset it.
+      **Done as `MERMAID_SECURE_KEYS` +
+      `mermaidInitConfig()` in `src/markdown/mermaid-block.tsx`.** The
+      hostile-front-matter coverage did *not* land in
+      `processor.xss.test.tsx` as planned: that suite tests the markdown
+      pipeline, and mermaid config is merged inside `MermaidBlock`,
+      downstream of everything the processor does. It went to a new
+      `src/markdown/mermaid-config.test.ts` (the sibling MermaidBlock
+      suite mocks mermaid, so it could not host this) plus a second
+      figure in the e2e rendering fixture, which is where the
+      *rendered-output* half of the guarantee already lives.
 - [ ] Bump `mermaid` to `^12.0.0` and update the lockfile.
 - [ ] Adopt ELK as the default layout (OQ-1) by setting `layout`
       explicitly in `getMermaid()` rather than relying on the new
@@ -499,7 +508,8 @@ and must follow it exactly, including the both-ends validation rule.
 | `src/routes/directory.test.tsx` | Modify | Dated page rows; ordering assertions |
 | `src/mocks/fixtures.ts` | Modify | `created`, page timestamps, honor `sort`/`source`, emit 400 |
 | `src/markdown/mermaid-block.tsx` | Modify | ELK default, layout override, `secure` list, v12 theme keys |
-| `src/markdown/processor.xss.test.tsx` | Modify | Hostile front-matter row, if OQ-11 confirms the gap |
+| `src/markdown/mermaid-config.test.ts` | Create | The OQ-11 audit, kept as a test (real mermaid, merged config) |
+| `src/mocks/browser.ts` | Modify | Second e2e figure whose front matter attacks the `secure` list |
 | `src/a11y/axe.test.tsx` | Modify | Confirm the mermaid mock matches the v12 module shape |
 | `server/serve.ts` | Modify | `DOCZ_MERMAID_LAYOUT` whitelist + injection |
 | `server/serve.test.ts` | Modify | Validation and fallback cases |
@@ -533,9 +543,15 @@ and must follow it exactly, including the both-ends validation rule.
 - [ ] `server/serve.test.ts` — `DOCZ_MERMAID_LAYOUT` validation and
       fallback. Runs under `bun test server/`, outside the vitest graph.
 - [ ] `src/markdown/processor.xss.test.tsx` — existing rows green under
-      v12, plus a hostile front-matter row if OQ-11 confirms the gap.
-- [ ] `e2e/rendering.spec.ts` — hostile-label row green under v12;
-      widened chunk assertion; all three specimen fences render.
+      v12.
+- [x] `src/markdown/mermaid-config.test.ts` — hostile front matter
+      cannot re-enable `htmlLabels` at either path or lower
+      `securityLevel`, a non-secure key still applies (non-vacuity), and
+      the effective `secure` list stays a superset of whatever the
+      installed mermaid protects.
+- [ ] `e2e/rendering.spec.ts` — hostile-label rows green under v12,
+      including the front-matter figure; widened chunk assertion; all
+      three specimen fences render.
 - [ ] `e2e/a11y.spec.ts` — full-rule axe over the specimen with real v12
       diagrams, contrast included.
 - [ ] `just helm-unittest` — the new env renders for both layout values.
@@ -588,6 +604,45 @@ What is established: the default `secure` list, read from the installed
 package. What is not: whether front-matter config actually reaches the
 `htmlLabels` merge, and whether a top-level `secure` entry also covers
 the nested `flowchart.htmlLabels` path. Both need a test, not a reading.
+
+#### Finding (2026-09-14, mermaid 11.16.0, before the v12 bump)
+
+**Confirmed. The gap was real and is now closed.** Both open parts were
+settled by running the shipped config against hostile front matter and
+reading the merged config back out:
+
+| Front matter under…       | `htmlLabels` | `flowchart.htmlLabels` | `securityLevel` |
+| ------------------------- | ------------ | ---------------------- | --------------- |
+| mermaid's default `secure` | `true`      | `true`                 | `strict`        |
+| `MERMAID_SECURE_KEYS`      | `false`     | `false`                | `strict`        |
+
+So a document *could* re-enable HTML labels at both paths, and one
+top-level `secure` entry closes both — mermaid's directive sanitizer
+recurses into nested config objects, deleting secure keys at every
+level. `securityLevel` was never reachable, which is what made the
+mechanism legible: it is in the default list, and it held.
+
+The path, read from the shipped bundle and then exercised:
+`render` → `processAndSetConfigs` → `preprocessDiagram` (extracts the
+front-matter `config:`) → `addDirective` → `sanitizeDirective` (drops
+keys outside the config schema) → `updateCurrentConfig` → `sanitize`
+(deletes `secure`-listed keys, recursively) → merged over the site
+config.
+
+Two things worth carrying forward. Mermaid *unions* a supplied `secure`
+array with its defaults rather than replacing it, so a one-element
+addition would work today — but that is an implementation detail, and
+under clobber semantics it would silently drop `securityLevel` from the
+protected set. `MERMAID_SECURE_KEYS` therefore restates the defaults in
+full, and the test asserts the **effective** list is a superset of
+whatever the installed mermaid protects, so a future version adding a
+key fails CI either way. Second, `mermaidAPI` is deprecated but is the
+only handle on the merged config; it appears in the test only, never in
+shipped code.
+
+Covered by `src/markdown/mermaid-config.test.ts` (config-level, jsdom)
+and by a second figure in the e2e rendering fixture whose front matter
+tries the same thing (rendered-output level, real browser).
 
 - **a.** Verify it first, as a standalone `patch` PR ahead of this
   branch, and if confirmed, ship the `secure`-array fix plus an XSS-suite

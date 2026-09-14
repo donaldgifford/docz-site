@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-import type { Mermaid } from "mermaid";
+import type { Mermaid, MermaidConfig } from "mermaid";
 
 /*
  * Client-side mermaid rendering (IMPL-0002 Phase 4, OQ-1a).
@@ -21,6 +21,7 @@ import type { Mermaid } from "mermaid";
  *   - htmlLabels false (global + flowchart): labels render as SVG
  *     <text>, so hostile markup in a node label stays literal text —
  *     no element ever materializes from document text.
+ * A THIRD setting keeps the second one true — see `secureKeys`.
  * Do not copy this pattern elsewhere and do not relax either setting;
  * keep the hostile-source rows in the XSS suite and e2e green when
  * touching this. (rfc-site's "strict doesn't render" note described
@@ -39,17 +40,54 @@ let renderSeq = 0;
 
 function getMermaid(): Promise<Mermaid> {
   mermaidPromise ??= import("mermaid").then((mod) => {
-    mod.default.initialize({
-      startOnLoad: false,
-      theme: "base",
-      securityLevel: "strict",
-      htmlLabels: false,
-      flowchart: { htmlLabels: false },
-      themeVariables: mermaidThemeFromTokens(),
-    });
+    mod.default.initialize(mermaidInitConfig());
     return mod.default;
   });
   return mermaidPromise;
+}
+
+/*
+ * `secure` is the list of config keys a diagram's own YAML front matter
+ * is forbidden to set. Mermaid's default list covers `securityLevel`
+ * but NOT `htmlLabels`, and the gap is real rather than theoretical:
+ * audited against the installed 11.16.0 and proven by test in
+ * `mermaid-config.test.ts`, a hostile `config:` block otherwise flips
+ * BOTH the global flag and the nested `flowchart.htmlLabels`,
+ * re-opening the exact vector strict mode leaves open. Mermaid's
+ * directive sanitizer recurses into nested config objects, so the ONE
+ * top-level entry covers both paths. `secure` is itself always secure,
+ * so a document cannot unset any of this.
+ *
+ * Upstream's own defaults are restated here rather than added to,
+ * because mermaid currently UNIONS this array with its defaults and
+ * that is an implementation detail — under clobber semantics a
+ * one-element array would silently drop `securityLevel` from the
+ * protected set. The EFFECTIVE list is what the test asserts on, and
+ * it also fails if a future mermaid protects a key this list omits.
+ */
+export const MERMAID_SECURE_KEYS = [
+  // Mermaid's defaults as of 11.16.0.
+  "secure",
+  "securityLevel",
+  "startOnLoad",
+  "maxTextSize",
+  "suppressErrorRendering",
+  "maxEdges",
+  // Ours.
+  "htmlLabels",
+] as const;
+
+/** The exact config we ship — exported so tests exercise it, not a copy. */
+export function mermaidInitConfig(): MermaidConfig {
+  return {
+    startOnLoad: false,
+    theme: "base",
+    securityLevel: "strict",
+    htmlLabels: false,
+    flowchart: { htmlLabels: false },
+    secure: [...MERMAID_SECURE_KEYS],
+    themeVariables: mermaidThemeFromTokens(),
+  };
 }
 
 // Minimal documented v11 variable set, read from the live tokens so

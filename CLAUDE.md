@@ -424,6 +424,14 @@ Bun is the package manager and script runner (pinned in `mise.toml`).
 - TypeScript is pinned to the 5.9 series: typescript-eslint's parser
   cannot load the TS 7 (native compiler) line. Don't bump the major
   until typescript-eslint supports it.
+- package.json `overrides` holds a `dompurify` floor of `^3.4.13`.
+  mermaid asks for `^3.4.12` and GHSA-55q2-fjhq-7xh7 covers `<=3.4.12`;
+  it isn't reachable through mermaid (it needs `IN_PLACE` plus an
+  element hook that detaches a node — mermaid sanitizes a string and
+  only hooks attributes) but this is the sanitizer behind the one
+  `innerHTML` here, so it stays above the advisory. Fix a transitive
+  advisory with an override, never `bun update <pkg>` — that adds a
+  direct dependency on a package nothing imports.
 - ESLint is flat config (`eslint.config.js`): typescript-eslint
   strict + stylistic type-checked (projectService), react-hooks flat
   recommended, jsx-a11y, eslint-config-prettier last. Generated dir is

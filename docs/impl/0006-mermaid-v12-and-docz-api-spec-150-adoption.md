@@ -395,8 +395,22 @@ per-flowchart.
       including both mermaid rows; e2e green with zero `img`,
       `foreignObject`, or `script` under `.doc-prose` and no dialog,
       across both hostile figures.
-- [ ] Confirm no advisory applies to the DOMPurify version v12 resolves
-      (`^3.3.3` → `^3.4.12` transitively).
+- [x] Confirm no advisory applies to the DOMPurify version v12 resolves
+      (`^3.3.3` → `^3.4.12` transitively). **One did.**
+      GHSA-55q2-fjhq-7xh7 (moderate, XSS) covers `<= 3.4.12` — exactly
+      the version the bump landed on — and is fixed in 3.4.13. Read in
+      full rather than taken at severity: it needs `IN_PLACE`
+      sanitization *plus* a `beforeSanitizeElements`/
+      `uponSanitizeElement` hook that detaches a node, and mermaid does
+      neither. It sanitizes a **string** (`innerHTML` of the render
+      container, so never `IN_PLACE`) and its only hooks are
+      `before/afterSanitizeAttributes`, which copy an anchor `target`
+      and never remove anything. Not reachable.
+      Pinned to `^3.4.13` anyway via a `dompurify` entry in package.json
+      `overrides` (resolves 3.4.15), because it costs nothing and this
+      library is the sanitizer behind the one `innerHTML` in the
+      codebase. `bun update dompurify` is the wrong tool — it adds a
+      direct dependency on a package we never import.
 - [x] Widen the chunk assertion in `e2e/rendering.spec.ts` from
       `/mermaid/i` to also match ELK. ELK ships as its own ESM chunk
       whose filename will not contain "mermaid", so an eagerly-imported

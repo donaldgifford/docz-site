@@ -47,6 +47,9 @@
     "unist-util-visit": "^5.1.0",
     "unist-util-visit-parents": "^6.0.2"
   },
+  "overrides": {
+    "dompurify": "^3.4.13"
+  },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
     "@eslint/js": "^10.0.1",

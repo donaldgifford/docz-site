@@ -11,14 +11,24 @@ import { expect, test } from "@playwright/test";
  * strict-mode render gets its security assertion.
  */
 
+/*
+ * Chunks that must only ever load for a document containing a diagram.
+ * ELK is matched separately because mermaid 12 ships it as its own ESM
+ * chunk whose filename contains no "mermaid" — a pattern looking only
+ * for that word would sail straight past an eagerly imported layout
+ * engine, which is the single mistake these assertions exist to catch.
+ */
+const ELK_CHUNK = /\belk\b/i;
+const DIAGRAM_CHUNK = /mermaid|\belk\b/i;
+
 test("alerts, code chrome, and mermaid render on one doc", async ({ page }) => {
   await page.addInitScript(() => {
     sessionStorage.setItem("docz:e2e:rendering-doc", "1");
   });
-  const mermaidRequests: string[] = [];
+  const diagramRequests: string[] = [];
   page.on("request", (request) => {
-    if (/mermaid/i.test(request.url())) {
-      mermaidRequests.push(request.url());
+    if (DIAGRAM_CHUNK.test(request.url())) {
+      diagramRequests.push(request.url());
     }
   });
   let dialogFired = false;
@@ -55,7 +65,13 @@ test("alerts, code chrome, and mermaid render on one doc", async ({ page }) => {
     "fig 1 - order flow",
     "fig 2 - hostile front matter",
   ]);
-  expect(mermaidRequests.length).toBeGreaterThan(0);
+  expect(diagramRequests.length).toBeGreaterThan(0);
+  // ELK is the configured layout, so its chunk must actually be fetched
+  // — which also keeps the diagram-free assertion below honest by
+  // proving this pattern matches something real.
+  expect(diagramRequests.filter((url) => ELK_CHUNK.test(url))).not.toHaveLength(
+    0,
+  );
 
   // strict + htmlLabels:false — the hostile node label stays literal
   // SVG text: no element (not even a purified <img src>) materializes
@@ -69,17 +85,17 @@ test("alerts, code chrome, and mermaid render on one doc", async ({ page }) => {
   expect(dialogFired).toBe(false);
 });
 
-test("the mermaid chunk stays off diagram-free docs", async ({ page }) => {
-  const mermaidRequests: string[] = [];
+test("the diagram chunks stay off diagram-free docs", async ({ page }) => {
+  const diagramRequests: string[] = [];
   page.on("request", (request) => {
-    if (/mermaid/i.test(request.url())) {
-      mermaidRequests.push(request.url());
+    if (DIAGRAM_CHUNK.test(request.url())) {
+      diagramRequests.push(request.url());
     }
   });
 
   await page.goto("/donaldgifford/docz-site/design/DESIGN-0001");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-  // The reader (and Shiki) are fully loaded; mermaid never was.
+  // The reader (and Shiki) are fully loaded; mermaid and ELK never were.
   await expect(page.locator(".doc-prose pre").first()).toBeVisible();
-  expect(mermaidRequests).toHaveLength(0);
+  expect(diagramRequests).toHaveLength(0);
 });

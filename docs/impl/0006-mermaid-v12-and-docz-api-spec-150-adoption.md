@@ -388,16 +388,24 @@ per-flowchart.
       upstream's rule to change, and the line is cheap. Pinned by a test
       that walks the whole merged config for any `htmlLabels: true`
       after hostile front matter, rather than naming blocks.
-- [ ] Run the XSS suite (`src/markdown/processor.xss.test.tsx`) and the
+- [x] Run the XSS suite (`src/markdown/processor.xss.test.tsx`) and the
       e2e hostile-label row in `e2e/rendering.spec.ts`, which renders a
       node label carrying an `<img>` payload. Confirm no element
-      materializes from document text.
+      materializes from document text. All 48 XSS rows green under v12,
+      including both mermaid rows; e2e green with zero `img`,
+      `foreignObject`, or `script` under `.doc-prose` and no dialog,
+      across both hostile figures.
 - [ ] Confirm no advisory applies to the DOMPurify version v12 resolves
       (`^3.3.3` → `^3.4.12` transitively).
-- [ ] Widen the chunk assertion in `e2e/rendering.spec.ts` from
+- [x] Widen the chunk assertion in `e2e/rendering.spec.ts` from
       `/mermaid/i` to also match ELK. ELK ships as its own ESM chunk
       whose filename will not contain "mermaid", so an eagerly-imported
-      ELK would pass the test written to prevent exactly that.
+      ELK would pass the test written to prevent exactly that. Confirmed
+      from the build output — the chunk is `assets/elk-<hash>.js`, no
+      "mermaid" anywhere in the name. The diagram page now also asserts
+      the ELK chunk **is** fetched, which both proves ELK is the layout
+      actually in use at runtime and keeps the diagram-free assertion
+      from passing on a pattern that matches nothing.
 - [ ] Re-check the jsdom mermaid mock in `src/a11y/axe.test.tsx` still
       matches the v12 module shape.
 - [ ] Confirm all three specimen fences render under ELK, including

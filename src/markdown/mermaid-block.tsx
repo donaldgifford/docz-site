@@ -98,12 +98,27 @@ export const MERMAID_SECURE_KEYS = [
  */
 const MERMAID_LAYOUT = "elk";
 
+/*
+ * v12 also changed the default `look` from `classic` to `neo`, which
+ * rounds node corners, thickens strokes, and adds a drop shadow. That
+ * is a separate change riding along with the layout one, and this site
+ * has a stated position on it: the radius scale in tokens.css is wiped
+ * — sharp corners everywhere, `rounded-pill` the only exception — so
+ * `neo` would leave diagrams the one surface with rounded boxes.
+ * Pinned rather than inherited, so the appearance is a decision on the
+ * record instead of a side effect of a dependency bump. Flipping to
+ * `neo` is this one line, and the specimen's Mermaid section is where
+ * to judge it.
+ */
+const MERMAID_LOOK = "classic";
+
 /** The exact config we ship — exported so tests exercise it, not a copy. */
 export function mermaidInitConfig(): MermaidConfig {
   return {
     startOnLoad: false,
     theme: "base",
     layout: MERMAID_LAYOUT,
+    look: MERMAID_LOOK,
     securityLevel: "strict",
     htmlLabels: false,
     flowchart: { htmlLabels: false },
@@ -120,12 +135,14 @@ export function mermaidInitConfig(): MermaidConfig {
  * blank figure rather than an error, and the test asserts each one
  * survives the merge.
  *
- * `nodeBorder` is load-bearing beyond its own color in v12. The default
- * `look` is now `neo`, which strokes nodes with a gradient whenever the
- * theme sets `useGradient` — and `base` does. Theme.calculate turns it
- * back off precisely when the overrides carry `nodeBorder` and not
- * `useGradient`, which is this map. Drop `nodeBorder` and gradients
- * reappear across every diagram, against the monochrome policy.
+ * `nodeBorder` is load-bearing beyond its own color in v12. The `neo`
+ * look strokes nodes with a gradient whenever the theme sets
+ * `useGradient` — and `base` does. Theme.calculate turns it back off
+ * precisely when the overrides carry `nodeBorder` and not
+ * `useGradient`, which is this map. MERMAID_LOOK keeps us off `neo`
+ * today, but the two guards are independent: drop `nodeBorder` and a
+ * later look change grows gradients across every diagram, against the
+ * monochrome policy.
  */
 export function mermaidThemeFromTokens(): Record<string, string> {
   const style = getComputedStyle(document.documentElement);

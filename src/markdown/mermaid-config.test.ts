@@ -86,12 +86,20 @@ describe("the mermaid secure list", () => {
   });
 });
 
-describe("the shipped layout", () => {
-  it("is named explicitly rather than inherited", () => {
+describe("the shipped layout and look", () => {
+  it("names the layout explicitly rather than inheriting it", () => {
     // v12 already defaults to ELK; writing it out is what gives a
     // deployment override something to replace (IMPL-0006 OQ-1).
     expect(mermaidInitConfig().layout).toBe("elk");
     expect(mermaid.mermaidAPI.getConfig().layout).toBe("elk");
+  });
+
+  it("holds the look at classic", () => {
+    // v12 moved the default to `neo`, which rounds node corners. The
+    // radius scale in tokens.css is wiped, so that would leave diagrams
+    // the only rounded surface on the site. Pinned deliberately.
+    expect(mermaidInitConfig().look).toBe("classic");
+    expect(mermaid.mermaidAPI.getConfig().look).toBe("classic");
   });
 });
 

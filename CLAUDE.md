@@ -138,9 +138,17 @@ Bun is the package manager and script runner (pinned in `mise.toml`).
   Diagrams are MONOCHROME unless the document says otherwise: tokens.css
   pins only label font-family and fill, and mermaid scopes a diagram's
   own `classDef` rules by render id, so those outrank the stylesheet —
-  that's the supported way to color nodes (see the specimen's Figure 2).
-  themeVariables stay the minimal documented v11 set with an ASCII font
-  name; extras break `mermaid.render` silently.
+  that's the supported way to color nodes (see the specimen's Figure 2,
+  asserted on computed stroke in `e2e/rendering.spec.ts`).
+  themeVariables stay the minimal documented set with an ASCII font
+  name; extras break `mermaid.render` silently. `nodeBorder` is NOT
+  just a color — mermaid's `neo` look gradients node strokes whenever
+  the theme sets `useGradient` (`base` does), and `Theme.calculate`
+  clears it exactly when the overrides carry `nodeBorder` without
+  `useGradient`. `layout` and `look` are both pinned
+  (`MERMAID_LAYOUT` = elk, `MERMAID_LOOK` = classic): v12 defaults to
+  elk + neo, and neo rounds node corners, which would make diagrams the
+  only rounded surface under a wiped radius scale.
   h2–h4 map to `markdown-heading.tsx`, which appends the
   hover/focus-revealed copy-link button (a labeled BUTTON, not a
   link — the underline rule for prose links stays untouched).

@@ -430,10 +430,29 @@ per-flowchart.
       `mermaidAPI` too. Worth remembering as an argument for config
       that does not interrogate the library it configures.) Recorded in
       the mock's comment so the next person knows when it must grow.
-- [ ] Confirm all three specimen fences render under ELK, including
+- [x] Confirm all three specimen fences render under ELK, including
       Figure 2's per-node `classDef` colors. Mermaid scopes a diagram's
       own `classDef` by render id, which is why it outranks the
-      stylesheet; confirm that still holds.
+      stylesheet; confirm that still holds. It does — all three render,
+      and Figure 2's three colors arrive verbatim
+      (`#9ece6a` / `#e0af68` / `#7dcfff`). Now an e2e test reading
+      computed `stroke` rather than a one-time look, since a theme or
+      layout change can break this without throwing. The uncolored nodes
+      assert `--color-border-strong` as a flat `rgb()`, which doubles as
+      the runtime proof that node gradients stay off — a gradient would
+      read `url(#…-gradient)`.
+- [x] **Decision not in the original task list: pin `look: "classic"`.**
+      v12 moved the default from `classic` to `neo`, which rounds node
+      corners, thickens strokes, and adds a drop shadow. tokens.css
+      wipes the radius scale — sharp corners everywhere, `rounded-pill`
+      the only exception — so `neo` would make diagrams the single
+      rounded surface on the site. Adopting the new appearance defaults
+      was also a *distinct* [OQ-1](#oq-1-to-oq-10-answered) alternative
+      from the one chosen, so inheriting them would quietly decide a
+      question that was answered the other way. Both looks were rendered
+      and compared on the specimen before choosing. Flipping is one
+      line (`MERMAID_LOOK`) and is asserted by a test so it cannot drift
+      back.
 - [ ] Run `just bundle-budget`. The eager budget should be untouched
       (mermaid is behind a dynamic import), but record the new
       diagram-page chunk cost — ELK is roughly 500 KB gzipped in the

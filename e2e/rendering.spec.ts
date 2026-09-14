@@ -1,3 +1,8 @@
+/// <reference lib="dom" />
+// ^ e2e runs under tsconfig.node.json, whose lib is ES2023 only. The
+// `page.evaluate` callback below runs in the browser and needs
+// `getComputedStyle`; this is the same per-file escape hatch the unit
+// tests use for node APIs, rather than widening the shared config.
 import { expect, test } from "@playwright/test";
 
 /*
@@ -98,4 +103,56 @@ test("the diagram chunks stay off diagram-free docs", async ({ page }) => {
   // The reader (and Shiki) are fully loaded; mermaid and ELK never were.
   await expect(page.locator(".doc-prose pre").first()).toBeVisible();
   expect(diagramRequests).toHaveLength(0);
+});
+
+/*
+ * The specimen's Mermaid section carries all three diagram kinds this
+ * pipeline renders, and Figure 2 is the one place the "monochrome
+ * unless the document says otherwise" policy is exercised: a diagram's
+ * own `classDef` has to outrank the stylesheet, which works only
+ * because mermaid scopes those rules by render id. A layout or theme
+ * change can break that without breaking anything that throws, so it is
+ * asserted on computed style rather than left to the eye.
+ */
+test("the specimen's diagrams render with their own colors", async ({
+  page,
+}) => {
+  await page.goto("/donaldgifford/docz-site/pages/guides/markdown-specimen.md");
+  const figures = page.locator("figure.mermaid-figure");
+  await expect(figures.locator("svg")).toHaveCount(3, { timeout: 20_000 });
+  // The third fence takes no caption, so only two figcaptions exist.
+  await expect(page.locator("figure.mermaid-figure figcaption")).toHaveText([
+    "Figure 1: the sync pipeline",
+    "Figure 2: coloring individual nodes",
+  ]);
+
+  const nodes = await figures.nth(2).evaluate((figure) =>
+    // Array.from, not a spread: the e2e lib is ES2023 without
+    // dom.iterable, so a NodeList has no iterator here.
+    Array.from(figure.querySelectorAll("g.node"), (node) => {
+      const shape = node.querySelector("rect, polygon, path, circle");
+      return {
+        className: node.getAttribute("class") ?? "",
+        stroke: shape === null ? "" : getComputedStyle(shape).stroke,
+      };
+    }),
+  );
+  const strokeOf = (className: string): string | undefined =>
+    nodes.find((node) => node.className.includes(className))?.stroke;
+
+  // The three classDef colors from the document, verbatim.
+  expect(strokeOf("begin")).toBe("rgb(158, 206, 106)");
+  expect(strokeOf("decide")).toBe("rgb(224, 175, 104)");
+  expect(strokeOf("work")).toBe("rgb(125, 207, 255)");
+
+  // Everything the document did not color takes --color-border-strong
+  // from the theme map. A flat rgb() rather than a url(#…-gradient) is
+  // also what proves the neo look's node gradients stay off.
+  const plain = nodes.filter(
+    (node) => !/begin|decide|work/.test(node.className),
+  );
+  expect(plain.length).toBeGreaterThan(0);
+  for (const node of plain) {
+    expect(node.stroke).toBe("rgb(52, 64, 90)");
+  }
 });

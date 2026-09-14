@@ -344,10 +344,15 @@ per-flowchart.
       bump alone, before any layout change — including the OQ-11 audit,
       so `secure`, `securityLevel`, and `htmlLabels` keep their 11.x
       semantics in 12.x.
-- [ ] Adopt ELK as the default layout (OQ-1) by setting `layout`
+- [x] Adopt ELK as the default layout (OQ-1) by setting `layout`
       explicitly in `getMermaid()` rather than relying on the new
       default. An explicit value is what Phase 5's override reads, and
-      it keeps the config self-describing.
+      it keeps the config self-describing. Landed in
+      `mermaidInitConfig()`, which `getMermaid()` now calls — the config
+      moved out of the closure in the OQ-11 commit so tests could
+      exercise the shipped object rather than a copy of it. Confirmed
+      against the v12 schema that `layout` already defaults to `"elk"`,
+      so this is a statement of intent, not a behavior change.
 - [ ] Keep `nodeBorder` in `mermaidThemeFromTokens()`. The new `neo`
       look paints node strokes with a gradient when the theme sets
       `useGradient`, which `base` does, and a custom `nodeBorder` is what

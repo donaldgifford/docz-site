@@ -66,7 +66,7 @@ function getMermaid(): Promise<Mermaid> {
  * it also fails if a future mermaid protects a key this list omits.
  */
 export const MERMAID_SECURE_KEYS = [
-  // Mermaid's defaults as of 11.16.0.
+  // Mermaid's defaults as of 11.16.0, unchanged in 12.0.0.
   "secure",
   "securityLevel",
   "startOnLoad",
@@ -77,11 +77,25 @@ export const MERMAID_SECURE_KEYS = [
   "htmlLabels",
 ] as const;
 
+/*
+ * ELK is mermaid 12's default layout and ships bundled, so this line
+ * changes nothing today — it is written out anyway (IMPL-0006 OQ-1) so
+ * the config says which algorithm draws the diagrams instead of
+ * deferring to whatever the installed mermaid happens to prefer, and so
+ * there is one place for a deployment override to replace. ELK arrives
+ * as its own ~500 KB chunk behind the same dynamic import as mermaid
+ * itself; it must never become eager, and the chunk assertion in
+ * e2e/rendering.spec.ts has to match its filename, which does NOT
+ * contain "mermaid".
+ */
+const MERMAID_LAYOUT = "elk";
+
 /** The exact config we ship — exported so tests exercise it, not a copy. */
 export function mermaidInitConfig(): MermaidConfig {
   return {
     startOnLoad: false,
     theme: "base",
+    layout: MERMAID_LAYOUT,
     securityLevel: "strict",
     htmlLabels: false,
     flowchart: { htmlLabels: false },

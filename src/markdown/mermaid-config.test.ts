@@ -82,6 +82,15 @@ describe("the mermaid secure list", () => {
   });
 });
 
+describe("the shipped layout", () => {
+  it("is named explicitly rather than inherited", () => {
+    // v12 already defaults to ELK; writing it out is what gives a
+    // deployment override something to replace (IMPL-0006 OQ-1).
+    expect(mermaidInitConfig().layout).toBe("elk");
+    expect(mermaid.mermaidAPI.getConfig().layout).toBe("elk");
+  });
+});
+
 describe("hostile diagram front matter", () => {
   it("cannot turn html labels back on", () => {
     expect(mermaid.mermaidAPI.getConfig().htmlLabels).toBe(false);

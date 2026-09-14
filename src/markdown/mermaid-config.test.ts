@@ -13,6 +13,7 @@ import type { Mermaid } from "mermaid";
 import {
   MERMAID_SECURE_KEYS,
   mermaidInitConfig,
+  mermaidThemeFromTokens,
 } from "@/markdown/mermaid-block";
 
 /*
@@ -88,6 +89,34 @@ describe("the shipped layout", () => {
     // deployment override something to replace (IMPL-0006 OQ-1).
     expect(mermaidInitConfig().layout).toBe("elk");
     expect(mermaid.mermaidAPI.getConfig().layout).toBe("elk");
+  });
+});
+
+describe("the theme variables", () => {
+  const theme = mermaidThemeFromTokens();
+
+  it.each(Object.keys(theme))("survives the merge: %s", (key) => {
+    // An unknown theme variable breaks mermaid.render silently — the
+    // symptom is a blank figure, not an error — so assert each key is
+    // one mermaid keeps rather than trusting the v11-era comment.
+    const merged = mermaid.mermaidAPI.getSiteConfig().themeVariables as
+      | Record<string, unknown>
+      | undefined;
+    expect(merged?.[key]).toBe(theme[key]);
+  });
+
+  it("disables the neo look's node gradients", () => {
+    // v12 defaults `look` to "neo", which strokes nodes with a gradient
+    // whenever the theme sets useGradient — and "base" does.
+    // Theme.calculate turns it off exactly when the overrides carry
+    // `nodeBorder` without `useGradient`, which is why that key stays in
+    // the map. Monochrome diagrams depend on this.
+    expect(theme.nodeBorder).toBeDefined();
+    expect(theme.useGradient).toBeUndefined();
+    const merged = mermaid.mermaidAPI.getSiteConfig().themeVariables as
+      | Record<string, unknown>
+      | undefined;
+    expect(merged?.useGradient).toBe(false);
   });
 });
 

@@ -353,15 +353,27 @@ per-flowchart.
       exercise the shipped object rather than a copy of it. Confirmed
       against the v12 schema that `layout` already defaults to `"elk"`,
       so this is a statement of intent, not a behavior change.
-- [ ] Keep `nodeBorder` in `mermaidThemeFromTokens()`. The new `neo`
+- [x] Keep `nodeBorder` in `mermaidThemeFromTokens()`. The new `neo`
       look paints node strokes with a gradient when the theme sets
       `useGradient`, which `base` does, and a custom `nodeBorder` is what
       turns that off. Removing it would grow gradients silently and
-      break the monochrome policy.
-- [ ] Re-validate every key in `mermaidThemeFromTokens()` against the
+      break the monochrome policy. **Verified, and the mechanism is
+      exactly as described**: `look` does default to `"neo"` in 12.0.0,
+      `theme-base` sets `useGradient = true`, and `Theme.calculate`
+      clears it when the overrides carry `nodeBorder` and *not*
+      `useGradient` — which is this map. The node stroke then reads
+      `nodeBorder` instead of `url(#…-gradient)`. Pinned by a test on
+      the merged `themeVariables`, so the key cannot be dropped as
+      "just a color".
+- [x] Re-validate every key in `mermaidThemeFromTokens()` against the
       v12 theme schema. The map is commented as the "minimal documented
       v11 set", and an unknown variable breaks `mermaid.render`
       *silently* — the failure mode is a blank figure, not an error.
+      All 16 keys are still consumed by v12's `theme-base`; none were
+      renamed or dropped. Rather than leave that as a one-time reading,
+      the test now asserts each key survives the merge into
+      `themeVariables` with its value intact, so a future rename fails
+      CI instead of blanking a figure.
 - [ ] Verify `securityLevel: "strict"` and `htmlLabels: false` still
       exist, are still honored, and still mean the same thing in 12.x.
       Read the v12 config schema; do not infer from the absence of a

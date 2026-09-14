@@ -104,8 +104,21 @@ export function mermaidInitConfig(): MermaidConfig {
   };
 }
 
-// Minimal documented v11 variable set, read from the live tokens so
-// diagrams follow tokens.css; fallbacks keep jsdom/tests valid.
+/*
+ * Minimal documented variable set, read from the live tokens so
+ * diagrams follow tokens.css; fallbacks keep jsdom/tests valid. Every
+ * key here was re-checked against mermaid 12's theme-base — an unknown
+ * variable breaks `mermaid.render` SILENTLY, so the failure mode is a
+ * blank figure rather than an error, and the test asserts each one
+ * survives the merge.
+ *
+ * `nodeBorder` is load-bearing beyond its own color in v12. The default
+ * `look` is now `neo`, which strokes nodes with a gradient whenever the
+ * theme sets `useGradient` — and `base` does. Theme.calculate turns it
+ * back off precisely when the overrides carry `nodeBorder` and not
+ * `useGradient`, which is this map. Drop `nodeBorder` and gradients
+ * reappear across every diagram, against the monochrome policy.
+ */
 export function mermaidThemeFromTokens(): Record<string, string> {
   const style = getComputedStyle(document.documentElement);
   const read = (name: string, fallback: string): string => {

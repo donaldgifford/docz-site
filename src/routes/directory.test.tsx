@@ -36,6 +36,11 @@ function syntheticSearchHandler(total: number) {
       path: `docs/guide/${String(i).padStart(4, "0")}-synthetic.md`,
       status: "Draft",
       author: "someone",
+      // Distinct per row so an ordering assertion has something to
+      // order by; the pagination tests that use this handler only care
+      // that the set is stable.
+      created: `2026-01-${String((i % 28) + 1).padStart(2, "0")}`,
+      updated_at: `2026-02-${String((i % 28) + 1).padStart(2, "0")}T12:00:00Z`,
       snippet: "",
     })).slice(offset, offset + limit);
     return HttpResponse.json({

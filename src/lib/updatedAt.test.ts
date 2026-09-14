@@ -20,6 +20,8 @@ function hit(extra: Record<string, unknown> = {}): SearchHit {
     path: "docs/design/0005-reader-typography.md",
     status: "In Review",
     author: "donaldgifford",
+    created: "",
+    updated_at: "",
     snippet: "",
     ...extra,
   };

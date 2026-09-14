@@ -1,7 +1,7 @@
 ---
 id: IMPL-0006
 title: "Mermaid v12 and docz-api spec 1.5.0 adoption"
-status: Draft
+status: In Progress
 author: Donald Gifford
 created: 2026-09-14
 ---
@@ -62,7 +62,7 @@ becomes a ninth amendment to DESIGN-0005, which already owns the
 monochrome diagram policy; the search changes complete asks recorded in
 DESIGN-0001 and DESIGN-0004.
 
-Neither change is forced.  1.5.0 change is additive, and mermaid 11
+Neither change is forced. Every 1.5.0 change is additive, and mermaid 11
 keeps working. This is deliberate adoption, not a forced migration,
 which is why the phases below are ordered so each is independently
 revertable.
@@ -147,28 +147,31 @@ moved".
 
 #### Tasks
 
-- [ ] Flip this document's status from Draft to In Progress. Every
+- [x] Flip this document's status from Draft to In Progress. Every
       question is answered; from here it is the code that changes, not the
       plan.
-- [ ] Copy `api/openapi.yaml` from docz-api (currently 1.4.1 here, 1.5.0
+- [x] Copy `api/openapi.yaml` from docz-api (currently 1.4.1 here, 1.5.0
       upstream). The diff is: `source` and `sort` query params on
       `searchDocs`, a `400` response on that operation, a new
       `BadRequest` response component, `created` and `updated_at` added
       to `SearchHit` and both listed `required`, plus description-only
       edits to `Document.updated_at` and `Session.groups`.
-- [ ] Run `bun run gen-api`; confirm the generated client gains the two
+- [x] Run `bun run gen-api`; confirm the generated client gains the two
       `SearchHit` properties and union types for `sort` and `source`.
-- [ ] Run `just gen-api-check` — the drift gate must be clean against
+- [x] Run `just gen-api-check` — the drift gate must be clean against
       the freshly vendored spec.
-- [ ] Confirm `bunx tsc -b --force` passes with no source change.
+- [x] Confirm `bunx tsc -b --force` passes with no source change.
       `SearchHit` gaining required properties is a widening for readers;
       the only expected breakage is in code that *constructs* a
       `SearchHit`.
-- [ ] Fix the construction sites the typecheck reveals by adding
-      `created` and `updated_at`: `src/mocks/fixtures.ts`,
-      `src/lib/updatedAt.test.ts`, `src/routes/directory.test.tsx`.
-      Placeholder values here; Phase 2 makes them meaningful.
-- [ ] Confirm no runtime behavior changed: full `bun run test` green
+- [x] Fix the construction sites the typecheck reveals by adding
+      `created` and `updated_at`. **Four sites, not the three planned**
+      — `src/components/command-palette.tsx` was missed, where recents
+      are synthesized into hits. There both fields are `""` permanently,
+      not as placeholders: recents store coordinates and title only, so
+      the stamps are genuinely unknown, exactly like the `status` and
+      `author` already sitting at `""` beside them.
+- [x] Confirm no runtime behavior changed: full `bun run test` green
       with no edits beyond those construction sites.
 
 #### Success Criteria

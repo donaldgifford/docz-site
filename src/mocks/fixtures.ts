@@ -214,6 +214,46 @@ function makePage(input: FixturePageInput): Page {
   };
 }
 
+/** The `sort` values spec 1.5.0 accepts; anything else is a 400. */
+const SORTS = new Set([
+  "updated_at:desc",
+  "updated_at:asc",
+  "created:desc",
+  "created:asc",
+]);
+
+/**
+ * Order hits the way Meilisearch does for a `sort` request.
+ *
+ * The quirk worth reproducing: **a record with no value for the sort
+ * key goes last in BOTH directions.** Meilisearch treats an empty value
+ * as absent rather than as the lexicographic minimum, so `created:asc`
+ * still puts page hits — which carry no authored date — after every
+ * document. A fixture that sorted `""` to the front would disagree with
+ * the real API in exactly the case the UI cares about, and every test
+ * built on it would inherit that.
+ *
+ * Both keys are lexicographically ordered in their wire format
+ * (`YYYY-MM-DD` and RFC3339 UTC), so string compare is the real order.
+ */
+function sortHits(hits: SearchHit[], sort: string | null): SearchHit[] {
+  if (sort === null) {
+    return hits;
+  }
+  const [key, direction] = sort.split(":");
+  const valueOf = (hit: SearchHit) =>
+    key === "created" ? hit.created : hit.updated_at;
+  const sign = direction === "asc" ? 1 : -1;
+  return [...hits].sort((a, b) => {
+    const left = valueOf(a);
+    const right = valueOf(b);
+    if (left === right) return 0;
+    if (left === "") return 1;
+    if (right === "") return -1;
+    return left < right ? -sign : sign;
+  });
+}
+
 /*
  * Page SEARCH HITS carry `updated_at` from spec 1.5.0, but the `Page`
  * schema itself does not (repo/path/title/raw_md/git_sha), so the stamp
@@ -502,8 +542,18 @@ export const demoOrgHandlers = [
     const type = url.searchParams.get("type");
     const status = url.searchParams.get("status");
     const author = url.searchParams.get("author");
+    const source = url.searchParams.get("source");
+    const sort = url.searchParams.get("sort");
+
+    // The operation's only 4xx (spec 1.5.0). Filter values are NOT
+    // validated upstream — an unknown facet value just matches nothing
+    // — so `sort` is the one parameter that can be wrong.
+    if (sort !== null && !SORTS.has(sort)) {
+      return HttpResponse.json({ error: "invalid sort" }, { status: 400 });
+    }
 
     const matches = DEMO_DOCS.filter((doc) => {
+      if (source === "page") return false;
       if (repo !== null && doc.repo !== repo) return false;
       if (type !== null && doc.type !== type) return false;
       if (status !== null && doc.status !== status) return false;
@@ -516,7 +566,7 @@ export const demoOrgHandlers = [
     // Pages ride the same index (spec 1.4.1): doc-only filters drop
     // them, q matches title+body, and doc-only hit fields are "".
     const pageMatches =
-      type !== null || status !== null || author !== null
+      type !== null || status !== null || author !== null || source === "doc"
         ? []
         : Object.values(DEMO_PAGES)
             .flat()
@@ -565,7 +615,7 @@ export const demoOrgHandlers = [
         updated_at: PAGE_INGESTED_AT[page.repo] ?? "",
       })),
     ];
-    const hits = allHits.slice(offset, offset + limit);
+    const hits = sortHits(allHits, sort).slice(offset, offset + limit);
 
     const facet = (key: (doc: Document) => string) =>
       Object.fromEntries(

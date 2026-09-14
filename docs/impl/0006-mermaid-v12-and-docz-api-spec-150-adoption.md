@@ -243,47 +243,51 @@ and the first that can regress search quality.
 
 #### Tasks
 
-- [ ] Extend `DirectorySearchState` in `src/lib/searchParams.ts` with
-      the sort and source keys, keeping the module's rule intact: the
-      URL is the only source of filter truth.
-- [ ] Parse and serialize the new keys, omitting defaults so shared URLs
-      stay clean (the existing convention).
-- [ ] Map them in `toSearchDocsParams` using the generated union types,
+- [x] **Representation decided while implementing: neither key goes in
+      the URL, and `DirectorySearchState` is unchanged.** OQ-3 makes
+      `sort` *derived* from whether `q` is empty, and no control selects
+      a `source`, so a URL key for either would be state nothing can
+      set — speculative surface, not filter truth. `toSearchDocsParams`
+      grows an explicit `{ ordered }` option instead, passed only by the
+      query that renders rows; `source` is applied where a fixed value
+      is genuinely wanted (`useRepoFacts`). If a sort or source control
+      ever lands, the URL key lands with it.
+- [x] Map them in `toSearchDocsParams` using the generated union types,
       never string literals.
-- [ ] Implement the OQ-3 ordering: send `sort=updated_at:desc` when
+- [x] Implement the OQ-3 ordering: send `sort=updated_at:desc` when
       `state.q` is empty, and send no `sort` once the user has typed.
       The spec is explicit that `sort` is a **total order over the
       matches, not a tie-break within relevance**, so sorting during a
       text search ranks recent-but-irrelevant hits above the best match.
       Put that reasoning in a comment; it is not self-evident from the
       code.
-- [ ] Confirm the grow-the-window pagination still holds. The directory
+- [x] Confirm the grow-the-window pagination still holds. The directory
       sends `offset: 0` with `limit: state.offset + PAGE_SIZE`, so rows
       0..N are refetched on every "load more". A total-order sort makes
       this *more* stable than relevance ranking did — assert it rather
       than assume it.
-- [ ] Teach the fixture `searchDocs` resolver to honor `sort`, including
+- [x] Teach the fixture `searchDocs` resolver to honor `sort`, including
       the documented quirk that **records with no value for the sort key
       sort last in both directions**, so `created:*` puts page hits after
       every document either way. A fixture that ignores this makes
       `dev:msw` and e2e lie about ordering, and every downstream test
       inherits the lie.
-- [ ] Teach the fixture resolver to honor `source`, and to return
+- [x] Teach the fixture resolver to honor `source`, and to return
       `400 {"error":"invalid sort"}` for an unrecognized `sort` so the
       error path is reachable in tests.
-- [ ] Add a `BadRequestError` class in `src/api/fetcher.ts` beside
+- [x] Add a `BadRequestError` class in `src/api/fetcher.ts` beside
       `SessionRequiredError`/`NotFoundError`/`SessionUnavailableError`,
       and add it to the no-retry predicate in
       `src/app/query-client.ts` (OQ-5). A 400 is a stable answer;
       retrying twice is waste.
-- [ ] Replace client-side doc/page separation with `source` where the UI
+- [x] Replace client-side doc/page separation with `source` where the UI
       already distinguishes them. Keep the directory count line's
       "· X docs · Y pages" behavior byte-identical for deployments that
       publish no pages.
-- [ ] Add `src/lib/searchParams.test.ts` cases for the new keys: parse,
+- [x] Add `src/lib/searchParams.test.ts` cases for the new keys: parse,
       serialize, round-trip, default omission, and rejection of a value
       outside the enum.
-- [ ] Add a directory route test that the ordering flips when the query
+- [x] Add a directory route test that the ordering flips when the query
       empties and back when it fills.
 
 #### Success Criteria

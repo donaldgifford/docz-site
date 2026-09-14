@@ -381,6 +381,59 @@ describe("directory route", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("asks for newest-first while browsing and relevance while searching", async () => {
+    // IMPL-0006 OQ-3. `sort` is a total order, not a relevance
+    // tie-break, so a typed query must drop it or recent-but-irrelevant
+    // hits outrank the best match.
+    const sorts: (string | null)[] = [];
+    server.use(
+      http.get("*/api/v1/search", ({ request }) => {
+        const url = new URL(request.url);
+        // Only the listing query is ordered; facet queries run limit 0.
+        if (url.searchParams.get("limit") !== "0") {
+          sorts.push(url.searchParams.get("sort"));
+        }
+        return HttpResponse.json({
+          query: url.searchParams.get("q") ?? "",
+          estimated_total_hits: 0,
+          hits: [],
+          facets: {},
+        });
+      }),
+    );
+    const user = userEvent.setup();
+    mountAt("/");
+
+    await waitFor(() => {
+      expect(sorts).toContain("updated_at:desc");
+    });
+
+    await user.type(screen.getByRole("searchbox"), "reader");
+    await waitFor(() => {
+      expect(sorts.at(-1)).toBeNull();
+    });
+  });
+
+  it("load more never reshuffles the rows already on screen", async () => {
+    // The window grows from a fixed offset 0, so every wider fetch
+    // re-renders the earlier rows. A total-order sort makes that safe;
+    // this pins that it stays safe.
+    server.use(syntheticSearchHandler(60));
+    const user = userEvent.setup();
+    mountAt("/");
+
+    await screen.findByText("Synthetic doc 0");
+    const before = screen
+      .getAllByRole("listitem")
+      .map((row) => row.textContent);
+
+    await user.click(screen.getByRole("button", { name: /load more/ }));
+    await screen.findByText("Synthetic doc 49");
+    const after = screen.getAllByRole("listitem").map((row) => row.textContent);
+
+    expect(after.slice(0, before.length)).toEqual(before);
+  });
+
   it("renders the full window for a deep-linked offset", async () => {
     server.use(syntheticSearchHandler(60));
     mountAt("/?offset=25");

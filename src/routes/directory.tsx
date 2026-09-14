@@ -235,7 +235,9 @@ export function Component() {
   // renders exactly the same rows (the URL stays the only source of
   // truth). "Load more" grows the window by pushing offset.
   const searchQuery = useSearchDocs(
-    toSearchDocsParams({ ...state, offset: 0 }, state.offset + PAGE_SIZE),
+    toSearchDocsParams({ ...state, offset: 0 }, state.offset + PAGE_SIZE, {
+      ordered: true,
+    }),
     {
       // Keep the previous window on screen while a filter change
       // refetches; the skeleton is for first paint only.

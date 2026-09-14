@@ -73,13 +73,16 @@ Bun is the package manager and script runner (pinned in `mise.toml`).
   files). New config files at the repo root go in `tsconfig.node.json`'s
   `include`.
 - `src/api/fetcher.ts` — the orval fetch mutator and the typed errors
-  (`SessionRequiredError` 401, `NotFoundError` 404,
-  `SessionUnavailableError` 503 — transient, NEVER a logout —
-  `ApiError` rest). Match on these classes in UI code; never `fetch`
-  the API directly.
+  (`BadRequestError` 400 — spec 1.5.0, currently only an unrecognized
+  `sort`, which the generated unions make unreachable from our own code
+  so in practice it means a hand-edited URL — `SessionRequiredError`
+  401, `NotFoundError` 404, `SessionUnavailableError` 503 — transient,
+  NEVER a logout — `ApiError` rest). Match on these classes in UI code;
+  never `fetch` the API directly.
   Success returns orval's `{ data, status, headers }` envelope —
   narrow on `status === 200` before touching `.data`. Query defaults
-  live in `src/app/query-client.ts` (no retry on 401/404).
+  live in `src/app/query-client.ts` (no retry on 400/401/404 — all
+  three are stable answers, so asking again gets the same reply).
 - Tests: Vitest + Testing Library in jsdom (`vitest.config.ts`).
   `src/test/setup.ts` starts one MSW node server from the generated
   handlers with `onUnhandledRequest: "error"` — override per-test with
@@ -268,6 +271,16 @@ Bun is the package manager and script runner (pinned in `mise.toml`).
   `toSearchDocsParams` maps state → API params, first-of-array facets).
   Typed queries debounce ~200 ms and commit with `replace: true`;
   discrete filter actions must push so back/forward walks history.
+  ORDERING (IMPL-0006 OQ-3): `sort=updated_at:desc` goes out ONLY when
+  `q` is empty — `sort` is a TOTAL order over matches, not a tie-break
+  within relevance, so sorting a text search ranks recent-but-irrelevant
+  hits above the best match. It is DERIVED, never stored: no control
+  selects it, so it has no URL key, and `toSearchDocsParams` takes an
+  explicit `{ ordered: true }` passed only by the row-rendering query
+  (facet queries run at limit 0 — ordering them is work for a count
+  nobody reads). Same reasoning for `source`: no control, no URL key;
+  it is sent as a fixed `doc` by `useRepoFacts`, whose total is now
+  `estimated_total_hits` rather than a source-facet lookup.
 - The updated column: since spec 1.5.0 `SearchHit.updated_at` is a
   typed REQUIRED property on BOTH record kinds — read `hit.updated_at`
   directly, there is no accessor. `created` (frontmatter `YYYY-MM-DD`)

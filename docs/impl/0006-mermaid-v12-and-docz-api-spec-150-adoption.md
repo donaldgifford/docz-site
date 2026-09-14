@@ -191,35 +191,35 @@ old comments encode, and make the fixtures carry real dates.
 
 #### Tasks
 
-- [ ] Delete `hitUpdatedAt` (OQ-7) and read `hit.updated_at` directly at
+- [x] Delete `hitUpdatedAt` (OQ-7) and read `hit.updated_at` directly at
       the call site in `src/routes/directory.tsx`. The wrapper existed
       only to hide an untyped probe.
-- [ ] Rewrite the `src/lib/updatedAt.ts` module comment. It currently
+- [x] Rewrite the `src/lib/updatedAt.ts` module comment. It currently
       describes the field as absent from the schema and explains the
       upstream ask — all now false and actively misleading.
-- [ ] Keep `formatUpdatedStamp` and its en-US/`timeZone` contract
+- [x] Keep `formatUpdatedStamp` and its en-US/`timeZone` contract
       unchanged; it is already correct for an RFC3339 UTC input. Keep
       its `Number.isNaN` guard in particular: it is what makes a missing
       field from an older API degrade to the em dash rather than
       rendering "Invalid Date".
-- [ ] Correct the "pages have no timestamp" premise, which 1.5.0
+- [x] Correct the "pages have no timestamp" premise, which 1.5.0
       falsifies, in all three places it appears: the
       `src/lib/updatedAt.ts` module comment, the `UpdatedCell` comment
       in `src/routes/directory.tsx`, and the fixtures comment.
       **`created` is the field that is empty on page hits**, not
       `updated_at`.
-- [ ] Give fixture page records a timestamp. `Page` has no `updated_at`
+- [x] Give fixture page records a timestamp. `Page` has no `updated_at`
       in the spec (verified — the schema is `repo`, `path`, `title`,
       `raw_md`, `git_sha`), so `FixturePageInput` needs its own
       `updatedAt`, used when building search hits.
-- [ ] Give fixture doc hits a `created` from the document's frontmatter
+- [x] Give fixture doc hits a `created` from the document's frontmatter
       date, and page hits `created: ""`.
-- [ ] Remove the `SearchHit & { updated_at: string }` intersection in
+- [x] Remove the `SearchHit & { updated_at: string }` intersection in
       `src/mocks/fixtures.ts`; the plain generated type now suffices.
-- [ ] Update `src/lib/updatedAt.test.ts`: the "returns '' for the hits
+- [x] Update `src/lib/updatedAt.test.ts`: the "returns '' for the hits
       today's API actually sends" case describes a world that no longer
       exists. Cover the real shapes instead, including `""`.
-- [ ] Update `src/routes/directory.test.tsx`: page rows now render a
+- [x] Update `src/routes/directory.test.tsx`: page rows now render a
       stamp rather than an em dash, so the current
       `getAllByText("—").length > 0` assertion will fail, and should.
       Replace it with one asserting both kinds render a date.

@@ -214,6 +214,21 @@ function makePage(input: FixturePageInput): Page {
   };
 }
 
+/*
+ * Page SEARCH HITS carry `updated_at` from spec 1.5.0, but the `Page`
+ * schema itself does not (repo/path/title/raw_md/git_sha), so the stamp
+ * lives here rather than on the record.
+ *
+ * One value per repo is the realistic shape, not a shortcut: docz-api
+ * stamps every record in a repository at onboard, and one reconcile is
+ * one transaction, so the pages of a repo genuinely share a stamp to
+ * the microsecond until their content changes.
+ */
+const PAGE_INGESTED_AT: Readonly<Record<string, string>> = {
+  "donaldgifford/docz-site": "2026-08-30T17:04:00Z",
+  "donaldgifford/docz-api": "2026-08-30T17:04:00Z",
+};
+
 // The docz-site repo dogfoods the api: block (OQ-2a): its real docz
 // index READMEs publish as directory pages (extensionless), docs/input.md
 // as a file page, a snapshot as the nested file page, and the root
@@ -517,13 +532,12 @@ export const demoOrgHandlers = [
     const offset = intParam(url, "offset", 0);
     const limit = intParam(url, "limit", 20);
     /*
-     * `updated_at` is NOT in the SearchHit schema — it is the open
-     * additive ask (see src/lib/updatedAt.ts). The demo org forwards
-     * the document's own stamp anyway, so the directory's updated
-     * column is reviewable here; against a real docz-api it renders
-     * the em dash, exactly as page hits do in both places.
+     * Spec 1.5.0 dates both record kinds: docs forward their own
+     * `updated_at` and frontmatter `created`; pages carry the repo's
+     * onboard stamp and an empty `created`, because a published page
+     * has no authored date.
      */
-    const allHits: (SearchHit & { updated_at: string })[] = [
+    const allHits: SearchHit[] = [
       ...matches.map((doc) => ({
         source: "doc" as const,
         repo: doc.repo,
@@ -548,7 +562,7 @@ export const demoOrgHandlers = [
         author: "",
         created: "",
         snippet: snippetFor(page, q),
-        updated_at: "",
+        updated_at: PAGE_INGESTED_AT[page.repo] ?? "",
       })),
     ];
     const hits = allHits.slice(offset, offset + limit);

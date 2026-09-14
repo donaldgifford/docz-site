@@ -268,21 +268,22 @@ Bun is the package manager and script runner (pinned in `mise.toml`).
   `toSearchDocsParams` maps state → API params, first-of-array facets).
   Typed queries debounce ~200 ms and commit with `replace: true`;
   discrete filter actions must push so back/forward walks history.
-- The updated column: `SearchHit` still has NO `updated_at` property,
-  so against a real docz-api every row renders "—". docz-api ALREADY
-  indexes the value (`internal/search/types.go` stores `updated_at` in
-  Unix seconds; `client.go` makes it sortable) — `decodeHits` just
-  never copies it onto the wire struct, so the ask upstream is a decode
-  + an additive schema property, not an indexing change.
-  `src/lib/updatedAt.ts` is the whole surface: `hitUpdatedAt` reads the
-  property defensively (same posture as `apiConfig`/`changelogConfig`
-  over `config_snapshot`) so the column lights up with no further
-  change here, `formatUpdatedStamp` splits RFC3339 into the two lines
-  (locale pinned en-US, zone is the reader's, `timeZone` arg for
-  tests), and `formatRelativeTime` stays for surfaces wanting relative.
-  Demo fixtures forward each doc's own `updated_at` so the column is
-  reviewable under `dev:msw`; page hits send "" — nothing in the
-  contract dates a published page.
+- The updated column: since spec 1.5.0 `SearchHit.updated_at` is a
+  typed REQUIRED property on BOTH record kinds — read `hit.updated_at`
+  directly, there is no accessor. `created` (frontmatter `YYYY-MM-DD`)
+  is the field that is "" on page hits; a published page has no
+  authored date. `updated_at` is INGEST-observed, not commit time: one
+  reconcile is one transaction, so every doc an ingest touches shares
+  the stamp to the microsecond and a fresh DB restamps a repo at
+  onboard. `src/lib/updatedAt.ts` holds `formatUpdatedStamp` (splits
+  RFC3339 into the two lines; locale pinned en-US, zone is the
+  reader's, `timeZone` arg for tests) and `formatRelativeTime` for
+  surfaces wanting relative. KEEP `formatUpdatedStamp`'s `Number.isNaN`
+  guard — it is what makes a deployment on a pre-1.5.0 docz-api render
+  "—" instead of "Invalid Date", since the type promises a string the
+  old API simply omits. Fixtures: docs forward their own stamp and
+  `created`; pages take `PAGE_INGESTED_AT[repo]`, one value per repo
+  because that is genuinely how onboard stamps behave.
 - Faceted controls exclude their own dimension via separate limit-0
   searchDocs queries (directory picker/chips AND palette pills) so
   every option stays offered while one is selected. URL `offset` means

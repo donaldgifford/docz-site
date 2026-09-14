@@ -20,6 +20,8 @@ const API_DESIGN_TITLE =
 const API_CONTRACT_TITLE = "OpenAPI contract for docz-api and the docz-site";
 /** That fixture doc's `updated_at`, which the demo search forwards. */
 const API_CONTRACT_UPDATED_AT = "2026-07-06T15:30:00Z";
+/** The docz-site repo's onboard stamp, shared by all its page hits. */
+const PAGE_UPDATED_AT = "2026-08-30T17:04:00Z";
 
 /** A search handler over `total` synthetic docs honoring offset/limit. */
 function syntheticSearchHandler(total: number) {
@@ -87,18 +89,24 @@ describe("directory route", () => {
     // still on every row after the date took the right-hand column.
     expect(screen.getAllByText("docz-site").length).toBeGreaterThan(0);
 
-    // Doc hits carry the demo org's own stamp; page hits have none
-    // anywhere in the contract, so they keep the em dash.
+    // Spec 1.5.0 dates BOTH record kinds, so no row is left undated.
+    // Formatted in the runner's own zone, as in the browser — the
+    // format itself is pinned in updatedAt.test.ts.
     const dated = screen.getByRole("link", {
       name: new RegExp(API_CONTRACT_TITLE),
     });
-    // Formatted in the runner's own zone, as in the browser — the
-    // format itself is pinned in updatedAt.test.ts.
     const stamp = formatUpdatedStamp(API_CONTRACT_UPDATED_AT);
     expect(stamp).toBeDefined();
     expect(within(dated).getByText(stamp?.date ?? "")).toBeInTheDocument();
     expect(within(dated).getByText(stamp?.time ?? "")).toBeInTheDocument();
-    expect(screen.getAllByText("—").length).toBeGreaterThan(0);
+
+    // A page hit carries the repo's onboard stamp rather than the em
+    // dash it showed before 1.5.0.
+    const page = screen.getByRole("link", { name: /Markdown rendering/ });
+    const pageStamp = formatUpdatedStamp(PAGE_UPDATED_AT);
+    expect(pageStamp).toBeDefined();
+    expect(within(page).getByText(pageStamp?.date ?? "")).toBeInTheDocument();
+    expect(screen.queryAllByText("—")).toHaveLength(0);
 
     // Rows link straight into the reader.
     expect(

@@ -21,7 +21,15 @@ import type { Mermaid, MermaidConfig } from "mermaid";
  *   - htmlLabels false (global + flowchart): labels render as SVG
  *     <text>, so hostile markup in a node label stays literal text —
  *     no element ever materializes from document text.
- * A THIRD setting keeps the second one true — see `secureKeys`.
+ * A THIRD setting keeps the second one true — see MERMAID_SECURE_KEYS.
+ *
+ * Both survive mermaid 12 unchanged: `securityLevel` keeps its four
+ * levels, and the root `htmlLabels` now explicitly OUTRANKS every
+ * per-diagram copy (`flowchart.htmlLabels` and friends are deprecated
+ * in its favour), which makes one `false` cover diagram types this file
+ * never names. The nested one stays set anyway — it costs a line and
+ * the precedence rule is upstream's to change.
+ *
  * Do not copy this pattern elsewhere and do not relax either setting;
  * keep the hostile-source rows in the XSS suite and e2e green when
  * touching this. (rfc-site's "strict doesn't render" note described

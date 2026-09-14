@@ -374,10 +374,20 @@ per-flowchart.
       the test now asserts each key survives the merge into
       `themeVariables` with its value intact, so a future rename fails
       CI instead of blanking a figure.
-- [ ] Verify `securityLevel: "strict"` and `htmlLabels: false` still
+- [x] Verify `securityLevel: "strict"` and `htmlLabels: false` still
       exist, are still honored, and still mean the same thing in 12.x.
       Read the v12 config schema; do not infer from the absence of a
-      release note.
+      release note. **Both intact.** `securityLevel` keeps its four
+      levels (`strict | loose | antiscript | sandbox`) and its "level of
+      trust for parsed diagram" meaning. The root `htmlLabels` is still
+      a boolean and v12 adds a *strengthening*: it now explicitly
+      outranks every per-diagram copy, and those (`flowchart.htmlLabels`
+      and the same key on other diagram blocks) are deprecated in its
+      favour. So one root `false` covers diagram types this repo never
+      names. The nested one stays set regardless — precedence is
+      upstream's rule to change, and the line is cheap. Pinned by a test
+      that walks the whole merged config for any `htmlLabels: true`
+      after hostile front matter, rather than naming blocks.
 - [ ] Run the XSS suite (`src/markdown/processor.xss.test.tsx`) and the
       e2e hostile-label row in `e2e/rendering.spec.ts`, which renders a
       node label carrying an `<img>` payload. Confirm no element

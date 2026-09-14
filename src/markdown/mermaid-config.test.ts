@@ -47,6 +47,9 @@ const HOSTILE = [
   // Not a secure key: proves the front-matter channel really does reach
   // the merge, so the assertions above it are not vacuous.
   "    curve: linear",
+  // A second nested path, to show the guard is not flowchart-specific.
+  "  classDiagram:",
+  "    htmlLabels: true",
   "---",
   "flowchart TD",
   '  A["<img src=x onerror=alert(1)>"] --> B[Sink]',
@@ -129,6 +132,28 @@ describe("hostile diagram front matter", () => {
     // One top-level `secure` entry covers this: mermaid's directive
     // sanitizer recurses into nested config objects.
     expect(mermaid.mermaidAPI.getConfig().flowchart?.htmlLabels).toBe(false);
+  });
+
+  it("cannot turn them on anywhere in the config tree", () => {
+    // v12 scatters a deprecated per-diagram `htmlLabels` across several
+    // blocks (flowchart, classDiagram, swimlanes, …). The sanitizer
+    // deletes secure keys at every nesting depth, so the single entry
+    // covers all of them — including any a later version adds. Walk the
+    // merged config rather than naming the blocks.
+    const truthy: string[] = [];
+    const walk = (node: unknown, path: string): void => {
+      if (typeof node !== "object" || node === null) {
+        return;
+      }
+      for (const [key, value] of Object.entries(node)) {
+        if (key === "htmlLabels" && value === true) {
+          truthy.push(`${path}.${key}`);
+        }
+        walk(value, `${path}.${key}`);
+      }
+    };
+    walk(mermaid.mermaidAPI.getConfig(), "config");
+    expect(truthy).toEqual([]);
   });
 
   it("cannot lower the security level", () => {

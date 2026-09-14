@@ -39,7 +39,7 @@ created: 2026-09-14
 - [Testing Plan](#testing-plan)
 - [Dependencies](#dependencies)
 - [Open Questions](#open-questions)
-  - [OQ-11](#oq-11)
+  - [OQ-11 (answered: b)](#oq-11-answered-b)
   - [OQ-1 to OQ-10 (answered)](#oq-1-to-oq-10-answered)
 - [References](#references)
 <!--toc:end-->
@@ -62,7 +62,7 @@ becomes a ninth amendment to DESIGN-0005, which already owns the
 monochrome diagram policy; the search changes complete asks recorded in
 DESIGN-0001 and DESIGN-0004.
 
-Neither change is forced. Every 1.5.0 change is additive, and mermaid 11
+Neither change is forced.  1.5.0 change is additive, and mermaid 11
 keeps working. This is deliberate adoption, not a forced migration,
 which is why the phases below are ordered so each is independently
 revertable.
@@ -84,7 +84,7 @@ revertable.
   through the container and the Helm chart — so a deployment can fall
   back to dagre without a rebuild.
 - Auditing whether a document's own front matter can override the two
-  settings that make `MermaidBlock` safe (see [OQ-11](#oq-11)).
+  settings that make `MermaidBlock` safe (see [OQ-11](#oq-11-answered-b)).
 - Widening the e2e chunk assertion so an eagerly-imported ELK cannot
   pass a test written to catch exactly that.
 - Updating `CLAUDE.md`, DESIGN-0005, and the comments 1.5.0 falsifies.
@@ -107,8 +107,8 @@ revertable.
 
 ## Decisions
 
-All ten opening questions were answered on 2026-09-14. Recorded here so
-the phases below read as instructions rather than options; the original
+All eleven questions were answered on 2026-09-14. Recorded here so the
+phases below read as instructions rather than options; the original
 alternatives are preserved in [Open Questions](#open-questions).
 
 | # | Decision |
@@ -123,9 +123,10 @@ alternatives are preserved in [Open Questions](#open-questions).
 | OQ-8 | Record the layout decision as a **ninth amendment to DESIGN-0005**. |
 | OQ-9 | **One PR**, phases in order, mermaid last. |
 | OQ-10 | Resolved by fact: **docz-api v0.10.0 carries spec 1.5.0** (so does v0.9.1). No release gate needed. |
+| OQ-11 | **Audit and fix the `secure`-list gap inside Phase 4**, not as a separate PR. It predates the upgrade, so it gains no urgency from it. |
 
-[OQ-11](#oq-11) is new, raised by a finding made while planning Phase 5,
-and is the one question still open.
+No questions remain open. OQ-11 arrived after the others, raised by a
+finding made while planning Phase 5; it is answered on the same terms.
 
 ## Implementation Phases
 
@@ -146,6 +147,9 @@ moved".
 
 #### Tasks
 
+- [ ] Flip this document's status from Draft to In Progress. Every
+      question is answered; from here it is the code that changes, not the
+      plan.
 - [ ] Copy `api/openapi.yaml` from docz-api (currently 1.4.1 here, 1.5.0
       upstream). The diff is: `source` and `sort` query params on
       `searchDocs`, a `400` response on that operation, a new
@@ -306,7 +310,7 @@ per-flowchart.
 #### Tasks
 
 - [ ] **Audit the `secure` list first, before the upgrade** — see
-      [OQ-11](#oq-11). In the installed mermaid 11.16.0 the default is
+      [OQ-11](#oq-11-answered-b). In the installed mermaid 11.16.0 the default is
       `["secure", "securityLevel", "startOnLoad", "maxTextSize",
       "suppressErrorRendering", "maxEdges"]`, which does **not** include
       `htmlLabels`. Determine by test whether a diagram's own front
@@ -547,11 +551,11 @@ and must follow it exactly, including the both-ends validation rule.
 ## Open Questions
 
 Answer format: **a** is the recommendation, **b** onward are the
-alternatives, and *other* is free text. OQ-1 through OQ-10 were answered
-2026-09-14 and are summarized in [Decisions](#decisions); their
-alternatives are kept for the record.
+alternatives, and *other* is free text. All questions were answered on
+2026-09-14 and are summarized in [Decisions](#decisions); the
+alternatives are kept below for the record.
 
-### OQ-11
+### OQ-11 (answered: b)
 
 **Can a document's own front matter re-enable HTML labels?** Raised
 while planning Phase 5. Not yet verified, and it may describe code we
@@ -580,10 +584,17 @@ the nested `flowchart.htmlLabels` path. Both need a test, not a reading.
 
 - **a.** Verify it first, as a standalone `patch` PR ahead of this
   branch, and if confirmed, ship the `secure`-array fix plus an XSS-suite
-  row on its own. *Recommended:* if the gap is real it affects production
-  now, and a security fix should not wait behind a dependency upgrade or
-  arrive buried in a 6-phase diff.
-- **b.** Verify and fix inside Phase 4, as currently written.
+  row on its own. *Was the recommendation:* if the gap is real it affects
+  production now, and a security fix should not wait behind a dependency
+  upgrade or arrive buried in a 6-phase diff.
+- **b. → CHOSEN.** Verify and fix inside Phase 4, as written. The gap,
+  if real, has been shipped since IMPL-0002 and carries no new urgency
+  from the upgrade; folding it in keeps one PR rather than two.
+  Consequence to hold onto: the audit is the **first** task of Phase 4,
+  before the version bump, so the answer is established against the
+  version actually in production. If it turns out to be exploitable,
+  reconsider splitting it out rather than letting a live fix wait on ELK
+  review.
 - **c.** Verify only, record the finding, and decide afterward.
 - **d.** Treat it as acceptable: `securityLevel: "strict"` still applies
   and the residual risk is a purified `<img>`, so no change.

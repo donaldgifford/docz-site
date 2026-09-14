@@ -337,7 +337,13 @@ per-flowchart.
       suite mocks mermaid, so it could not host this) plus a second
       figure in the e2e rendering fixture, which is where the
       *rendered-output* half of the guarantee already lives.
-- [ ] Bump `mermaid` to `^12.0.0` and update the lockfile.
+- [x] Bump `mermaid` to `^12.0.0` and update the lockfile. Resolves to
+      12.0.0 exactly (the only 12.x published), pulling `elkjs ^0.9.3`
+      and `dompurify ^3.4.12`, and declaring `engines.node >=22.12.0`.
+      Unit suite, typecheck, lint, and `just e2e` are all green on the
+      bump alone, before any layout change — including the OQ-11 audit,
+      so `secure`, `securityLevel`, and `htmlLabels` keep their 11.x
+      semantics in 12.x.
 - [ ] Adopt ELK as the default layout (OQ-1) by setting `layout`
       explicitly in `getMermaid()` rather than relying on the new
       default. An explicit value is what Phase 5's override reads, and

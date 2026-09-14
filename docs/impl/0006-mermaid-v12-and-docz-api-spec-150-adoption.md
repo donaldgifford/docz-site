@@ -420,8 +420,16 @@ per-flowchart.
       the ELK chunk **is** fetched, which both proves ELK is the layout
       actually in use at runtime and keeps the diagram-free assertion
       from passing on a pattern that matches nothing.
-- [ ] Re-check the jsdom mermaid mock in `src/a11y/axe.test.tsx` still
-      matches the v12 module shape.
+- [x] Re-check the jsdom mermaid mock in `src/a11y/axe.test.tsx` still
+      matches the v12 module shape. It does, and the surface it has to
+      match is narrower than before: `default.initialize` and
+      `default.render` are everything `MermaidBlock` touches, because
+      `mermaidInitConfig()` builds the config without a mermaid
+      instance. (Had `secureKeys` kept its first shape — reading
+      upstream's list off the live module — the mock would have needed
+      `mermaidAPI` too. Worth remembering as an argument for config
+      that does not interrogate the library it configures.) Recorded in
+      the mock's comment so the next person knows when it must grow.
 - [ ] Confirm all three specimen fences render under ELK, including
       Figure 2's per-node `classDef` colors. Mermaid scopes a diagram's
       own `classDef` by render id, which is why it outranks the

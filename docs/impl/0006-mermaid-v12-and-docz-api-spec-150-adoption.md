@@ -476,11 +476,20 @@ per-flowchart.
       not deep-path" is a rule a future edit can break silently, it is
       now an ESLint `no-restricted-imports` pattern on `mermaid/*` with
       the reason in the message — checked to fire before being trusted.
-- [ ] Set an explicit `build.target` in `vite.config.ts` matching
+- [x] Set an explicit `build.target` in `vite.config.ts` matching
       mermaid's ES2024 / Safari 17.4 floor, and state the supported
       browsers in `README.md` (OQ-4). The floor exists whether or not it
       is written down; unstated, it arrives as a bug report from an old
-      iPad.
+      iPad. Written as browser versions
+      (`chrome119`, `edge119`, `firefox122`, `safari17.4` — the first
+      releases with full ES2024 support, Safari being the binding one)
+      rather than the string `es2024`, so `cssTarget`, which inherits
+      from `build.target`, gets something it can act on. Confirmed the
+      setting is live rather than assumed: building against an ancient
+      target moves the entry chunk from 78.5 to 81.7 KB gz, so Vite is
+      reading it. At the real floor the output is byte-identical to the
+      previous default, which is the expected result — nothing here was
+      relying on downlevelling.
 
 #### Success Criteria
 

@@ -622,10 +622,24 @@ and must follow it exactly, including the both-ends validation rule.
       component and gets a dated update note rather than an edited body:
       it is a record of what was decided when, not a description of
       today.
-- [ ] Add a specimen section if v12 introduces a construct worth
+- [x] Add a specimen section if v12 introduces a construct worth
       rendering — the standing rule is that a pipeline feature lands
       with a specimen section in the same commit. Use-case diagrams are
-      new in v12.
+      new in v12. **Evaluated and declined, for two reasons rather than
+      for convenience.** The construct was built and rendered first: a
+      `usecase-beta` figure with two actors and a `systemBoundary` does
+      render under strict mode with `htmlLabels: false`, monochrome and
+      in keeping with the rest of the page. But every ellipse label sits
+      right of its shape's centre, and a label wide enough relative to
+      its ellipse spills outside it — reproduced under **both** ELK and
+      dagre, so it is the use-case renderer's own measurement and not
+      a consequence of the layout adopted here. The specimen is a real
+      published page and the reference for visual judgement; a figure
+      with text outside its shape does not belong in it. Second, the
+      keyword still carries `-beta`, so the syntax is expected to move,
+      and the specimen is asserted on in e2e. Revisit when the shape
+      lands non-beta. Nothing else in v12 adds a construct this pipeline
+      renders differently.
 - [ ] Close [#29] and [#30] with a pointer to the merge commit.
 - [ ] Regenerate `CHANGELOG.md` with `git fetch --tags` first, commit as
       `chore(changelog): Auto-sync`, and make it the **last** commit on

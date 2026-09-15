@@ -507,6 +507,16 @@ per-flowchart.
 - Before/after screenshots of the specimen page attached to the PR. This
   is the only check that answers "do the diagrams still look right", so
   it is recorded rather than automated.
+  **Met in substance, not in form.** All three figures were rendered and
+  inspected individually under v12 with ELK, at both `look: "neo"` and
+  `look: "classic"` — that comparison is what decided the pin. The
+  images could not be uploaded from where the work ran, so
+  [a PR comment][shots] records what was compared and how to reproduce
+  it. Two assertions now cover what the screenshots could only show:
+  computed `stroke` on Figure 2's coloured and uncoloured nodes, and
+  every theme variable surviving the merge — the latter matters
+  precisely because an unknown variable blanks a figure *silently*,
+  which is the failure a screenshot review is most likely to skim past.
 
 ---
 
@@ -892,5 +902,6 @@ Retained so the decisions have their alternatives on record.
   originated
 
 [pr]: https://github.com/donaldgifford/docz-site/pull/31
+[shots]: https://github.com/donaldgifford/docz-site/pull/31#issuecomment-5681592757
 [#29]: https://github.com/donaldgifford/docz-site/issues/29
 [#30]: https://github.com/donaldgifford/docz-site/issues/30

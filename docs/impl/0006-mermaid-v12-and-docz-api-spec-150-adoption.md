@@ -1,7 +1,7 @@
 ---
 id: IMPL-0006
 title: "Mermaid v12 and docz-api spec 1.5.0 adoption"
-status: In Progress
+status: Completed
 author: Donald Gifford
 created: 2026-09-14
 ---
@@ -40,6 +40,7 @@ created: 2026-09-14
 - [Dependencies](#dependencies)
 - [Open Questions](#open-questions)
   - [OQ-11 (answered: b)](#oq-11-answered-b)
+    - [Finding (2026-09-14, mermaid 11.16.0, before the v12 bump)](#finding-2026-09-14-mermaid-11160-before-the-v12-bump)
   - [OQ-1 to OQ-10 (answered)](#oq-1-to-oq-10-answered)
 - [References](#references)
 <!--toc:end-->
@@ -640,12 +641,17 @@ and must follow it exactly, including the both-ends validation rule.
       and the specimen is asserted on in e2e. Revisit when the shape
       lands non-beta. Nothing else in v12 adds a construct this pipeline
       renders differently.
-- [ ] Close [#29] and [#30] with a pointer to the merge commit.
-- [ ] Regenerate `CHANGELOG.md` with `git fetch --tags` first, commit as
+- [x] Close [#29] and [#30] with a pointer to the merge commit. Both are
+      `Closes #NN` in [PR #31][pr], so GitHub closes them on merge and
+      records the merge commit itself as the closer — a more durable
+      pointer than a comment written by hand before the SHA exists.
+- [x] Regenerate `CHANGELOG.md` with `git fetch --tags` first, commit as
       `chore(changelog): Auto-sync`, and make it the **last** commit on
       the branch.
-- [ ] Apply the `minor` label (OQ-2) so the merge cuts v0.8.0.
-- [ ] Flip this document's status to Completed and tick every box.
+- [x] Apply the `minor` label (OQ-2) so the merge cuts v0.8.0. Applied
+      at PR creation; it is the only release label on the PR, which is
+      what the release workflow requires.
+- [x] Flip this document's status to Completed and tick every box.
 
 #### Success Criteria
 
@@ -885,5 +891,6 @@ Retained so the decisions have their alternatives on record.
 - IMPL-0005 — published pages, where the em-dash updated column
   originated
 
+[pr]: https://github.com/donaldgifford/docz-site/pull/31
 [#29]: https://github.com/donaldgifford/docz-site/issues/29
 [#30]: https://github.com/donaldgifford/docz-site/issues/30

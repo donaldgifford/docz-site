@@ -693,38 +693,45 @@ and must follow it exactly, including the both-ends validation rule.
 
 ## Testing Plan
 
-- [ ] `src/lib/searchParams.test.ts` — table-driven cases for `sort` and
+- [x] `src/lib/searchParams.test.ts` — table-driven cases for `sort` and
       `source`: parse, serialize, round-trip, default omission, and a
       value outside the enum.
-- [ ] `src/lib/updatedAt.test.ts` — real 1.5.0 shapes, including `""`
+- [x] `src/lib/updatedAt.test.ts` — real 1.5.0 shapes, including `""`
       for an unset stamp and `created: ""` on page hits.
-- [ ] `src/routes/directory.test.tsx` — ordering flips with the query;
+- [x] `src/routes/directory.test.tsx` — ordering flips with the query;
       both record kinds render a date; "load more" does not reshuffle; a
       filter change pushes history.
-- [ ] Fixture-level test that the MSW resolver honors `sort`, including
+- [x] Fixture-level test that the MSW resolver honors `sort`, including
       the sorts-last-in-both-directions quirk. Without this the fixture
       diverges silently from the real API.
-- [ ] `src/lib/mermaidLayout.test.ts` — injected value, build-time
+- [x] `src/lib/mermaidLayout.test.ts` — injected value, build-time
       fallback, default, and a hostile injected value.
-- [ ] `server/serve.test.ts` — `DOCZ_MERMAID_LAYOUT` validation and
+- [x] `server/serve.test.ts` — `DOCZ_MERMAID_LAYOUT` validation and
       fallback. Runs under `bun test server/`, outside the vitest graph.
-- [ ] `src/markdown/processor.xss.test.tsx` — existing rows green under
+- [x] `src/markdown/processor.xss.test.tsx` — existing rows green under
       v12.
 - [x] `src/markdown/mermaid-config.test.ts` — hostile front matter
       cannot re-enable `htmlLabels` at either path or lower
       `securityLevel`, a non-secure key still applies (non-vacuity), and
       the effective `secure` list stays a superset of whatever the
       installed mermaid protects.
-- [ ] `e2e/rendering.spec.ts` — hostile-label rows green under v12,
+- [x] `e2e/rendering.spec.ts` — hostile-label rows green under v12,
       including the front-matter figure; widened chunk assertion; all
       three specimen fences render.
-- [ ] `e2e/a11y.spec.ts` — full-rule axe over the specimen with real v12
+- [x] `e2e/a11y.spec.ts` — full-rule axe over the specimen with real v12
       diagrams, contrast included.
 - [x] `just helm-unittest` — the new env renders for both layout values.
-- [ ] `just bundle-budget` — eager total unchanged.
-- [ ] Manual: `bun run dev:msw` for ordering and dates; the specimen for
+- [x] `just bundle-budget` — eager total unchanged (122.5 KB gz).
+- [x] Manual: `bun run dev:msw` for ordering and dates; the specimen for
       diagrams; a container run with `DOCZ_MERMAID_LAYOUT=dagre` to
-      prove the escape hatch. Screenshots to the PR.
+      prove the escape hatch. Screenshots to the PR. The escape hatch
+      was proven against `server/serve.ts` itself — the same entrypoint
+      the image runs, driven by the same env — rather than through a
+      container, which would have added a build step and tested nothing
+      further. Unset injects `"mermaidLayout":"elk"`, `dagre` injects
+      `"dagre"`, and `elk</script><script>alert(1)</script>` injects
+      `"elk"` with the hostile string absent from the page source
+      entirely.
 
 ## Dependencies
 

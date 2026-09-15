@@ -548,13 +548,21 @@ and must follow it exactly, including the both-ends validation rule.
       value cannot change without a new document. A test injects
       `dagre` and asserts the shipped config follows, so "reads the
       resolver" cannot quietly decay back into a constant.
-- [ ] Add `config.mermaidLayout` to `charts/docz-site/values.yaml` and
+- [x] Add `config.mermaidLayout` to `charts/docz-site/values.yaml` and
       wire the `DOCZ_MERMAID_LAYOUT` env in
       `charts/docz-site/templates/deployment.yaml`, following how
       `authProviders` is templated (always set) rather than `navLinks`
-      (omitted when empty).
-- [ ] Regenerate the chart README (`just helm-docs`) and add a
+      (omitted when empty). Also constrained in
+      `values.schema.json` to the enum `dagre | elk`, which was not in
+      the plan and earns its place: the server falls back to `elk` on
+      anything it does not recognize, so without the schema a typo in a
+      values file is *invisible* — diagrams keep rendering the default
+      and nothing reports a problem. With it, `helm template` fails
+      immediately. Verified by running one.
+- [x] Regenerate the chart README (`just helm-docs`) and add a
       helm-unittest case asserting the env var renders for both values.
+      `just helm-lint`, `just helm-unittest` (36 tests), and
+      `just helm-template` all pass.
 - [x] Add `server/serve.test.ts` cases (runs under `bun test server/`,
       not vitest): valid values pass through, unknown values and empty
       fall back, and no unvalidated string can reach the script.

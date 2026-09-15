@@ -145,10 +145,21 @@ Bun is the package manager and script runner (pinned in `mise.toml`).
   just a color — mermaid's `neo` look gradients node strokes whenever
   the theme sets `useGradient` (`base` does), and `Theme.calculate`
   clears it exactly when the overrides carry `nodeBorder` without
-  `useGradient`. `layout` and `look` are both pinned
-  (`MERMAID_LAYOUT` = elk, `MERMAID_LOOK` = classic): v12 defaults to
-  elk + neo, and neo rounds node corners, which would make diagrams the
-  only rounded surface under a wiped radius scale.
+  `useGradient`. `look` is PINNED (`MERMAID_LOOK` = classic): v12
+  defaults to neo, which rounds node corners — diagrams would be the
+  only rounded surface under a wiped radius scale. `layout` is NOT a
+  constant: `src/lib/mermaidLayout.ts` resolves runtime
+  `DOCZ_MERMAID_LAYOUT` → build-time `VITE_MERMAID_LAYOUT` → `elk`,
+  closed set `dagre|elk`, validated at BOTH ends like nav pins — the
+  value goes straight into `mermaid.initialize`, so an unvalidated
+  string would be config injection on the library that renders
+  untrusted text. Unlike nav pins an invalid injected value is not
+  authoritative; it falls through. Chart value `config.mermaidLayout`,
+  schema-constrained to the two names because the server's fallback is
+  silent. ELK is its own ~436 KB gz chunk that mermaid fetches ONLY
+  when the layout is elk; e2e asserts both directions, and the
+  diagram-free chunk assertion matches `elk` as well as `mermaid`
+  because the ELK filename contains neither the word nor the library.
   h2–h4 map to `markdown-heading.tsx`, which appends the
   hover/focus-revealed copy-link button (a labeled BUTTON, not a
   link — the underline rule for prose links stays untouched).
@@ -383,9 +394,10 @@ Bun is the package manager and script runner (pinned in `mise.toml`).
   hits keyed/linked by published path with a neutral mono marker
   (doc-only columns "—"; the directory count line appends
   "· X docs · Y pages" ONLY when pages matched, so non-opted
-  deployments stay byte-identical). searchDocs has NO source filter
-  param yet (additive upstream ask). `useRepoFacts.total` reads
-  `facets.source.doc` — the raw estimated total now counts pages.
+  deployments stay byte-identical). searchDocs gained the `source`
+  filter in spec 1.5.0 (docz-api#27, closed) — `useRepoFacts` sends a
+  fixed `doc` and reads `estimated_total_hits`, so the total is a
+  doc count by construction rather than a facet lookup.
   Recents (`recentDocs.ts`) are kind-discriminated (`doc` | `page`);
   page entries store the published path, validated per segment with
   dot-only segments rejected, and a stored payload without `kind`

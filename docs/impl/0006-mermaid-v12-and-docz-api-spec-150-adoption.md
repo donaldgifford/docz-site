@@ -603,14 +603,25 @@ and must follow it exactly, including the both-ends validation rule.
 
 #### Tasks
 
-- [ ] Update `CLAUDE.md`: the mermaid paragraph (ELK default, the
+- [x] Update `CLAUDE.md`: the mermaid paragraph (ELK default, the
       override, any moved invariant), the directory paragraph (ordering
       and the source filter), and the updated-column paragraph, which
       currently documents the field as absent and the upstream ask as
-      open.
-- [ ] Add the ninth amendment to DESIGN-0005 (OQ-8) recording the ELK
+      open. A fourth paragraph needed it too and was not in the plan —
+      the published-pages one still claimed "searchDocs has NO source
+      filter param yet (additive upstream ask)" and described
+      `useRepoFacts.total` reading `facets.source.doc`. Both were
+      falsified in Phase 3.
+- [x] Add the ninth amendment to DESIGN-0005 (OQ-8) recording the ELK
       adoption, the override, and whatever the `secure`-list audit
-      found.
+      found. It also closes the eighth amendment's loose end — that
+      section ends "until it lands", describing `hitUpdatedAt` and the
+      em dash — and corrects its parting claim that page hits send `""`
+      for `updated_at`; it is `created` that is empty on a page.
+      DESIGN-0004 carried the same two expired premises in its search
+      component and gets a dated update note rather than an edited body:
+      it is a record of what was decided when, not a description of
+      today.
 - [ ] Add a specimen section if v12 introduces a construct worth
       rendering — the standing rule is that a pipeline feature lands
       with a specimen section in the same commit. Use-case diagrams are

@@ -106,6 +106,43 @@ test("the diagram chunks stay off diagram-free docs", async ({ page }) => {
 });
 
 /*
+ * The deployment layout override (IMPL-0006 Phase 5). `build:msw` bakes
+ * no layout — the default is what e2e should exercise, and baking
+ * `dagre` would quietly stop covering ELK — so the override is driven
+ * through `window.__DOCZ_CONFIG__` directly. That is more faithful than
+ * a build-time variable anyway: it is the exact channel
+ * server/serve.ts injects on, so this covers the real path a deployment
+ * takes rather than the fallback.
+ *
+ * The payload sets only `mermaidLayout`; `nav` and `authProviders` stay
+ * absent so they keep falling back to the baked build-time values and
+ * this test changes nothing else about the page.
+ */
+test("the dagre override renders without fetching ELK", async ({ page }) => {
+  await page.addInitScript(() => {
+    (window as unknown as Record<string, unknown>).__DOCZ_CONFIG__ = {
+      mermaidLayout: "dagre",
+    };
+  });
+  const diagramRequests: string[] = [];
+  page.on("request", (request) => {
+    if (DIAGRAM_CHUNK.test(request.url())) {
+      diagramRequests.push(request.url());
+    }
+  });
+
+  await page.goto("/donaldgifford/docz-site/pages/guides/markdown-specimen.md");
+  await expect(page.locator("figure.mermaid-figure svg")).toHaveCount(3, {
+    timeout: 20_000,
+  });
+
+  // mermaid still loads; ELK is never fetched. This is what makes the
+  // 436 KB gzipped layout chunk a cost only ELK deployments pay.
+  expect(diagramRequests.length).toBeGreaterThan(0);
+  expect(diagramRequests.filter((url) => ELK_CHUNK.test(url))).toHaveLength(0);
+});
+
+/*
  * The specimen's Mermaid section carries all three diagram kinds this
  * pipeline renders, and Figure 2 is the one place the "monochrome
  * unless the document says otherwise" policy is exercised: a diagram's

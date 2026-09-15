@@ -569,9 +569,23 @@ and must follow it exactly, including the both-ends validation rule.
 - [x] Add `src/lib/mermaidLayout.test.ts` covering the injected-value,
       build-time-fallback, and default paths, plus a hostile injected
       value.
-- [ ] Decide whether `build:msw` bakes a layout for e2e, as it bakes an
+- [x] Decide whether `build:msw` bakes a layout for e2e, as it bakes an
       RFCs nav pin. Default behavior is the thing e2e should exercise,
       so probably not — but make it a decision, not an oversight.
+      **Decided: it does not.** The nav pin is baked because there is no
+      other way to reach that surface — an unpinned build renders
+      nothing to assert on. The layout is the opposite: it has a real
+      default, that default is the thing worth exercising, and baking
+      `dagre` would quietly stop covering ELK.
+      The override is still exercised end to end, by setting
+      `window.__DOCZ_CONFIG__` in a Playwright init script. That is more
+      faithful than a build-time variable would have been: it is the
+      exact channel `server/serve.ts` injects on, so the test covers the
+      path a deployment actually takes rather than the fallback. It
+      asserts all three specimen diagrams render **and** that the ELK
+      chunk is never fetched — which is what makes the 436 KB gzipped
+      layout engine a cost only ELK deployments pay, rather than a
+      claim about mermaid's loader that this repo never checked.
 
 #### Success Criteria
 
@@ -681,7 +695,7 @@ and must follow it exactly, including the both-ends validation rule.
       three specimen fences render.
 - [ ] `e2e/a11y.spec.ts` — full-rule axe over the specimen with real v12
       diagrams, contrast included.
-- [ ] `just helm-unittest` — the new env renders for both layout values.
+- [x] `just helm-unittest` — the new env renders for both layout values.
 - [ ] `just bundle-budget` — eager total unchanged.
 - [ ] Manual: `bun run dev:msw` for ordering and dates; the specimen for
       diagrams; a container run with `DOCZ_MERMAID_LAYOUT=dagre` to

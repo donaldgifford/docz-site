@@ -443,7 +443,10 @@ Bun is the package manager and script runner (pinned in `mise.toml`).
 - ESLint is flat config (`eslint.config.js`): typescript-eslint
   strict + stylistic type-checked (projectService), react-hooks flat
   recommended, jsx-a11y, eslint-config-prettier last. Generated dir is
-  ignored.
+  ignored. One `no-restricted-imports` pattern: never deep-path into
+  `mermaid/*` — the bare specifier maps to `dist/mermaid.core.mjs`,
+  while the minified sibling carries syntax es-module-lexer (Vite)
+  rejects.
 - react-hooks v7 forbids `setState` inside effects
   (`set-state-in-effect`) — sync prop→state with the react.dev
   "adjust state during render" pattern (guarded `setState` in render

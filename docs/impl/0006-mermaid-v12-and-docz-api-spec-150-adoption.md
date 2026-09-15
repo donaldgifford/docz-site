@@ -453,15 +453,29 @@ per-flowchart.
       and compared on the specimen before choosing. Flipping is one
       line (`MERMAID_LOOK`) and is asserted by a test so it cannot drift
       back.
-- [ ] Run `just bundle-budget`. The eager budget should be untouched
+- [x] Run `just bundle-budget`. The eager budget should be untouched
       (mermaid is behind a dynamic import), but record the new
       diagram-page chunk cost — ELK is roughly 500 KB gzipped in the
-      inlined build.
-- [ ] Confirm `import("mermaid")` still resolves to the package
+      inlined build. **Eager total 122.4 KB gz against the 130 KB
+      budget**, up 0.2 KB from 122.2 — noise, and no mermaid or ELK
+      chunk is in the eager set.
+      The diagram-page cost is the real number to hold onto: ELK lands
+      as `assets/elk-<hash>.js`, **1.39 MB raw / 436 KB gzipped**, which
+      did not exist before this upgrade. It is fetched only by a
+      document containing a diagram, and only when `layout` is `elk` —
+      mermaid's layout loader imports it on demand — so Phase 5's
+      `dagre` override should skip it entirely. Verify that there rather
+      than assuming it.
+- [x] Confirm `import("mermaid")` still resolves to the package
       specifier. Upstream notes `dist/mermaid.esm.min.mjs` now contains
       syntax `es-module-lexer` (which Vite uses) rejects; we are
       unaffected only because we import the bare specifier. Do not
-      deep-path into `dist`.
+      deep-path into `dist`. Confirmed: 12.0.0's `exports["."]` maps to
+      `dist/mermaid.core.mjs`, a different file from the minified one,
+      and the only mermaid specifiers in the repo are bare. Since "do
+      not deep-path" is a rule a future edit can break silently, it is
+      now an ESLint `no-restricted-imports` pattern on `mermaid/*` with
+      the reason in the message — checked to fire before being trusted.
 - [ ] Set an explicit `build.target` in `vite.config.ts` matching
       mermaid's ES2024 / Safari 17.4 floor, and state the supported
       browsers in `README.md` (OQ-4). The floor exists whether or not it

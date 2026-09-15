@@ -94,6 +94,17 @@ describe("the shipped layout and look", () => {
     expect(mermaid.mermaidAPI.getConfig().layout).toBe("elk");
   });
 
+  it("takes the layout from the deployment resolver, not a constant", () => {
+    // mermaidLayout.ts owns the precedence and validation; this pins
+    // that the config actually asks it rather than hard-coding "elk".
+    window.__DOCZ_CONFIG__ = { mermaidLayout: "dagre" };
+    try {
+      expect(mermaidInitConfig().layout).toBe("dagre");
+    } finally {
+      delete window.__DOCZ_CONFIG__;
+    }
+  });
+
   it("holds the look at classic", () => {
     // v12 moved the default to `neo`, which rounds node corners. The
     // radius scale in tokens.css is wiped, so that would leave diagrams

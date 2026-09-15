@@ -532,14 +532,22 @@ and must follow it exactly, including the both-ends validation rule.
       mirrors the JSON it produces. The keys are still written out
       explicitly inside rather than stringifying the argument, so the
       emitted order cannot depend on how a caller built the object.
-- [ ] Add `src/lib/mermaidLayout.ts` that **re-validates** the injected
+- [x] Add `src/lib/mermaidLayout.ts` that **re-validates** the injected
       value against the same closed set, then falls back to a build-time
       `VITE_MERMAID_LAYOUT`, then `elk`. The both-ends rule: neither end
-      trusts the other.
-- [ ] Read it in `getMermaid()` (`src/markdown/mermaid-block.tsx`) when
+      trusts the other. One deliberate difference from nav pins: an
+      injected value that fails validation is **not** authoritative, it
+      falls through. Pins respect "the deployment chose no pins"; there
+      is no equivalent here, so a bad value means something is wrong
+      rather than that something was chosen. `VITE_MERMAID_LAYOUT` is
+      declared in `src/vite-env.d.ts` as a plain string, so the call
+      site passes typed input to the validator instead of casting.
+- [x] Read it in `getMermaid()` (`src/markdown/mermaid-block.tsx`) when
       calling `initialize()`. Note the module memoizes `mermaidPromise`,
       so the layout resolves once per page load, which is correct — the
-      value cannot change without a new document.
+      value cannot change without a new document. A test injects
+      `dagre` and asserts the shipped config follows, so "reads the
+      resolver" cannot quietly decay back into a constant.
 - [ ] Add `config.mermaidLayout` to `charts/docz-site/values.yaml` and
       wire the `DOCZ_MERMAID_LAYOUT` env in
       `charts/docz-site/templates/deployment.yaml`, following how
@@ -550,7 +558,7 @@ and must follow it exactly, including the both-ends validation rule.
 - [x] Add `server/serve.test.ts` cases (runs under `bun test server/`,
       not vitest): valid values pass through, unknown values and empty
       fall back, and no unvalidated string can reach the script.
-- [ ] Add `src/lib/mermaidLayout.test.ts` covering the injected-value,
+- [x] Add `src/lib/mermaidLayout.test.ts` covering the injected-value,
       build-time-fallback, and default paths, plus a hostile injected
       value.
 - [ ] Decide whether `build:msw` bakes a layout for e2e, as it bakes an

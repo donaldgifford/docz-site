@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 
 import type { Mermaid, MermaidConfig } from "mermaid";
 
+import { mermaidLayout } from "@/lib/mermaidLayout";
+
 /*
  * Client-side mermaid rendering (IMPL-0002 Phase 4, OQ-1a).
  *
@@ -86,19 +88,6 @@ export const MERMAID_SECURE_KEYS = [
 ] as const;
 
 /*
- * ELK is mermaid 12's default layout and ships bundled, so this line
- * changes nothing today — it is written out anyway (IMPL-0006 OQ-1) so
- * the config says which algorithm draws the diagrams instead of
- * deferring to whatever the installed mermaid happens to prefer, and so
- * there is one place for a deployment override to replace. ELK arrives
- * as its own ~500 KB chunk behind the same dynamic import as mermaid
- * itself; it must never become eager, and the chunk assertion in
- * e2e/rendering.spec.ts has to match its filename, which does NOT
- * contain "mermaid".
- */
-const MERMAID_LAYOUT = "elk";
-
-/*
  * v12 also changed the default `look` from `classic` to `neo`, which
  * rounds node corners, thickens strokes, and adds a drop shadow. That
  * is a separate change riding along with the layout one, and this site
@@ -112,12 +101,24 @@ const MERMAID_LAYOUT = "elk";
  */
 const MERMAID_LOOK = "classic";
 
-/** The exact config we ship — exported so tests exercise it, not a copy. */
+/**
+ * The exact config we ship — exported so tests exercise it, not a copy.
+ *
+ * `layout` is resolved per page load (IMPL-0006 OQ-1): ELK by default,
+ * `dagre` when the deployment says so through DOCZ_MERMAID_LAYOUT. The
+ * module memoizes `mermaidPromise`, so this runs once, which is right —
+ * the value cannot change without a new document. ELK arrives as its
+ * own ~436 KB gzipped chunk behind the same dynamic import as mermaid
+ * itself, and mermaid only fetches it when the layout is `elk`; neither
+ * may ever become eager, and the chunk assertion in
+ * e2e/rendering.spec.ts has to match the ELK filename, which does NOT
+ * contain "mermaid".
+ */
 export function mermaidInitConfig(): MermaidConfig {
   return {
     startOnLoad: false,
     theme: "base",
-    layout: MERMAID_LAYOUT,
+    layout: mermaidLayout(),
     look: MERMAID_LOOK,
     securityLevel: "strict",
     htmlLabels: false,

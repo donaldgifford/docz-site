@@ -518,14 +518,20 @@ and must follow it exactly, including the both-ends validation rule.
 
 #### Tasks
 
-- [ ] Add `resolveMermaidLayout(raw)` to `server/serve.ts`,
+- [x] Add `resolveMermaidLayout(raw)` to `server/serve.ts`,
       whitelist-validating `DOCZ_MERMAID_LAYOUT` against the closed set
       `dagre | elk`. Anything else, including empty, resolves to the
       default. **Only whitelist values may reach the injected
       `<script>`** — this is the rule that keeps raw env out of inline
       script, and it is not negotiable.
-- [ ] Extend `runtimeConfigScript` to publish the value on
+- [x] Extend `runtimeConfigScript` to publish the value on
       `window.__DOCZ_CONFIG__`, keeping the existing `</` escaping.
+      Signature moved from positional arguments to a `RuntimeConfig`
+      object on the way past. Three independent values were one too many
+      for positional order to stay readable, and the parameter now
+      mirrors the JSON it produces. The keys are still written out
+      explicitly inside rather than stringifying the argument, so the
+      emitted order cannot depend on how a caller built the object.
 - [ ] Add `src/lib/mermaidLayout.ts` that **re-validates** the injected
       value against the same closed set, then falls back to a build-time
       `VITE_MERMAID_LAYOUT`, then `elk`. The both-ends rule: neither end
@@ -541,7 +547,7 @@ and must follow it exactly, including the both-ends validation rule.
       (omitted when empty).
 - [ ] Regenerate the chart README (`just helm-docs`) and add a
       helm-unittest case asserting the env var renders for both values.
-- [ ] Add `server/serve.test.ts` cases (runs under `bun test server/`,
+- [x] Add `server/serve.test.ts` cases (runs under `bun test server/`,
       not vitest): valid values pass through, unknown values and empty
       fall back, and no unvalidated string can reach the script.
 - [ ] Add `src/lib/mermaidLayout.test.ts` covering the injected-value,

@@ -43,7 +43,9 @@ OpenTelemetry tracing that stitches to docz-api's existing traces.
 Per [INV-0006](../investigation/0006-server-observability-logging-health-probes-metrics-and-the-otel.md)
 this is the **split**, not all-OTel: Prometheus for metrics, OTel for
 traces, plain structured stdout for logs — matching docz-api. It ships
-as **one PR and one minor version**, not staged.
+as **two PRs under this one design**: logs and probes first (no new
+dependencies), then metrics and traces. See
+[Migration / Rollout Plan](#migration--rollout-plan).
 
 Every signal degrades to nothing when unconfigured. A deployment with no
 Prometheus and no collector sets nothing and pays nothing.
@@ -453,25 +455,59 @@ Playwright's journeys.
 
 ## Migration / Rollout Plan
 
-One PR, one minor version, `minor` label.
+**Two PRs, one design document, two minor versions.** The split is not
+arbitrary — it falls exactly on the dependency boundary, which is what
+makes it clean:
 
-Backwards compatible by construction: every new env defaults to today's
-behaviour plus proxy-failure logging. A deployment that upgrades and
-changes nothing gets strictly more signal and no new configuration.
+| | PR 1 — logs and probes | PR 2 — metrics and traces |
+| --- | --- | --- |
+| Components | 1, 2, 3, 4, and the pipeline wrapper of 8 | 5, 6, 7, and 8's signal emission |
+| New runtime dependencies | **none** | `prom-client`, OTel SDK |
+| Dockerfile change | **none** | bundling step (Component 7) |
+| Chart change | log level/format values; readiness → `/readyz` | metrics + otel values, ServiceMonitor |
+| Closes | issue #18 | — |
+| Label | `minor` | `minor` |
 
-The one behavioural change is the chart pointing readiness at `/readyz`.
-Sequencing matters — the chart must not ship a probe the running image
-does not serve — but since chart and image release together from this
-repo, and `appVersion` moves with it, a defaults-only install is
-consistent. Worth an explicit note in the chart README for anyone
-pinning `image.tag` independently of chart version.
+PR 1 keeps the server's dependency count at **zero** and its packaging
+untouched, because the logger is hand-written and the probes are
+`Bun.file` calls. That means the whole Component 7 question — no
+`node_modules` in the runtime image, bundling, a 420 KB artifact — is
+deferred to PR 2 along with the dependencies that cause it. PR 1 is
+therefore reviewable as a pure behaviour change with no build-system
+risk, which is worth a lot given it touches the OAuth path.
+
+Components 1 and 2 (route classification, redaction) land in PR 1
+because logging needs them, and PR 2 reuses them unchanged. Building
+them for logs first and metrics second is the right order anyway: the
+label set gets exercised by log output before anything depends on its
+cardinality properties.
+
+**Ordering is required, not merely preferred.** PR 1 must ship first:
+PR 2's metrics and spans consume PR 1's classifier and redaction module.
+
+Backwards compatible by construction in both. Every new env defaults to
+today's behaviour, so a deployment that upgrades and changes nothing
+gets strictly more signal and no new configuration.
+
+The one behavioural change is PR 1's chart pointing readiness at
+`/readyz`. Sequencing matters — the chart must not ship a probe the
+running image does not serve — but since chart and image release
+together from this repo, and `appVersion` moves with it, a defaults-only
+install is consistent. Worth an explicit note in the chart README for
+anyone pinning `image.tag` independently of chart version.
 
 Rollback is a chart revision; nothing here writes state.
 
 ## Open Questions
 
 Each is lettered: **a** is my recommendation, **b**+ are real
-alternatives, **other** is free-form.
+alternatives, **other** is free-form. Decided questions keep their
+reasoning rather than being deleted, so the design records why, not just
+what.
+
+**Decided 2026-09-18:** OQ-2 — take the OTel SDK.
+Also decided outside the list: the work ships as **two PRs** (logs and
+probes, then metrics and traces) under this single design.
 
 ---
 
@@ -493,25 +529,21 @@ sensitivity, but they do leak traffic shape.
 
 ---
 
-**OQ-2 — Do we take the OTel dependency at all?**
+**OQ-2 — Do we take the OTel dependency at all? — DECIDED: (a) take the
+SDK.**
 Tracing is the expensive half: 382 KB of the 420 KB bundle, and the only
-part needing an SDK. A cheaper option exists — generate a W3C
-`traceparent` ourselves (~20 lines) and log the trace id. docz-api would
-still parent its spans to it, so its traces and our logs correlate by
-trace id, with no SDK, no exporter, no batching. What we would lose is
-our **own** spans: the proxy hop's latency as a span and any span for
+part needing an SDK. The cheaper alternative considered was generating a
+W3C `traceparent` ourselves (~20 lines) and logging the trace id —
+docz-api would still parent its spans to it, so its traces and our logs
+would correlate, with no SDK, no exporter, no batching. What that loses
+is our **own** spans: the proxy hop's latency, and any span for
 non-proxied requests.
 
-- **a (recommended)** — Take the full SDK. The context propagation is
-  verified working under Bun (F10), the bundle is 420 KB in an image
-  already far larger, and our span is what makes the trace genuinely
-  end-to-end rather than starting at docz-api.
-- **b** — Hand-rolled `traceparent` only. Keeps the server dependency
-  count at zero, correlates logs with docz-api traces, defers the SDK
-  until something wants our spans.
-- **c** — No tracing in this PR; metrics and logs only. Contradicts the
-  one-PR decision, so listed only for completeness.
-- **other** — _______
+Decided in favour of the full SDK: context propagation is verified
+working under Bun (F10), 420 KB is immaterial next to the Bun runtime
+image, and our span is what makes a trace genuinely end-to-end rather
+than starting at docz-api. Component 6 stands as written; the bundling
+step in Component 7 is therefore required, in PR 2.
 
 ---
 
@@ -559,19 +591,47 @@ reproduce a problem at a raised level.
 
 ---
 
-**OQ-6 — Is the browser in scope for this PR?**
-The decision was one PR for "all the obs/monitoring changes". Browser
-telemetry measures 23.4 KB gz against 7.5 KB of headroom (F11), so it
-cannot be an eager import.
+**OQ-6 — Is the browser in scope, and does gating it solve the budget?**
 
-- **a (recommended)** — Server only. The budget makes browser telemetry
-  a distinct decision with distinct tradeoffs (lazy-loading, an egress
-  path through our origin), and folding it in would expand this PR well
-  past the surface INV-0006 examined.
-- **b** — Include a lazy-loaded browser OTel bundle, gated on the OTLP
-  endpoint being configured, loaded off the critical path.
-- **c** — Include a hand-rolled `sendBeacon` error reporter — far
-  smaller than the SDK, no OTLP, just "something broke" plus a route.
+First, the part that is not a question: **server tracing and browser
+tracing are independent.** The OTel SDK from Component 6 runs inside the
+Bun process and is bundled into the server artifact. It costs the
+browser exactly zero bytes. Server tracing can ship in PR 2 and the
+browser can stay dark indefinitely, with no coupling in either
+direction.
+
+Second, the part that is: **a config gate alone does not solve the
+headroom problem.** A runtime flag around a *static* import ships all
+23.4 KB to every visitor whether the flag is on or off, because the
+bytes are in the module graph regardless. Only a **dynamic `import()`**
+moves them off the eager path — the budget measures the entry chunk plus
+its modulepreload closure, and a dynamically imported chunk is in
+neither. We already rely on this: mermaid is ~700 KB in its own chunk
+and does not count against the 122.5 KB.
+
+So gate **and** lazy-load, or neither. Gating a static import is the one
+combination that buys nothing.
+
+Third, the tradeoff that survives even when the budget is satisfied.
+Browser OTel must patch `fetch` before the app issues requests, and an
+error boundary earns its keep during initial render. A telemetry chunk
+that arrives after first paint misses early requests and early errors —
+the highest-value events. Lazy browser telemetry is therefore
+budget-safe but functionally weaker, which is a product decision, not a
+build detail.
+
+- **a (recommended)** — Server only for now. Land PR 1 and PR 2, then
+  decide the browser on its own evidence. Nothing here forecloses it.
+- **b** — Browser OTel in a third PR: dynamic `import()` gated on a
+  runtime config flag, accepting that early events are missed.
+- **c** — A small eager reporter instead: `window.onerror` +
+  `unhandledrejection` + the error boundary, posting to a collector
+  endpoint via `sendBeacon`. Catches events from the very first line,
+  and plausibly a few hundred bytes rather than 23.4 KB — but it is not
+  OTel and would not produce spans. **Estimate not yet measured.**
+- **d** — Browser OTel eagerly, raising the bundle budget deliberately
+  from 130 KB to ~150 KB. Honest about the cost, but spends the entire
+  headroom reserve on telemetry.
 - **other** — _______
 
 ---
@@ -594,7 +654,7 @@ is also user-facing on its own.
 **OQ-8 — Chart: also ship a `PrometheusRule` with starter alerts?**
 docz-api ships one, default off.
 
-- **a (recommended)** — Not in this PR. Thresholds written without
+- **a (recommended)** — Not in either PR. Thresholds written without
   traffic data are guesses that get copied into production and then
   ignored. Revisit once the metrics have run somewhere real.
 - **b** — Ship one now, default off, with a single conservative alert on

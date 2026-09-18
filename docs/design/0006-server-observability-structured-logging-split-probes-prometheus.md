@@ -1,7 +1,7 @@
 ---
 id: DESIGN-0006
 title: "Server observability — structured logging, split probes, Prometheus metrics, and OTel tracing"
-status: Draft
+status: Approved
 author: Donald Gifford
 created: 2026-09-18
 ---
@@ -25,11 +25,12 @@ created: 2026-09-18
   - [Component 6 — OpenTelemetry tracing](#component-6--opentelemetry-tracing)
   - [Component 7 — Packaging the dependencies](#component-7--packaging-the-dependencies)
   - [Component 8 — The request pipeline](#component-8--the-request-pipeline)
+  - [Component 9 — The React error boundary](#component-9--the-react-error-boundary)
 - [API / Interface Changes](#api--interface-changes)
 - [Data Model](#data-model)
 - [Testing Strategy](#testing-strategy)
 - [Migration / Rollout Plan](#migration--rollout-plan)
-- [Open Questions](#open-questions)
+- [Open Questions — all resolved](#open-questions--all-resolved)
 - [References](#references)
 <!--toc:end-->
 
@@ -68,9 +69,10 @@ Prometheus and no collector sets nothing and pays nothing.
 
 ### Non-Goals
 
-- **Browser/RUM telemetry.** Measured at 23.4 KB gz against 7.5 KB of
-  headroom (INV-0006 F11). Scope questions are raised in OQ-6/OQ-7, not
-  assumed in.
+- **Browser/RUM telemetry export.** Measured at 23.4 KB gz against
+  7.5 KB of headroom (INV-0006 F11); decided out in OQ-6a. Note the
+  error boundary (Component 9) IS in scope — it catches and displays,
+  it does not export.
 - **Alerting rules.** docz-api ships a `PrometheusRule`; we are not
   copying it until there is traffic data to write thresholds from.
 - **Log shipping.** Structured stdout is the contract; forwarders are
@@ -105,8 +107,8 @@ INV-0006: the runtime image contains no `node_modules` at all. See
 
 ## Detailed Design
 
-Eight components. 1 and 2 are shared primitives every signal depends on,
-so they come first.
+Nine components. 1 and 2 are shared primitives every signal depends on,
+so they come first; 9 is the sole browser-side change.
 
 ### Component 1 — Route classification
 
@@ -374,6 +376,46 @@ One emission point means the log line, the metric, and the span can
 never disagree about what happened, which is a property worth more than
 the handful of lines it costs.
 
+### Component 9 — The React error boundary
+
+The one browser-side change, added by OQ-7b. It **catches and displays**;
+it does not export (OQ-6a). No collector, no egress, no network call —
+so it carries none of the bundle-budget or redaction concerns that made
+browser telemetry a separate question.
+
+Today a render throw inside a route unmounts to a blank page with a
+console message and nothing else (INV-0006 F9). `src/app/router.tsx`
+defines no `errorElement`, `src/` contains no error boundary, and
+`src/main.tsx` installs no global handler.
+
+**Shape.** An `errorElement` on the root route (`path: "/"`, which
+already wraps every child) catches render and lazy-load errors from any
+descendant. It renders inside `AppShell`, so the topbar survives and the
+user can navigate away rather than being stranded.
+
+**Appearance is not a new design.** `src/components/query-states.tsx`
+already exports `ErrorPanel` alongside `NotFoundPanel` — the established
+visual language for a route that cannot render. The boundary reuses it,
+which is why this is a small change rather than a UI design exercise.
+
+**It must not swallow the error.** `console.error` stays, so devtools
+and any future reporter still see the throw. The boundary changes what
+the *user* sees, not what the *developer* can observe.
+
+Two things deliberately excluded, because they are export-shaped and
+belong with a browser-telemetry decision rather than here:
+
+- `window.onerror` / `unhandledrejection` global handlers — those are
+  only useful if something records them.
+- Any `sendBeacon`, fetch, or collector wiring.
+
+**This is the one part of the work with a UI surface**, which is what
+argued for OQ-7a. Taking 7b means PR 1 gains an a11y obligation: a new
+entry in `src/a11y/axe.test.tsx` rendering a route that throws, asserting
+zero serious/critical violations on the error state. Worth naming
+explicitly so it is not discovered late — an error panel with no heading
+or an unfocusable recovery link would fail that sweep.
+
 ## API / Interface Changes
 
 **New HTTP endpoints** (server-only; not app routes, not proxied):
@@ -450,8 +492,17 @@ A cardinality regression test is worth having: drive N distinct hostile
 paths and methods through the classifier and assert the metric registry
 series count stays bounded.
 
-No e2e changes. These surfaces are server-side and invisible to
-Playwright's journeys.
+**Component 9 is the exception to "server-side only".** Being a browser
+change, it lands in the vitest/jsdom suite rather than `bun test
+server/`, and it carries the project's standing a11y obligation: a new
+entry in `src/a11y/axe.test.tsx` that renders a throwing route and
+asserts zero serious/critical violations on the resulting panel. A
+route-level error test also belongs beside the existing route suites —
+mount via `createMemoryRouter`, throw from a child, assert the topbar
+survives and the panel renders.
+
+Otherwise no e2e changes. The remaining surfaces are server-side and
+invisible to Playwright's journeys.
 
 ## Migration / Rollout Plan
 
@@ -459,18 +510,21 @@ Playwright's journeys.
 arbitrary — it falls exactly on the dependency boundary, which is what
 makes it clean:
 
-| | PR 1 — logs and probes | PR 2 — metrics and traces |
+| | PR 1 — logs, probes, error boundary | PR 2 — metrics and traces |
 | --- | --- | --- |
-| Components | 1, 2, 3, 4, and the pipeline wrapper of 8 | 5, 6, 7, and 8's signal emission |
+| Components | 1, 2, 3, 4, 9, and the pipeline wrapper of 8 | 5, 6, 7, and 8's signal emission |
 | New runtime dependencies | **none** | `prom-client`, OTel SDK |
 | Dockerfile change | **none** | bundling step (Component 7) |
 | Chart change | log level/format values; readiness → `/readyz` | metrics + otel values, ServiceMonitor |
+| Browser surface | error boundary only (reuses `ErrorPanel`) | none |
 | Closes | issue #18 | — |
 | Label | `minor` | `minor` |
 
 PR 1 keeps the server's dependency count at **zero** and its packaging
 untouched, because the logger is hand-written and the probes are
-`Bun.file` calls. That means the whole Component 7 question — no
+`Bun.file` calls. Component 9 rides along in PR 1 without changing that:
+it is SPA code reusing an existing panel, so it adds no dependency and a
+negligible number of bytes to a budget with 7.5 KB spare. That means the whole Component 7 question — no
 `node_modules` in the runtime image, bundling, a 420 KB artifact — is
 deferred to PR 2 along with the dependencies that cause it. PR 1 is
 therefore reviewable as a pure behaviour change with no build-system
@@ -498,20 +552,38 @@ anyone pinning `image.tag` independently of chart version.
 
 Rollback is a chart revision; nothing here writes state.
 
-## Open Questions
+## Open Questions — all resolved
 
-Each is lettered: **a** is my recommendation, **b**+ are real
-alternatives, **other** is free-form. Decided questions keep their
-reasoning rather than being deleted, so the design records why, not just
-what.
+**All eight are decided (2026-09-18).** They are kept with their
+reasoning rather than deleted, so the design records why, not only what.
+Each was lettered with **a** as the recommendation.
 
-**Decided 2026-09-18:** OQ-2 — take the OTel SDK.
-Also decided outside the list: the work ships as **two PRs** (logs and
-probes, then metrics and traces) under this single design.
+| OQ | Decision |
+| --- | --- |
+| OQ-1 `/metrics` exposure | **a** — main port, endpoint on by default, ServiceMonitor off |
+| OQ-2 OTel SDK | **a** — take it; Component 7 bundling is therefore required |
+| OQ-3 `/readyz` upstream check | **a** — none at all; `proxy_errors_total` is the surface |
+| OQ-4 log format | **a** — default `json` |
+| OQ-5 request log level | **a** — debug only, unsampled |
+| OQ-6 browser telemetry | **a** — server only; no browser export path |
+| OQ-7 error boundary | **b** — **include it**, see [Component 9](#component-9--the-react-error-boundary) |
+| OQ-8 starter alerts | **a** — follow-up, not in either PR |
+
+Also decided outside the list: the work ships as **two PRs** under this
+single design.
+
+**OQ-6a + OQ-7b read as a contradiction and are not one.** The error
+boundary *catches and displays*; browser telemetry *exports*. Taking the
+boundary without the export path means a render throw becomes a usable
+error state instead of a blank page, and stays in the user's browser —
+no collector, no egress, no bundle cost beyond the panel itself. It is a
+UX fix that happens to also be the prerequisite if browser telemetry is
+ever wanted.
 
 ---
 
-**OQ-1 — Does `/metrics` belong on the public port?**
+**OQ-1 — Does `/metrics` belong on the public port? — DECIDED: (a)
+main port.**
 docz-api exposes `/metrics` on its main HTTP port and we would mirror
 that. But docz-api is typically internal, whereas docz-site is the
 internet-facing surface. Request counts by route class are low
@@ -547,7 +619,8 @@ step in Component 7 is therefore required, in PR 2.
 
 ---
 
-**OQ-3 — Should `/readyz` report upstream reachability informationally?**
+**OQ-3 — Should `/readyz` report upstream reachability informationally?
+— DECIDED: (a) no upstream check.**
 INV-0006 floated reporting docz-api health in the readyz body while
 never letting it set the status code. Drafting Component 4 changed my
 mind and I would rather flag that than quietly drop it.
@@ -563,7 +636,7 @@ mind and I would rather flag that than quietly drop it.
 
 ---
 
-**OQ-4 — Log format default.**
+**OQ-4 — Log format default. — DECIDED: (a) default `json`.**
 docz-api defaults to `text` and its chart sets `json`.
 
 - **a (recommended)** — Default `json`, chart leaves it alone.
@@ -576,7 +649,8 @@ docz-api defaults to `text` and its chart sets `json`.
 
 ---
 
-**OQ-5 — Request logs at debug only, or an info-level sampled line?**
+**OQ-5 — Request logs at debug only, or an info-level sampled line?
+— DECIDED: (a) debug only, unsampled.**
 Issue #18 proposes request lines at debug. On a quiet docs site, logging
 every request at info would be affordable and would mean not having to
 reproduce a problem at a raised level.
@@ -591,7 +665,8 @@ reproduce a problem at a raised level.
 
 ---
 
-**OQ-6 — Is the browser in scope, and does gating it solve the budget?**
+**OQ-6 — Is the browser in scope, and does gating it solve the budget?
+— DECIDED: (a) server only.**
 
 First, the part that is not a question: **server tracing and browser
 tracing are independent.** The OTel SDK from Component 6 runs inside the
@@ -651,7 +726,8 @@ is also user-facing on its own.
 
 ---
 
-**OQ-8 — Chart: also ship a `PrometheusRule` with starter alerts?**
+**OQ-8 — Chart: also ship a `PrometheusRule` with starter alerts?
+— DECIDED: (a) follow-up.**
 docz-api ships one, default off.
 
 - **a (recommended)** — Not in either PR. Thresholds written without

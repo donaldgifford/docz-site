@@ -1,7 +1,7 @@
 ---
 id: INV-0006
 title: "Server observability — logging, health probes, metrics, and the OTel-vs-Prometheus split"
-status: In Progress
+status: Concluded
 author: Donald Gifford
 created: 2026-09-18
 ---
@@ -26,8 +26,10 @@ created: 2026-09-18
   - [F7 — Auto-instrumentation is a redaction hazard on exactly our hottest path](#f7--auto-instrumentation-is-a-redaction-hazard-on-exactly-our-hottest-path)
   - [F8 — SPA paths are unbounded, so naive route labels explode cardinality](#f8--spa-paths-are-unbounded-so-naive-route-labels-explode-cardinality)
   - [F9 — The browser has no error handling to report from](#f9--the-browser-has-no-error-handling-to-report-from)
+  - [F10 — OTel context propagation works under Bun (measured)](#f10--otel-context-propagation-works-under-bun-measured)
+  - [F11 — prom-client works under Bun; browser OTel does not fit the budget](#f11--prom-client-works-under-bun-browser-otel-does-not-fit-the-budget)
 - [Options](#options)
-- [Open questions](#open-questions)
+- [Open questions — resolved](#open-questions--resolved)
 - [Conclusion](#conclusion)
 - [Recommendation](#recommendation)
 - [References](#references)
@@ -401,6 +403,70 @@ is a prerequisite, and it has standalone user-facing value independent
 of this investigation — arguably it should be split out as its own
 piece of work regardless of what we decide here (OQ-8).
 
+### F10 — OTel context propagation works under Bun (measured)
+
+OQ-2 is answered, by experiment rather than by reading. Bun 1.3.14,
+`@opentelemetry/sdk-trace-node` 2.11.0.
+
+The failure mode this guards against is silent: spans still get created,
+but a child started after an `await` detaches from its parent and every
+trace becomes a pile of orphaned roots. So the spike asserts *linkage*,
+not merely that spans exist.
+
+```text
+{ "bun": "1.3.14", "spanCount": 2, "parentFound": true,
+  "childFound": true, "sameTrace": true, "childLinkedToParent": true }
+RESULT: PASS
+```
+
+A second spike exercised the ergonomic path real code would take —
+`NodeTracerProvider.register()`, which installs the AsyncLocalStorage
+context manager and the W3C propagator without naming either — and
+confirmed the header we would put on the proxy hop is produced and
+well-formed:
+
+```text
+traceparent: 00-36e1c1a1ada75466049b114f912b0a10-23f15ff8885f834c-01
+RESULT: PASS
+```
+
+Combined with F5 (docz-api already extracts `traceparent`), end-to-end
+tracing across the proxy costs us only the client half and needs no
+upstream change. This removes the main risk that would have argued
+against an OTel-bearing option.
+
+### F11 — prom-client works under Bun; browser OTel does not fit the budget
+
+**Server-side metrics: viable.** `prom-client` 15.1.3 runs under Bun.
+Custom counters and histograms export correct exposition text, and
+`collectDefaultMetrics` yields 26 metric families (~5.5 KB) with
+`process_*` and most `nodejs_*` populated for free.
+
+One gap worth knowing: `nodejs_gc_duration_seconds` registers a HELP
+line but produces **no samples** under Bun, as do the non-`_total`
+variants of `nodejs_active_handles`/`resources`/`requests`. Bun does not
+expose Node's GC hooks. Nothing we would alert on, but a dashboard
+copied from a Node service will show gaps.
+
+**Browser OTel: does not fit.** Measured, rather than guessed as the
+first draft of this document did. `@opentelemetry/sdk-trace-web` +
+`exporter-trace-otlp-http` + `instrumentation-fetch`, bundled for the
+browser and minified:
+
+| | Size |
+| --- | --- |
+| Minified | 74.8 KB |
+| **Gzipped** | **23.4 KB** |
+| Current eager bundle | 122.5 KB gz |
+| Budget | 130 KB gz |
+| **Headroom** | **7.5 KB gz** |
+
+23.4 KB against 7.5 KB of headroom — **3.1× over**. Browser OTel cannot
+be an eager import. It could still be lazy-loaded, since the budget
+measures the entry chunk plus its modulepreload closure and a deferred
+import falls outside both; that is a real option, not a dead end, but it
+is a deliberate decision rather than a detail.
+
 ## Options
 
 **Option A — All-OTel.** Logs, metrics, and traces from both runtimes as
@@ -438,57 +504,53 @@ These are not fully exclusive: D is a meta-choice that composes with B
 or C, and C is a proper subset of B — C now does not foreclose B later,
 provided log field names are chosen with metric labels in mind.
 
-## Open questions
+## Open questions — resolved
 
-- **OQ-1 — Is the staged path right?** Ship C now (issue #18's actual
-  ask), then evaluate B once there are logs to show what metrics would
-  even be useful? Or commit to B up front so the chart's telemetry
-  surface lands in one release rather than two?
-- **OQ-2 — Does OTel JS work well under Bun?** The Node SDK leans on
-  `async_hooks`/`diagnostics_channel` for context propagation. Bun
-  implements these with varying fidelity. **This must be tested, not
-  assumed** — a spike that starts a span across an `await` in `proxy()`
-  and confirms the context survives. If manual context passing is
-  needed, OTel's cost rises and Option C's appeal grows.
-- **OQ-3 — What may `/readyz` check?** Per F3 my recommendation is
-  serving dependencies only (`dist/index.html` readable, config
-  resolved), with API reachability reported in the body as
-  informational but **never** setting the status code. Does that satisfy
-  the intent behind the original request? If genuine
-  API-gating is wanted, it needs an explicit decision to accept the
-  outage-amplification tradeoff.
-- **OQ-4 — What does browser OTel actually cost us?** We have roughly
-  7.5 KB gz of headroom (~122.5 against 130). The OTel web SDK plus
-  fetch instrumentation is, I believe, well beyond that, but **I have
-  not measured it** and will not assert a number. If it does not fit,
-  the options are: raise the budget deliberately, lazy-load telemetry
-  off the critical path, or use something much smaller (a hand-rolled
-  `sendBeacon` reporter is plausibly under 1 KB).
-- **OQ-5 — Do we want browser telemetry at all yet?** F9's error
-  boundary has clear standalone value. Exporting RUM to a collector is a
-  much bigger commitment, including an egress path through our own
-  origin.
-- **OQ-6 — Env naming.** `DOCZ_LOG_LEVEL` (issue #18, matches our
-  `DOCZ_*` convention) or `LOG_LEVEL` (matches docz-api)? My lean:
-  `DOCZ_LOG_LEVEL` for ours since every other site env is prefixed, but
-  keep `OTEL_*` unprefixed because SDKs read those names natively.
-- **OQ-7 — Log format default.** docz-api defaults to `text` and the
-  chart sets `json`. Same split here, or default `json` outright? Also:
-  do request logs sample, or log everything? At this traffic level,
-  everything — but that should be stated, not assumed.
-- **OQ-8 — Should F9's error boundary be split into its own issue?** It
-  is user-facing, independently valuable, and blocks nothing else here.
-- **OQ-9 — Do we emit `traceparent` on the proxy hop even without a
-  local tracer?** F5 means docz-api would accept it. Generating an id
-  and logging it alongside would make site logs and API logs joinable
-  with no collector at all — cheap, and useful under Option C.
+All nine are closed: OQ-2 and OQ-4 by experiment (F10, F11), the rest by
+decision on 2026-09-18. Recorded here as the inputs DESIGN-0006 builds
+on.
+
+| OQ | Resolution |
+| --- | --- |
+| OQ-1 staging | **Overruled — one PR.** I recommended shipping logs first and deciding on metrics later; the decision is to land the whole observability surface in a single PR and version. See the note below. |
+| OQ-2 OTel under Bun | **Works** — measured, F10. Context survives `await`; `register()` and `traceparent` injection both verified. |
+| OQ-3 `/readyz` scope | **Serving-only**, accepted as "a small addition for low failure coverage". Never gates on docz-api. |
+| OQ-4 browser OTel cost | **23.4 KB gz against 7.5 KB headroom** — measured, F11. Cannot be eager. |
+| OQ-5 browser telemetry now? | Deferred; carried into DESIGN-0006 as an open question with options. |
+| OQ-6 env naming | `DOCZ_*` for ours, bare `OTEL_*` for the SDK-native names. |
+| OQ-7 log format | Carried into DESIGN-0006 as an open question. |
+| OQ-8 error boundary | Carried into DESIGN-0006 as an open question (scope). |
+| OQ-9 `traceparent` without a tracer | Moot — F10 makes the real tracer cheap, so the fallback is unnecessary. |
+
+**On OQ-1.** My staged recommendation was overruled with a rationale
+worth recording, because it is a better reading of the users than mine
+was: the split is only annoying if you assume everyone runs both
+backends. In practice logs are needed regardless and go to stdout; a
+deployment with no Prometheus and no collector simply gets nothing extra
+and configures nothing; a deployment with a forwarder already owns that
+plumbing and it is not our config surface. That argument makes the
+metrics half cheap enough that staging buys little, and one coherent
+chart surface beats two partial ones.
 
 ## Conclusion
 
-**Answer: provisional — the split (Option B) for the server, but the
-question as posed is scoped wrong in two ways.**
+**Answer: the split — Option B. Not all-OTel.**
 
-Both corrections matter more than the OTel-vs-Prometheus choice itself:
+Concretely, for the Bun server: **Prometheus for metrics** (`/metrics`,
+`prom-client`), **OpenTelemetry for traces** (OTLP/HTTP), **structured
+stdout for logs**. This is docz-api's shape, and the two empirical risks
+that could have overturned it are now measured and did not (F10, F11).
+
+All-OTel is rejected on three grounds: it requires a collector to exist
+before anything at all is observable, which breaks the
+degrades-to-nothing property a single-operator install depends on (F5);
+its main practical draw is free auto-instrumentation, which is precisely
+what we must disable on the proxy path (F7); and Prometheus users would
+still need a collector exporter, so the "one system" simplification is
+partly illusory in our topology.
+
+Two corrections to the question as posed matter more than the choice
+itself:
 
 **First, "OTel or Prometheus" is not one question, it is two runtimes.**
 For the Bun server they are genuine alternatives and the split wins,
@@ -511,32 +573,33 @@ redaction hazard (F7) rules out naive auto-instrumentation on the proxy
 path whatever the SDK, and route-class labels (F8) are mandatory before
 any metric or span records a path.
 
-This is marked provisional rather than concluded because OQ-2 (Bun/OTel
-viability) and OQ-4 (browser bundle cost) are empirical questions I have
-not yet run experiments for, and either could move the answer.
-
 ## Recommendation
 
-Staged, smallest-useful-thing first:
+Land the whole server observability surface in **one PR and one
+version** (OQ-1 as decided, overriding this document's original staged
+proposal):
 
-1. **Do issue #18's logging now, under Option C.** Structured stdout
-   logs, level from env, probe paths skipped (F5), route-class labels
-   ready for later reuse (F8), allowlist redaction (F7). Start by
-   binding that `catch` (F1) — it is a two-line change and the single
-   highest-value fix in this document.
-2. **Add a serving-only `/readyz`** per OQ-3, and split the chart's
-   readiness probe off `/healthz` (F2). Report API reachability
-   informationally, never in the status code.
-3. **Then decide B vs staying at C**, with logs in hand to show what
-   metrics would be worth having.
-4. **Treat the browser separately.** Land the error boundary (F9, OQ-8)
-   on its own merits; defer RUM export pending OQ-4.
-5. **Run the two spikes** (OQ-2, OQ-4) before committing to any
-   OTel-bearing option.
+1. **Structured stdout logging.** Level from env, probe paths skipped
+   (F5), allowlist redaction (F7). Bind that `catch` (F1) — two lines,
+   and the single highest-value fix here.
+2. **Split the probes.** Keep `/healthz` unconditional for liveness; add
+   a serving-only `/readyz` and point the chart's readiness probe at it
+   (F2, F3). Liveness and readiness fail differently: a missing `dist/`
+   must hold traffic, not restart the container into CrashLoopBackOff.
+3. **Prometheus `/metrics`** via `prom-client` (F11), route-class labels
+   only (F8), behind an enable flag, with a chart ServiceMonitor
+   mirroring docz-api's.
+4. **OTel traces** over OTLP/HTTP, hand-instrumented rather than
+   auto (F7), injecting `traceparent` on the proxy hop so traces stitch
+   to docz-api for free (F5, F10). No collector configured means no
+   export and no overhead.
+5. **Browser observability stays a separate decision**, now with a
+   number attached: 23.4 KB gz against 7.5 KB of headroom (F11). Carried
+   into DESIGN-0006 as scoped open questions rather than assumed in.
 
-Pending review, the concrete next artifacts would be a DESIGN for the
-server logging and probe surface, and a decision on OQ-1/OQ-3/OQ-6 to
-scope it.
+Next artifact: **DESIGN-0006**, covering the logging surface, probe
+semantics, metric set and labels, trace spans, redaction rules, env and
+chart plumbing, and the test strategy.
 
 ## References
 

@@ -121,19 +121,19 @@ logging (Phase 2) before metrics depend on its cardinality properties.
 
 ##### Tasks
 
-- [ ] Create `server/route-class.ts` with the closed `RouteClass` union
+- [x] Create `server/route-class.ts` with the closed `RouteClass` union
       (`asset`, `static`, `spa`, `proxy:api`, `proxy:auth`,
       `proxy:webhooks`, `proxy:openapi`, `probe`).
-- [ ] Add `normalizeMethod()` collapsing anything outside
+- [x] Add `normalizeMethod()` collapsing anything outside
       `GET HEAD POST PUT PATCH DELETE OPTIONS` to `other` — `fetch()`
       accepts arbitrary method tokens, so this is attacker-controlled
       input, not a formality.
-- [ ] Create `server/redact.ts` implementing DESIGN-0006's three rules:
+- [x] Create `server/redact.ts` implementing DESIGN-0006's three rules:
       headers never recorded; query keys kept and every value replaced
       with `<redacted>` via an **allowlist**; `Location` reduced to host.
-- [ ] Write `server/route-class.test.ts` — every class, unknown methods,
+- [x] Write `server/route-class.test.ts` — every class, unknown methods,
       hostile paths staying in-class.
-- [ ] Write `server/redact.test.ts` — including that an *unknown* query
+- [x] Write `server/redact.test.ts` — including that an *unknown* query
       key is redacted by default (proves allowlist, not denylist).
 
 ##### Success Criteria

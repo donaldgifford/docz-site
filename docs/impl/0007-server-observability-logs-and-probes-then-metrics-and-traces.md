@@ -466,7 +466,16 @@ three signals.
 ##### Success Criteria
 
 - `just ci` green including `format:check`.
-- All CI checks pass, Helm jobs included.
+- All CI checks pass, Helm jobs included. **One gap while #36 is
+  stacked:** the security workflows trigger on PRs targeting `main`, so
+  #36 runs 8 checks where #35 runs 10 — `CodeQL` and
+  `Analyze TypeScript` never fired on it. PR 2's server code (metrics,
+  tracing, the bundling step) has therefore had no static analysis yet.
+  It self-heals: merging #35 retargets #36 to `main` and CI re-runs.
+  **Wait for those two to go green on #36 after the retarget before
+  merging it** — it is the PR touching OAuth-bearing proxy traffic.
+  Do NOT retarget early to force a scan; that pulls PR 1's commits into
+  #36's diff and destroys the review boundary the split exists for.
 - Chart version bumped and, after merge, the publish job actually
   publishes (`SLSA provenance (chart)` must **not** show `skipped`).
   **Deferred by construction** — only observable post-merge.

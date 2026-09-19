@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
   createMemoryRouter,
@@ -90,7 +90,15 @@ describe("route error boundary", () => {
 
     await userEvent.click(screen.getByRole("link", { name: "go home" }));
     expect(router.state.location.pathname).toBe("/");
-    expect(screen.queryByText("Something went wrong")).not.toBeInTheDocument();
+    // The destination is a lazy route, so the panel is still mounted for
+    // a tick after the location changes — assert on the settled state,
+    // not on the instant after the click. (CI caught this as a flake
+    // that a fast local machine hid.)
+    await waitFor(() => {
+      expect(
+        screen.queryByText("Something went wrong"),
+      ).not.toBeInTheDocument();
+    });
   });
 
   it("does not swallow the error — console.error still sees it", async () => {

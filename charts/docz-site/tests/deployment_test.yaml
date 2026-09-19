@@ -167,6 +167,44 @@ tests:
             name: DOCZ_METRICS_ENABLED
             value: "false"
 
+  # Unset is what turns tracing off, so an empty endpoint must omit the
+  # env entirely rather than set it to "".
+  - it: should omit every OTEL_ env var by default
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: OTEL_EXPORTER_OTLP_ENDPOINT
+          any: true
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: OTEL_SERVICE_NAME
+          any: true
+
+  - it: should wire the OTEL env when an endpoint is configured
+    set:
+      otel:
+        endpoint: "http://otel-collector:4318/v1/traces"
+        serviceName: "docz-site-staging"
+        sampleRate: 0.1
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: OTEL_EXPORTER_OTLP_ENDPOINT
+            value: "http://otel-collector:4318/v1/traces"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: OTEL_SERVICE_NAME
+            value: "docz-site-staging"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: OTEL_TRACES_SAMPLER_ARG
+            value: "0.1"
+
   - it: should reject a log level outside the schema enum
     set:
       config:

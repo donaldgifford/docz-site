@@ -195,6 +195,9 @@ memory metric). The SPA server is stateless, so horizontal scaling is safe.
 | metrics.enabled | bool | `true` | Expose Prometheus metrics on /metrics (DOCZ_METRICS_ENABLED). When false the endpoint returns an explicit 404 rather than falling through to the SPA — a scraper is told the endpoint is absent instead of being handed index.html with a 200. |
 | nameOverride | string | `""` | Override the chart name |
 | nodeSelector | object | `{}` | Node selector |
+| otel.endpoint | string | `""` | OTLP/HTTP traces endpoint (OTEL_EXPORTER_OTLP_ENDPOINT), e.g. http://otel-collector:4318/v1/traces. EMPTY MEANS TRACING IS OFF — no provider is registered, no network call is attempted, and the env var is omitted entirely. Only absolute http(s) URLs are accepted; anything else is treated as unset rather than guessed at, because this decides where request telemetry is sent. |
+| otel.sampleRate | int | `1` | Head sample rate (OTEL_TRACES_SAMPLER_ARG), clamped to 0..1. docz-site injects `traceparent` on the proxy hop and docz-api already extracts it, so a sampled request produces ONE trace spanning both services with no docz-api configuration. |
+| otel.serviceName | string | `"docz-site"` | Service name reported to the collector (OTEL_SERVICE_NAME) |
 | podAnnotations | object | `{}` | Pod annotations |
 | podLabels | object | `{}` | Pod labels |
 | podSecurityContext | object | `{"fsGroup":1000,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000,"seccompProfile":{"type":"RuntimeDefault"}}` | Pod security context. Defaults match the `oven/bun` runtime image, whose `bun` user is UID/GID 1000, and drop to a RuntimeDefault seccomp profile. |

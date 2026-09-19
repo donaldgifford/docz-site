@@ -15,6 +15,9 @@ import { describe, expect, test } from "bun:test";
 
 const SERVE = new URL("./serve.ts", import.meta.url).pathname;
 
+/** Distinguishes the payload from the server's own log lines. */
+const MARKER = "__RESULT__";
+
 /** Drive one request through a serve.ts imported with metrics off. */
 async function requestWithMetricsDisabled(
   path: string,
@@ -22,7 +25,9 @@ async function requestWithMetricsDisabled(
   const script = `
     const { handleRequest } = await import(${JSON.stringify(SERVE)});
     const res = await handleRequest(new Request("http://localhost${path}"));
-    console.log(JSON.stringify({
+    // Marked, because the server's structured logs share this stdout —
+    // a readyz.fail warn would otherwise be parsed as the payload.
+    console.log(${JSON.stringify(MARKER)} + JSON.stringify({
       status: res.status,
       body: await res.text(),
       contentType: res.headers.get("content-type") ?? "",
@@ -38,10 +43,13 @@ async function requestWithMetricsDisabled(
     new Response(proc.stderr).text(),
   ]);
   await proc.exited;
-  if (out.trim() === "") {
-    throw new Error(`child produced no output; stderr: ${err}`);
+  const line = out
+    .split("\n")
+    .find((candidate) => candidate.startsWith(MARKER));
+  if (line === undefined) {
+    throw new Error(`child produced no output; stdout: ${out} stderr: ${err}`);
   }
-  return JSON.parse(out.trim()) as {
+  return JSON.parse(line.slice(MARKER.length)) as {
     status: number;
     body: string;
     contentType: string;

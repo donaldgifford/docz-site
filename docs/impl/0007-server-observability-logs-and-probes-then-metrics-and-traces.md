@@ -393,36 +393,44 @@ three signals.
 
 ##### Tasks
 
-- [ ] Add the OTel dependencies (`@opentelemetry/sdk-trace-node`,
+- [x] Add the OTel dependencies (`@opentelemetry/sdk-trace-node`,
       `@opentelemetry/api`, the OTLP/HTTP exporter).
-- [ ] Create `server/tracing.ts` — `NodeTracerProvider.register()`,
+- [x] Create `server/tracing.ts` — `NodeTracerProvider.register()`,
       resource `service.name`, clamped head sampler, batch exporter.
       Empty endpoint means no export and no overhead.
-- [ ] Add `resolveOtelEndpoint/ServiceName/SampleRate` with the usual
+- [x] Add `resolveOtelEndpoint/ServiceName/SampleRate` with the usual
       whitelist-and-clamp discipline.
-- [ ] Implement the pipeline wrapper (Component 8): probe paths
+- [x] Implement the pipeline wrapper (Component 8): probe paths
       short-circuit before any signal; everything else emits log,
       metric, and span from **one** place.
-- [ ] Start the server span with allowlisted attributes only —
+- [x] Start the server span with allowlisted attributes only —
       `http.request.method`, `http.route`, `http.response.status_code`,
       redacted `url.path`. **Never** `url.full`, never headers.
-- [ ] Add the `proxy.upstream` child span and inject `traceparent` on
+- [x] Add the `proxy.upstream` child span and inject `traceparent` on
       the fetch to docz-api.
-- [ ] Set span status `ERROR` on 5xx only.
-- [ ] Confirm **no** auto-instrumentation package is installed — that is
+- [x] Set span status `ERROR` on 5xx only.
+- [x] Confirm **no** auto-instrumentation package is installed — that is
       the mechanism that would ship OAuth codes to a collector.
-- [ ] Write tracing tests with an in-memory exporter: parent/child
+- [x] Write tracing tests with an in-memory exporter: parent/child
       linkage, `traceparent` well-formed, attributes allowlisted,
       no span for probe paths, nothing exported when unconfigured.
-- [ ] Add an attribute-redaction test mirroring Phase 2's log gate — no
+- [x] Add an attribute-redaction test mirroring Phase 2's log gate — no
       `code`/`state` value on any span.
-- [ ] Add chart `otel.*` values, env wiring, schema, helm tests.
+- [x] Add chart `otel.*` values, env wiring, schema, helm tests.
 
 ##### Success Criteria
 
 - With a local collector, a single browser request produces one trace
   spanning docz-site **and** docz-api, joined by our injected
   `traceparent`, with no docz-api change.
+  **PARTIALLY VERIFIED.** Our half is confirmed against the shipped
+  container: it exported spans to a local OTLP receiver, and a test
+  drives a real listening socket to assert the outgoing `traceparent`
+  is well-formed W3C and carries the server span's trace id. The
+  docz-api half was NOT observed — the local docz-api stack's services
+  are down — so the join rests on INV-0006 F5 (docz-api installs a
+  TraceContext propagator and Extracts unconditionally). Worth
+  confirming against a live stack before closing the phase out.
 - With no endpoint configured, nothing is exported and no network call
   is attempted.
 - No span attribute anywhere contains a `code` or `state` value.

@@ -16,7 +16,20 @@
  * the Vite/browser graph. See tsconfig.server.json.
  */
 
+import {
+  context,
+  propagation,
+  SpanStatusCode,
+  trace,
+} from "@opentelemetry/api";
+
 import { createMetrics } from "./metrics";
+import {
+  initTracing,
+  resolveOtelEndpoint,
+  resolveSampleRate,
+  resolveServiceName,
+} from "./tracing";
 import {
   createLogger,
   LOG_FORMATS,
@@ -340,6 +353,15 @@ const LOG_FORMAT = resolveLogFormat(process.env.DOCZ_LOG_FORMAT);
 
 const METRICS_ENABLED = resolveMetricsEnabled(process.env.DOCZ_METRICS_ENABLED);
 
+const OTEL_ENDPOINT = resolveOtelEndpoint(
+  process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
+);
+const tracing = initTracing({
+  endpoint: OTEL_ENDPOINT,
+  serviceName: resolveServiceName(process.env.OTEL_SERVICE_NAME),
+  sampleRate: resolveSampleRate(process.env.OTEL_TRACES_SAMPLER_ARG),
+});
+
 const log = createLogger({ level: LOG_LEVEL, format: LOG_FORMAT });
 // Undefined when disabled, so the instruments are never even created —
 // the feature is absent rather than present-and-ignored.
@@ -374,6 +396,29 @@ async function proxy(
   headers.set("x-forwarded-host", url.host);
   headers.set("x-forwarded-proto", url.protocol.replace(":", ""));
   const started = performance.now();
+
+  const span = tracing.tracer.startSpan("proxy.upstream", {
+    attributes: {
+      "http.request.method": method,
+      "http.route": route,
+      // The upstream HOST, never the URL — the path and query on an
+      // /auth/* hop carry the authorization code.
+      "server.address": target.host,
+    },
+  });
+  // Inject traceparent from the child span's context. docz-api installs
+  // a TraceContext propagator unconditionally and Extracts on every
+  // request, so its spans become children of this one with ZERO
+  // upstream change (INV-0006 F5).
+  propagation.inject(trace.setSpan(context.active(), span), headers, {
+    set: (carrier, key, value) => {
+      carrier.set(
+        key,
+        typeof value === "string" ? value : JSON.stringify(value),
+      );
+    },
+  });
+
   try {
     const upstream = await fetch(target, {
       method: req.method,
@@ -383,6 +428,13 @@ async function proxy(
       // redirects through instead of following them server-side.
       redirect: "manual",
     });
+    span.setAttribute("http.response.status_code", upstream.status);
+    if (upstream.status >= 500) {
+      // 5xx only. A 401 or 404 from docz-api is a client fault, not a
+      // failed span — same serverErrorFloor docz-api itself uses.
+      span.setStatus({ code: SpanStatusCode.ERROR });
+    }
+    span.end();
     // The OAuth-debugging line: where we sent the request, what came
     // back, and which host the browser is about to be redirected to.
     // Never the Location query — that carries client id and state.
@@ -414,6 +466,11 @@ async function proxy(
       err_message: err instanceof Error ? err.message : String(err),
       duration_ms: Math.round(performance.now() - started),
     });
+    span.setStatus({
+      code: SpanStatusCode.ERROR,
+      message: err instanceof Error ? err.name : "unknown",
+    });
+    span.end();
     metrics?.recordProxyError("unreachable");
     return new Response("upstream unreachable", { status: 502 });
   }
@@ -537,22 +594,54 @@ export async function handleRequest(req: Request): Promise<Response> {
     return await probe(pathname);
   }
 
-  const started = performance.now();
-  const { response, servedFromDisk } = await route(req, url);
-  const elapsed = performance.now() - started;
   const method = normalizeMethod(req.method);
-  const routeClass = classifyRoute(pathname, servedFromDisk);
-  // One emission point, so the log line, the metric, and the span can
-  // never disagree about what a request was.
-  log.debug("http.request", {
-    method,
-    route: routeClass,
-    path: redactUrl(url),
-    status: response.status,
-    duration_ms: Math.round(elapsed),
-  });
-  metrics?.recordRequest(method, routeClass, response.status, elapsed);
-  return response;
+  const started = performance.now();
+
+  // The server span is the ROOT and wraps the whole pipeline, so the
+  // proxy child below inherits it through the active context. Its name
+  // is finalised after routing, because the route class is only knowable
+  // once we know whether a file was found.
+  const span = tracing.tracer.startSpan(`${method} ${pathname}`);
+
+  try {
+    return await context.with(
+      trace.setSpan(context.active(), span),
+      async () => {
+        const { response, servedFromDisk } = await route(req, url);
+        const elapsed = performance.now() - started;
+        const routeClass = classifyRoute(pathname, servedFromDisk);
+
+        // ONE emission point for all three signals, so a log line, a
+        // metric, and a span can never disagree about what a request
+        // was (Component 8).
+        log.debug("http.request", {
+          method,
+          route: routeClass,
+          path: redactUrl(url),
+          status: response.status,
+          duration_ms: Math.round(elapsed),
+        });
+        metrics?.recordRequest(method, routeClass, response.status, elapsed);
+
+        span.updateName(`${method} ${routeClass}`);
+        // ALLOWLIST. Never url.full, never headers — on this proxy the
+        // full URL of an /auth/* hop carries the OAuth code, which is
+        // exactly what auto-instrumentation would have shipped.
+        span.setAttributes({
+          "http.request.method": method,
+          "http.route": routeClass,
+          "http.response.status_code": response.status,
+          "url.path": redactUrl(url),
+        });
+        if (response.status >= 500) {
+          span.setStatus({ code: SpanStatusCode.ERROR });
+        }
+        return response;
+      },
+    );
+  } finally {
+    span.end();
+  }
 }
 
 /** Operational endpoints, excluded from every signal. */
@@ -633,5 +722,6 @@ if (import.meta.main) {
     log_level: LOG_LEVEL,
     log_format: LOG_FORMAT,
     metrics_enabled: METRICS_ENABLED,
+    tracing: tracing.enabled ? (OTEL_ENDPOINT ?? "on") : "off",
   });
 }

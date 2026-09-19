@@ -51,7 +51,7 @@ const PROXY_EXACT_CLASSES = new Map<string, RouteClass>([
 ]);
 
 /** Vite content-hashes everything under this prefix. */
-const IMMUTABLE_PREFIX = "/assets/";
+export const IMMUTABLE_PREFIX = "/assets/";
 
 /** Methods we label verbatim; anything else collapses to `other`. */
 const KNOWN_METHODS = new Set([

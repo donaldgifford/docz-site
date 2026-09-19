@@ -156,23 +156,23 @@ the language level.
 
 ##### Tasks
 
-- [ ] Create `server/logger.ts` — levels `debug < info < warn < error`,
+- [x] Create `server/logger.ts` — levels `debug < info < warn < error`,
       JSON and `text` modes, one object per line to stdout.
-- [ ] Add `resolveLogLevel()` and `resolveLogFormat()` to `serve.ts`,
+- [x] Add `resolveLogLevel()` and `resolveLogFormat()` to `serve.ts`,
       following the existing whitelist-with-fallback pattern.
-- [ ] Convert the startup banner to a structured `server.start` event.
-- [ ] **Bind the proxy `catch`** and emit `proxy.error` with
+- [x] Convert the startup banner to a structured `server.start` event.
+- [x] **Bind the proxy `catch`** and emit `proxy.error` with
       `err_name`/`err_message`/`target_host`/`duration_ms`.
-- [ ] Give `502 DOCZ_API_URL is not configured` a distinct
+- [x] Give `502 DOCZ_API_URL is not configured` a distinct
       `not_configured` reason so a config fault is distinguishable from
       a network fault.
-- [ ] Add `proxy.request` (debug) carrying `upstream_status` and
+- [x] Add `proxy.request` (debug) carrying `upstream_status` and
       `location_host` — the OAuth-journey line the issue asks for.
-- [ ] Add `http.request` (debug) using Phase 1's classifier.
-- [ ] Skip probe paths at every level.
-- [ ] Write `server/logger.test.ts` — level filtering, both formats,
+- [x] Add `http.request` (debug) using Phase 1's classifier.
+- [x] Skip probe paths at every level.
+- [x] Write `server/logger.test.ts` — level filtering, both formats,
       unknown level falls back.
-- [ ] Write the **redaction gate**: drive a realistic OAuth callback
+- [x] Write the **redaction gate**: drive a realistic OAuth callback
       through the logger at *every* level, asserting on captured stdout
       that `code`/`state` values never appear while their keys do.
       Parameterise over levels so a future level cannot bypass it.

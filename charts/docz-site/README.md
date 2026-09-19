@@ -28,7 +28,7 @@ The chart is published as an OCI artifact to GHCR:
 ```bash
 helm install docz-site \
   oci://ghcr.io/donaldgifford/charts/docz-site \
-  --version 0.1.8 \
+  --version 0.1.9 \
   --namespace docz-site \
   --create-namespace \
   --set config.doczApiUrl=http://docz-api:8080
@@ -126,7 +126,7 @@ memory metric). The SPA server is stateless, so horizontal scaling is safe.
 | config.logLevel | string | `"info"` | Log verbosity (DOCZ_LOG_LEVEL): `debug`, `info`, `warn`, or `error`. `debug` adds a line per request plus the proxied `/auth/*` flow — the level to reach for when troubleshooting an Okta or Keycloak login. Credential-bearing values (`code`, `state`, cookies) are redacted at every level, enforced by a test. The values schema constrains this to the four names so a typo fails at install; at runtime an unrecognized level falls back to `info`, never to something noisier. |
 | config.mermaidLayout | string | `"elk"` | Diagram layout engine (DOCZ_MERMAID_LAYOUT): `elk` or `dagre`. mermaid 12 made ELK the default and so is it here; `dagre` restores the pre-12 layout without rebuilding the image. Injected into the SPA at runtime and whitelist-validated at both ends, so anything unrecognized falls back to `elk` — the values schema constrains it to the two names so a typo fails at install rather than silently rendering the default. |
 | config.navLinks | list | `[]` | Topbar nav pins (DOCZ_NAV_LINKS): a list of `{label, href}` links rendered between Repos and the session menu. Injected into the SPA at runtime as JSON, whitelist-validated by the server (short label charset, same-origin app-path hrefs, cap 6); invalid entries degrade to fewer/no pins, never a broken page. Empty → no pins and the env var is omitted. |
-| config.port | int | `8080` | Container HTTP listen port (drives the PORT env var and the Service targetPort). The SPA, /healthz, and the API proxy are all served here. |
+| config.port | int | `8080` | Container HTTP listen port (drives the PORT env var and the Service targetPort). The SPA, /healthz, /readyz, and the API proxy are all served here. |
 | extraEnv | list | `[]` | Additional environment variables |
 | extraVolumeMounts | list | `[]` | Additional volume mounts |
 | extraVolumes | list | `[]` | Additional volumes |

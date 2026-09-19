@@ -48,7 +48,7 @@ created: 2026-09-18
 - [File Changes](#file-changes)
 - [Testing Plan](#testing-plan)
 - [Dependencies](#dependencies)
-- [Open Questions](#open-questions)
+- [Open Questions — all resolved](#open-questions--all-resolved)
 - [References](#references)
 <!--toc:end-->
 
@@ -198,6 +198,10 @@ becomes a real check.
 
 ##### Tasks
 
+- [ ] Export `handleRequest` so tests can drive the request path by
+      calling it with a `Request` and asserting on the `Response`
+      (OQ-1a). `import.meta.main` already prevents startup on import,
+      so no port is bound.
 - [ ] Add a pure `checkReady(distDir)` returning per-check status, so
       the logic is testable without touching the module-level `DIST`
       (which is read once at import and cannot be varied afterwards).
@@ -239,6 +243,8 @@ not export.
       descendants and renders inside `AppShell`).
 - [ ] Render via the existing `ErrorPanel` from
       `src/components/query-states.tsx` — no new visual design.
+- [ ] Offer a link to `/` as the only recovery affordance (OQ-5a) — no
+      reset button, which risks an immediate re-throw loop.
 - [ ] Keep `console.error`; the boundary changes what the *user* sees,
       not what a developer can observe.
 - [ ] Confirm `window.onerror` / `unhandledrejection` / any beacon
@@ -270,10 +276,12 @@ not export.
 - [ ] Update `README.md` and the chart README with the new env and
       values.
 - [ ] Tick every Phase 1–4 box in this document.
-- [ ] Bump the chart version and `appVersion` (bare semver) — see OQ-2.
+- [ ] Bump the chart to **0.1.9** and `appVersion` to the release
+      (bare semver — metadata-action strips the `v`).
 - [ ] Regenerate `CHANGELOG.md` after `git fetch --tags`; the
       `chore(changelog): Auto-sync` commit must be **last**.
-- [ ] Open the PR with exactly one release label (`minor`).
+- [ ] Open the PR with exactly one release label (`minor`) and
+      `Closes #18` in the body (OQ-3a).
 
 ##### Success Criteria
 
@@ -338,8 +346,8 @@ Component 5.
 - [ ] Add `resolveMetricsEnabled()` and the `/metrics` route.
 - [ ] **When disabled, `/metrics` must return an explicit 404** — if the
       route is simply not registered it falls through to the SPA
-      handler and a scraper receives `index.html` with a `200`. See
-      OQ-4.
+      handler and a scraper receives `index.html` with a `200`
+      (OQ-4a).
 - [ ] Record `docz_site_proxy_errors_total` in both 502 paths, with
       `unreachable` and `not_configured` reasons.
 - [ ] Wire HTTP metrics into the Phase 8 pipeline wrapper using Phase 1
@@ -421,7 +429,7 @@ three signals.
       step, and the no-auto-instrumentation rule.
 - [ ] Update `README.md` and the chart README.
 - [ ] Tick every Phase 6–8 box.
-- [ ] Bump the chart version and `appVersion`.
+- [ ] Bump the chart to **0.1.10** and `appVersion` to the release.
 - [ ] Regenerate `CHANGELOG.md`; `chore(changelog): Auto-sync` last.
 - [ ] Flip DESIGN-0006 to `Implemented` and this document to
       `Completed`.
@@ -486,14 +494,25 @@ three signals.
 
 No blocking external work. Nothing here waits on another repo.
 
-## Open Questions
+## Open Questions — all resolved
 
-Each is lettered: **a** is my recommendation, **b**+ are alternatives,
-**other** is free-form.
+**All six are decided (2026-09-19): every one takes option (a).** They
+are kept with their reasoning rather than deleted, so the plan records
+why. Each was lettered with **a** as the recommendation.
+
+| OQ | Decision |
+| --- | --- |
+| OQ-1 request-path testing | **a** — export `handleRequest`, call it with a `Request` |
+| OQ-2 chart version | **a** — bump once per PR (0.1.9, then 0.1.10) |
+| OQ-3 closes #18 | **a** — PR 1 |
+| OQ-4 `/metrics` disabled | **a** — explicit 404, never the SPA shell |
+| OQ-5 error recovery | **a** — a link to `/`, no reset button |
+| OQ-6 e2e coverage | **a** — none; `bun test server/` plus the jsdom suite |
 
 ---
 
-**OQ-1 — How do we exercise the request path in tests?**
+**OQ-1 — How do we exercise the request path in tests? — DECIDED:
+(a) export `handleRequest`.**
 `handleRequest` is not exported and every existing test in
 `server/serve.test.ts` covers pure helpers only — nothing today
 constructs a request or binds a port. Phases 3, 7, and 8 all need it.
@@ -512,7 +531,7 @@ constructs a request or binds a port. Phases 3, 7, and 8 all need it.
 
 ---
 
-**OQ-2 — One chart version bump or two?**
+**OQ-2 — One chart version bump or two? — DECIDED: (a) one per PR.**
 Each PR changes the chart. The publish job reads `Chart.yaml` `.version`
 and skips silently if that version is already published — the trap that
 required PR #32.
@@ -526,7 +545,7 @@ required PR #32.
 
 ---
 
-**OQ-3 — Which PR closes issue #18?**
+**OQ-3 — Which PR closes issue #18? — DECIDED: (a) PR 1.**
 The issue is specifically about logging.
 
 - **a (recommended)** — PR 1, via `Closes #18`. Its content is delivered
@@ -536,7 +555,8 @@ The issue is specifically about logging.
 
 ---
 
-**OQ-4 — What does `/metrics` return when metrics are disabled?**
+**OQ-4 — What does `/metrics` return when metrics are disabled? —
+DECIDED: (a) explicit 404.**
 This one has a trap. If the route is simply not registered, `/metrics`
 falls through to the SPA handler and a scraper gets `index.html` with a
 `200` — which looks like success and would silently poison a dashboard.
@@ -551,7 +571,8 @@ falls through to the SPA handler and a scraper gets `index.html` with a
 
 ---
 
-**OQ-5 — Does the error boundary offer a recovery action?**
+**OQ-5 — Does the error boundary offer a recovery action? — DECIDED:
+(a) a link to `/`.**
 `ErrorPanel` exists; whether the boundary adds an affordance beyond it
 is a UI decision.
 
@@ -566,7 +587,8 @@ is a UI decision.
 
 ---
 
-**OQ-6 — Do the new endpoints get e2e coverage?**
+**OQ-6 — Do the new endpoints get e2e coverage? — DECIDED: (a) no
+e2e.**
 The Playwright suite runs against an MSW preview build, not the Bun
 production server, so `/readyz` and `/metrics` are not reachable there
 today.

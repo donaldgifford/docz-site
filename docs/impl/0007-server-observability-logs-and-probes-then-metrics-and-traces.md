@@ -77,7 +77,8 @@ first; Prometheus metrics and OpenTelemetry tracing second.
 - Bundling the server so it can carry dependencies at all
   (Component 7).
 - The request-pipeline wrapper (Component 8).
-- A root-route `errorElement` reusing `ErrorPanel` (Component 9).
+- An error boundary below `AppShell` reusing `ErrorPanel`'s chrome
+  (Component 9).
 - Chart values, a `ServiceMonitor`, and `values.schema.json` enums.
 
 ### Out of Scope
@@ -238,22 +239,27 @@ not export.
 
 ##### Tasks
 
-- [ ] Add an `errorElement` to the root route in `src/app/router.tsx`
-      (`path: "/"` already wraps every child, so one covers all
-      descendants and renders inside `AppShell`).
-- [ ] Render via the existing `ErrorPanel` from
+- [x] Add an error boundary in `src/app/router.tsx` on a **pathless
+      layout route directly below `AppShell`**, wrapping every real
+      route. NOT on the root route: a boundary replaces the element of
+      the route that owns it, so a root-level one swaps out `AppShell`
+      and takes the topbar with it. (Corrected here and in DESIGN-0006
+      Component 9, which described the root placement; a test pins both
+      behaviours.)
+- [x] Render via the existing `ErrorPanel` from
       `src/components/query-states.tsx` — no new visual design.
-- [ ] Offer a link to `/` as the only recovery affordance (OQ-5a) — no
+- [x] Offer a link to `/` as the only recovery affordance (OQ-5a) — no
       reset button, which risks an immediate re-throw loop.
-- [ ] Keep `console.error`; the boundary changes what the *user* sees,
+- [x] Keep `console.error`; the boundary changes what the *user* sees,
       not what a developer can observe.
-- [ ] Confirm `window.onerror` / `unhandledrejection` / any beacon
+- [x] Confirm `window.onerror` / `unhandledrejection` / any beacon
       wiring is **absent** — those are export-shaped and out of scope.
-- [ ] Add a route test: mount with `createMemoryRouter`, throw from a
+- [x] Add a route test: mount with `createMemoryRouter`, throw from a
       child, assert the panel renders and the topbar survives.
-- [ ] Add an entry to `src/a11y/axe.test.tsx` rendering a throwing route,
+- [x] Add an entry to `src/a11y/axe.test.tsx` rendering a throwing route,
       asserting zero serious/critical violations.
-- [ ] Re-run `just bundle-budget` and record the delta.
+- [x] Re-run `just bundle-budget` and record the delta. **Measured:
+      122.5 -> 122.8 KB gz (+0.3 KB), 7.2 KB under the 130 KB budget.**
 
 ##### Success Criteria
 

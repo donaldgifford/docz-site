@@ -320,17 +320,19 @@ Verified feasible before writing this phase: a file using `Bun.serve`,
 
 ##### Tasks
 
-- [ ] Add a `bun build server/serve.ts --target=bun --outfile=dist-server/serve.js`
+- [x] Add a `bun build server/serve.ts --target=bun --outfile=dist-server/serve.js`
       step to the Dockerfile build stage.
-- [ ] Change the runtime stage to copy `dist-server/serve.js` instead of
+- [x] Change the runtime stage to copy `dist-server/serve.js` instead of
       `server/serve.ts`; update `CMD`.
-- [ ] Add `dist-server/` to `.gitignore`.
-- [ ] Add a `just` recipe for building and running the bundle locally.
-- [ ] Confirm `server/serve.test.ts` still imports the **source**, not
+- [x] Add `dist-server/` to `.gitignore`.
+- [x] Add a `just` recipe for building and running the bundle locally.
+- [x] Confirm `server/serve.test.ts` still imports the **source**, not
       the bundle.
-- [ ] Rebuild the image and verify `/healthz`, `/readyz`, the SPA
+- [x] Rebuild the image and verify `/healthz`, `/readyz`, the SPA
       fallback, and the API proxy all behave identically.
-- [ ] Note the image size delta.
+- [x] Note the image size delta. **Measured: 284 MB before and
+      after — the bundle is 14.16 KB against four source files of
+      comparable size, so there is no delta to speak of.**
 
 ##### Success Criteria
 

@@ -6,7 +6,8 @@
  *      index.html always revalidated), preferring precompressed .gz
  *      variants when the client accepts them;
  *   2. falls back to index.html for SPA routes;
- *   3. answers /healthz for probes;
+ *   3. answers the operational probes — /healthz (liveness,
+ *      unconditional) and /readyz (readiness, checks dist/ and config);
  *   4. proxies /api, /auth, /webhooks and /openapi.yaml to docz-api
  *      (DOCZ_API_URL) so browser and API share one origin — no CORS,
  *      and the httpOnly session cookie just works.
@@ -166,6 +167,113 @@ export function resolveLogLevel(raw: string | undefined): LogLevel {
 export function resolveLogFormat(raw: string | undefined): LogFormat {
   const value = (raw ?? "").trim().toLowerCase();
   return LOG_FORMATS.find((format) => format === value) ?? DEFAULT_LOG_FORMAT;
+}
+
+// Readiness (DESIGN-0006 Component 4). Liveness and readiness answer
+// different questions and Kubernetes responds to them differently: a
+// failing liveness probe RESTARTS the container, a failing readiness
+// probe HOLDS TRAFFIC. A missing dist/ is not fixed by restarting —
+// that is CrashLoopBackOff — but it should absolutely stall the rollout
+// and leave the previous ReplicaSet serving. Same detection, correct
+// response. That asymmetry is the whole reason for a second endpoint.
+
+/** The environment readiness inspects, injectable for tests. */
+export type ConfigEnv = Readonly<Record<string, string | undefined>>;
+
+/** Per-check status: `ok`, or the reason it is not. */
+export interface ReadyChecks {
+  dist: "ok" | "missing";
+  config: "ok" | "invalid";
+}
+
+export interface ReadyReport {
+  ready: boolean;
+  checks: ReadyChecks;
+  /** Names of vars that were set but produced nothing usable. */
+  invalid: string[];
+}
+
+function isSet(raw: string | undefined): raw is string {
+  return raw !== undefined && raw.trim() !== "";
+}
+
+/** True when every provider the resolver returned was actually asked for. */
+function authProvidersHonoured(raw: string): boolean {
+  const asked = new Set(
+    raw
+      .split(",")
+      .map((key) => key.trim().toLowerCase())
+      .filter((key) => key !== ""),
+  );
+  return resolveAuthProviders(raw).every((key) => asked.has(key));
+}
+
+/**
+ * Config vars that are SET but produce nothing usable — an unambiguous
+ * deployment mistake rather than a preference.
+ *
+ * Deliberately narrow, because readiness failure stalls a rollout and
+ * that is too blunt an instrument for a cosmetic typo. An unset var is
+ * a default, not a fault; a nav array where some entries validate is
+ * honoured for the ones that did. Only a non-empty value that survives
+ * validation empty-handed counts.
+ *
+ * No whitelist is restated here — each check runs the real resolver and
+ * looks at whether it fell back, so this cannot drift from the rules it
+ * is reporting on.
+ */
+export function invalidConfigVars(env: ConfigEnv): string[] {
+  const invalid: string[] = [];
+
+  // Closed-set vars echo a valid value back, so a mismatch with the
+  // normalised input IS the fallback.
+  const closedSet: readonly [string, (raw: string) => string][] = [
+    ["DOCZ_MERMAID_LAYOUT", resolveMermaidLayout],
+    ["DOCZ_LOG_LEVEL", resolveLogLevel],
+    ["DOCZ_LOG_FORMAT", resolveLogFormat],
+  ];
+  for (const [name, resolve] of closedSet) {
+    const raw = env[name];
+    if (isSet(raw) && resolve(raw) !== raw.trim().toLowerCase()) {
+      invalid.push(name);
+    }
+  }
+
+  const providers = env.DOCZ_AUTH_PROVIDERS;
+  if (isSet(providers) && !authProvidersHonoured(providers)) {
+    invalid.push("DOCZ_AUTH_PROVIDERS");
+  }
+  const nav = env.DOCZ_NAV_LINKS;
+  if (isSet(nav) && resolveNavLinks(nav).length === 0) {
+    invalid.push("DOCZ_NAV_LINKS");
+  }
+  return invalid;
+}
+
+/**
+ * Readiness: can this pod serve? Takes `distDir` rather than reading the
+ * module-level DIST so tests can vary it — DIST is read once at import
+ * and cannot be changed afterwards.
+ *
+ * This makes NO network call. Gating readiness on docz-api would evict
+ * every pod from the Service the moment the API blipped, converting a
+ * degradation the SPA already handles into a total outage (INV-0006 F3).
+ * Upstream health is a metric, not a probe.
+ */
+export async function checkReady(
+  distDir: string,
+  env: ConfigEnv = process.env,
+): Promise<ReadyReport> {
+  const distOk = await Bun.file(`${distDir}/index.html`).exists();
+  const invalid = invalidConfigVars(env);
+  return {
+    ready: distOk && invalid.length === 0,
+    checks: {
+      dist: distOk ? "ok" : "missing",
+      config: invalid.length === 0 ? "ok" : "invalid",
+    },
+    invalid,
+  };
 }
 
 /**
@@ -405,7 +513,7 @@ export async function handleRequest(req: Request): Promise<Response> {
   // hitting these every 10s would otherwise be most of the log volume
   // on a quiet docs site.
   if (PROBE_PATHS.has(pathname)) {
-    return probe(pathname);
+    return await probe(pathname);
   }
 
   const started = performance.now();
@@ -422,12 +530,40 @@ export async function handleRequest(req: Request): Promise<Response> {
   return response;
 }
 
-/** Operational endpoints. `/readyz` and `/metrics` arrive in later phases. */
-function probe(pathname: string): Response {
+/** Operational endpoints. `/metrics` arrives in a later phase. */
+async function probe(pathname: string): Promise<Response> {
   if (pathname === "/healthz") {
+    // Liveness only, and unconditional by design — see the readiness
+    // comment above for why this one must never check anything.
     return new Response("ok", { headers: { "cache-control": "no-store" } });
   }
+  if (pathname === "/readyz") {
+    return await readyz();
+  }
   return new Response("not found", { status: 404 });
+}
+
+async function readyz(): Promise<Response> {
+  const report = await checkReady(DIST);
+  if (!report.ready) {
+    // The failing var NAMES go to the log, never to the response: the
+    // body is reachable by anything that can reach the pod.
+    log.warn("readyz.fail", {
+      dist: report.checks.dist,
+      config: report.checks.config,
+      invalid: report.invalid.join(",") || undefined,
+    });
+  }
+  return Response.json(
+    {
+      status: report.ready ? "ready" : "not ready",
+      checks: report.checks,
+    },
+    {
+      status: report.ready ? 200 : 503,
+      headers: { "cache-control": "no-store" },
+    },
+  );
 }
 
 // Guard startup so tests can import the pure helpers above without

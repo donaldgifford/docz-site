@@ -198,26 +198,26 @@ becomes a real check.
 
 ##### Tasks
 
-- [ ] Export `handleRequest` so tests can drive the request path by
+- [x] Export `handleRequest` so tests can drive the request path by
       calling it with a `Request` and asserting on the `Response`
       (OQ-1a). `import.meta.main` already prevents startup on import,
       so no port is bound.
-- [ ] Add a pure `checkReady(distDir)` returning per-check status, so
+- [x] Add a pure `checkReady(distDir)` returning per-check status, so
       the logic is testable without touching the module-level `DIST`
       (which is read once at import and cannot be varied afterwards).
-- [ ] Add the `/readyz` route: 200 `{"status":"ready","checks":{…}}`,
+- [x] Add the `/readyz` route: 200 `{"status":"ready","checks":{…}}`,
       503 naming the offender.
-- [ ] Emit `readyz.fail` (warn) when a check fails.
-- [ ] Confirm `/healthz` is byte-identical to today and still
+- [x] Emit `readyz.fail` (warn) when a check fails.
+- [x] Confirm `/healthz` is byte-identical to today and still
       unconditional.
-- [ ] Point the chart's `readinessProbe` at `/readyz`; leave
+- [x] Point the chart's `readinessProbe` at `/readyz`; leave
       `livenessProbe` and the Dockerfile `HEALTHCHECK` on `/healthz`.
-- [ ] Add `config.logLevel` / `config.logFormat` chart values, env
+- [x] Add `config.logLevel` / `config.logFormat` chart values, env
       wiring, and `values.schema.json` enums.
-- [ ] Update `charts/docz-site/tests/deployment_test.yaml` — readiness
+- [x] Update `charts/docz-site/tests/deployment_test.yaml` — readiness
       path, new env, defaults.
-- [ ] Run `just helm-docs`.
-- [ ] Write `/readyz` tests: ready when dist present, 503 naming `dist`
+- [x] Run `just helm-docs`.
+- [x] Write `/readyz` tests: ready when dist present, 503 naming `dist`
       when absent, **and that it makes no network call to docz-api**.
 
 ##### Success Criteria

@@ -285,10 +285,10 @@ not export.
 - [x] Bump the chart to **0.1.9** and `appVersion` to the release
       (bare semver — metadata-action strips the `v`). **Done: chart
       `0.1.9`, `appVersion: "0.9.0"`.**
-- [ ] Regenerate `CHANGELOG.md` after `git fetch --tags`; the
+- [x] Regenerate `CHANGELOG.md` after `git fetch --tags`; the
       `chore(changelog): Auto-sync` commit must be **last**.
-- [ ] Open the PR with exactly one release label (`minor`) and
-      `Closes #18` in the body (OQ-3a).
+- [x] Open the PR with exactly one release label (`minor`) and
+      `Closes #18` in the body (OQ-3a). **[#35](https://github.com/donaldgifford/docz-site/pull/35).**
 
 ##### Success Criteria
 

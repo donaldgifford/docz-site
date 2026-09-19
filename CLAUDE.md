@@ -31,6 +31,11 @@ Bun is the package manager and script runner (pinned in `mise.toml`).
 - `just local-up` / `just local-down` — build + run the site container
   (`deploy/compose.local.yaml`, :8090) joined to the docz-api local
   stack's network; re-run `local-up` after changes to rebuild/recreate
+  Bringing docz-api up for a real-stack check: its compose publishes
+  :8080, which is often already taken on this machine. The site reaches
+  it by service NAME over the shared network, so that publish is
+  unnecessary — start it with a throwaway override setting
+  `ports: !override []` rather than stopping whatever owns the port.
 
 ## Architecture
 
@@ -303,7 +308,13 @@ Bun is the package manager and script runner (pinned in `mise.toml`).
   status, REDACTED url.path); `tracing-spans.test.ts` is the tracing
   counterpart to the log redaction gate. `traceparent` is injected on
   the proxy hop and docz-api already Extracts it, so end-to-end traces
-  need zero upstream change. An unconfigured `OTEL_EXPORTER_OTLP_ENDPOINT`
+  need zero upstream change — OBSERVED, not assumed: one proxied request
+  produced a single trace whose docz-api server span is parented by our
+  `proxy.upstream` span. The two exporters disagree on the wire —
+  docz-api's Go `otlptracehttp` posts PROTOBUF to a bare `host:port`,
+  our SDK posts JSON to a full URL — so point them at the same collector
+  with the spellings each expects and let it absorb the difference;
+  don't "fix" one to match the other. An unconfigured `OTEL_EXPORTER_OTLP_ENDPOINT`
   means no provider, no export, no network call; the resolver fails
   CLOSED on anything that is not an absolute http(s) URL, because this
   value decides where telemetry is SENT.

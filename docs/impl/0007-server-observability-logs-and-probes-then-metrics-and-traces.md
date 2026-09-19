@@ -423,14 +423,22 @@ three signals.
 - With a local collector, a single browser request produces one trace
   spanning docz-site **and** docz-api, joined by our injected
   `traceparent`, with no docz-api change.
-  **PARTIALLY VERIFIED.** Our half is confirmed against the shipped
-  container: it exported spans to a local OTLP receiver, and a test
-  drives a real listening socket to assert the outgoing `traceparent`
-  is well-formed W3C and carries the server span's trace id. The
-  docz-api half was NOT observed — the local docz-api stack's services
-  are down — so the join rests on INV-0006 F5 (docz-api installs a
-  TraceContext propagator and Extracts unconditionally). Worth
-  confirming against a live stack before closing the phase out.
+  **VERIFIED against a live stack**, 2026-09-19. Both services were
+  pointed at one `otel/opentelemetry-collector`; docz-api needed only
+  its own `OTEL_*` env, no code change. One proxied request produced a
+  single trace, `9aab035c7e6828fa3715ad353bcabac3`:
+
+  | Span | Service | ID | Parent |
+  | --- | --- | --- | --- |
+  | `GET proxy:api` | docz-site | `2666e2b9de221a09` | (root) |
+  | `proxy.upstream` | docz-site | `5f374598ffdd7670` | `2666e2b9de221a09` |
+  | `GET /api/v1/*` | **docz-api** | `31382ce24371ef75` | `5f374598ffdd7670` |
+
+  docz-api's server span is parented by our proxy span, so INV-0006 F5
+  is now observed rather than assumed. The two exporters disagree on
+  the wire — docz-api posts protobuf to a `host:port`, our SDK posts
+  JSON to a full URL — which a standards-compliant collector absorbs,
+  but it is worth knowing before blaming a config.
 - With no endpoint configured, nothing is exported and no network call
   is attempted.
 - No span attribute anywhere contains a `code` or `state` value.
@@ -450,7 +458,10 @@ three signals.
 - [x] Regenerate `CHANGELOG.md`; `chore(changelog): Auto-sync` last.
 - [x] Flip DESIGN-0006 to `Implemented` and this document to
       `Completed`.
-- [ ] Open the PR with one release label (`minor`).
+- [x] Open the PR with one release label (`minor`) — **#36**, opened
+      against the PR 1 branch so its diff is only Phases 6–9. GitHub
+      retargets it to `main` when #35 merges. Stacked for *review*
+      only; they are merged one at a time, never in a loop.
 
 ##### Success Criteria
 
@@ -458,7 +469,28 @@ three signals.
 - All CI checks pass, Helm jobs included.
 - Chart version bumped and, after merge, the publish job actually
   publishes (`SLSA provenance (chart)` must **not** show `skipped`).
+  **Deferred by construction** — only observable post-merge.
 - Both PRs' behaviour verified against a real docz-api, not only MSW.
+  **VERIFIED** 2026-09-19 against the docz-api local stack, with the
+  shipped container (both PRs' code). Beyond the trace join above:
+  - Real upstream 401 and a real GitHub OAuth `302` both proxied, the
+    latter logged as `location_host="github.com"` with
+    `path="/auth/login?provider=<redacted>"` — the redaction rules hold
+    on live credential-bearing traffic, not just synthetic fixtures.
+  - `/healthz` and `/readyz` produced **zero** log lines at `debug` and
+    **zero** upstream requests: `/readyz` makes no docz-api call.
+  - A real browse yielded exactly four route-class labels
+    (`spa`, `proxy:api`, `proxy:auth`, `proxy:openapi`), unknown SPA
+    paths included — the closed set holds outside tests.
+  - **The outage-amplification claim (INV-0006 F3) was tested by
+    actually killing docz-api.** `/readyz` stayed `200 ready` and the
+    SPA kept serving while the API hop returned `502` and
+    `docz_site_proxy_errors_total{reason="unreachable"}` incremented.
+    A readiness gate on the upstream would have evicted the pod here;
+    this is the alertable signal that replaces it, and it is now
+    demonstrated rather than argued.
+  - `url.full` appeared **zero** times in exported spans; the attribute
+    set was exactly the allowlist.
 
 ## File Changes
 
@@ -485,20 +517,31 @@ three signals.
 
 ## Testing Plan
 
-- [ ] Unit tests for every new pure module (`bun test server/`).
-- [ ] The redaction gate, parameterised over all levels, asserting on
+- [x] Unit tests for every new pure module (`bun test server/`) — 141
+      tests across 10 files.
+- [x] The redaction gate, parameterised over all levels, asserting on
       captured stdout — and demonstrated to fail when redaction is
-      disabled.
-- [ ] Span-attribute redaction test mirroring it.
-- [ ] Cardinality regression test over many hostile paths and methods.
-- [ ] `/readyz` behaviour with dist present and absent, and proof it
-      makes no upstream call.
-- [ ] `/metrics` disabled returns 404, explicitly not the SPA shell.
-- [ ] Route test for the error boundary + axe entry for the error state.
-- [ ] Helm unit tests for every new value, the probe change, and
-      ServiceMonitor gating.
-- [ ] Manual verification against a real docz-api, including one
-      end-to-end trace spanning both services.
+      disabled. The self-check runs in the suite, so the gate cannot
+      pass vacuously.
+- [x] Span-attribute redaction test mirroring it.
+- [x] Cardinality regression test over many hostile paths and methods —
+      10 000 paths × 5 methods must stay under 100 series, with a
+      companion test proving the guard **fails** on an unbounded label.
+- [x] `/readyz` behaviour with dist present and absent, and proof it
+      makes no upstream call (`globalThis.fetch` stubbed, `calls === 0`;
+      re-confirmed against a live docz-api, which logged no probe hits).
+- [x] `/metrics` disabled returns 404, explicitly not the SPA shell.
+      Needs a child process: `bun test` shares one module registry, so
+      re-importing after setting env would test nothing.
+- [x] Route test for the error boundary + axe entry for the error state,
+      including a test pinning *why* the boundary sits on a pathless
+      route rather than `path: "/"` (owning the root would swap out
+      AppShell and take the topbar with it).
+- [x] Helm unit tests for every new value, the probe change, and
+      ServiceMonitor gating — 48 tests.
+- [x] Manual verification against a real docz-api, including one
+      end-to-end trace spanning both services — see Phase 8/9 above for
+      the span table and the killed-upstream result.
 
 ## Dependencies
 

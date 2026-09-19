@@ -1,7 +1,7 @@
 ---
 id: IMPL-0007
 title: "Server observability — logs and probes, then metrics and traces"
-status: In Progress
+status: Completed
 author: Donald Gifford
 created: 2026-09-18
 ---
@@ -442,13 +442,13 @@ three signals.
 
 ##### Tasks
 
-- [ ] Update `CLAUDE.md` — the metrics/tracing surface, the bundling
+- [x] Update `CLAUDE.md` — the metrics/tracing surface, the bundling
       step, and the no-auto-instrumentation rule.
-- [ ] Update `README.md` and the chart README.
-- [ ] Tick every Phase 6–8 box.
-- [ ] Bump the chart to **0.1.10** and `appVersion` to the release.
-- [ ] Regenerate `CHANGELOG.md`; `chore(changelog): Auto-sync` last.
-- [ ] Flip DESIGN-0006 to `Implemented` and this document to
+- [x] Update `README.md` and the chart README.
+- [x] Tick every Phase 6–8 box.
+- [x] Bump the chart to **0.1.10** (done: chart 0.1.10, appVersion 0.10.0) and `appVersion` to the release.
+- [x] Regenerate `CHANGELOG.md`; `chore(changelog): Auto-sync` last.
+- [x] Flip DESIGN-0006 to `Implemented` and this document to
       `Completed`.
 - [ ] Open the PR with one release label (`minor`).
 

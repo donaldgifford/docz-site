@@ -284,6 +284,44 @@ Bun is the package manager and script runner (pinned in `mise.toml`).
   any whitelist. It is deliberately narrow — only a non-empty value
   that validates empty-handed counts, because readiness failure stalls
   a rollout and that is too blunt for a cosmetic typo.
+- Metrics and tracing (DESIGN-0006 Components 5-6) label from
+  `route-class.ts` and NOWHERE else. Metric labels are the one place
+  where unbounded input is expensive rather than merely noisy — each
+  distinct combination is a series stored forever — so never build a
+  label from request text. `metrics.test.ts` drives 10 000 hostile
+  paths and asserts the series count stays bounded, with a companion
+  test proving that guard fails on an unbounded label.
+  `DOCZ_METRICS_ENABLED` defaults ON; when off, `/metrics` returns an
+  EXPLICIT 404 rather than being unregistered — an unregistered route
+  falls through to the SPA handler and hands a scraper `index.html`
+  with a 200, silently poisoning a dashboard.
+  Tracing is HAND-INSTRUMENTED and must stay that way: OTel's HTTP
+  auto-instrumentation records `url.full`, which on this proxy means
+  shipping OAuth codes to a collector. NEVER install an
+  `@opentelemetry/*instrumentation*` package — a test asserts none is
+  present. Span attributes are an allowlist (method, route class,
+  status, REDACTED url.path); `tracing-spans.test.ts` is the tracing
+  counterpart to the log redaction gate. `traceparent` is injected on
+  the proxy hop and docz-api already Extracts it, so end-to-end traces
+  need zero upstream change. An unconfigured `OTEL_EXPORTER_OTLP_ENDPOINT`
+  means no provider, no export, no network call; the resolver fails
+  CLOSED on anything that is not an absolute http(s) URL, because this
+  value decides where telemetry is SENT.
+  `nodejs_gc_duration_seconds` is declared but NEVER samples under Bun
+  (measured) — stock Node dashboards show empty GC panels.
+  The server ships BUNDLED (`bun build --target=bun` in the Dockerfile,
+  `just build-server`): the runtime image has no node_modules, so a
+  dependency is only possible bundled. It also retired the enumerated
+  `COPY server/serve.ts`, which broke the container the moment serve.ts
+  gained a sibling module — CI never builds and runs the image, so that
+  shipped green. Build and run the image by hand when touching
+  `server/` or the Dockerfile.
+  Env read once at import (`DOCZ_METRICS_ENABLED`, the OTEL_* vars)
+  cannot be re-tested by setting `process.env` and re-importing —
+  `bun test` shares ONE module registry across the whole run. Those
+  paths use a child process (`metrics-disabled.test.ts`,
+  `tracing-spans.test.ts`), and the child must MARK its stdout payload
+  because the server's own structured logs share that stream.
 - The route error boundary (`src/app/route-error.tsx`) sits on a
   PATHLESS layout route directly below `AppShell`, NOT on the root
   route. A boundary replaces the element of the route that owns it, so

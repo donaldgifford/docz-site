@@ -151,12 +151,20 @@ describe("cardinality is bounded by construction", () => {
       1,
     );
 
-    const text = await metrics.registry.metrics();
-    expect(text).not.toContain("etc/shadow");
-    expect(text).not.toContain("script");
-    expect(text).not.toContain("EVIL-METHOD");
-    expect(text).toContain('method="other"');
-    expect(text).toContain('route="spa"');
+    // Scope the check to OUR series. prom-client's own HELP text is not
+    // ours to police, and "Number of open file descriptors" contains the
+    // substring "script" — which made a whole-text assertion pass on
+    // macOS and fail on Linux, since process_open_fds is /proc-only.
+    const ours = (await metrics.registry.metrics())
+      .split("\n")
+      .filter((line) => line.startsWith("docz_site_"))
+      .join("\n");
+
+    expect(ours).not.toContain("etc/shadow");
+    expect(ours).not.toContain("script");
+    expect(ours).not.toContain("EVIL-METHOD");
+    expect(ours).toContain('method="other"');
+    expect(ours).toContain('route="spa"');
   });
 
   test("the cardinality guard would FAIL on an unbounded label", async () => {

@@ -31,11 +31,18 @@ interface CapturedSpan {
   traceId: string;
 }
 
+/** A path, or a path with a method other than GET. */
+type Hit = string | { path: string; method: string };
+
 /**
  * Drive requests through the real pipeline with an in-memory exporter
  * registered, and return every span that finished.
+ *
+ * Nothing here may assume a built `dist/`: `just ci` runs `test-server`
+ * BEFORE `build`, so on a clean checkout every SPA path answers 500.
+ * Assert on responses the router produces on its own.
  */
-async function spansFor(paths: string[]): Promise<CapturedSpan[]> {
+async function spansFor(paths: Hit[]): Promise<CapturedSpan[]> {
   const script = `
     const { NodeTracerProvider, InMemorySpanExporter, SimpleSpanProcessor } =
       await import("@opentelemetry/sdk-trace-node");
@@ -46,8 +53,10 @@ async function spansFor(paths: string[]): Promise<CapturedSpan[]> {
     provider.register();
 
     const { handleRequest } = await import(${JSON.stringify(SERVE)});
-    for (const path of ${JSON.stringify(paths)}) {
-      await handleRequest(new Request("http://localhost" + path));
+    for (const hit of ${JSON.stringify(paths)}) {
+      const { path, method } =
+        typeof hit === "string" ? { path: hit, method: "GET" } : hit;
+      await handleRequest(new Request("http://localhost" + path, { method }));
     }
     await provider.forceFlush();
 
@@ -119,8 +128,18 @@ describe("server spans", () => {
     expect(spans).toEqual([]);
   });
 
-  test("a hostile method collapses to `other` in the span name", async () => {
-    const spans = await spansFor(["/some/spa/path"]);
+  test("the span name is method + route class, never the raw path", async () => {
+    // This previously sent a plain GET while claiming to exercise a
+    // hostile method, and only asserted the path was absent — so it
+    // passed without testing anything. A hostile method cannot reach
+    // handleRequest through this door at all: Bun's Request constructor
+    // silently rewrites an unrecognised method token to GET (verified:
+    // "EVIL-METHOD" and "BREW" both arrive as GET). The collapse to
+    // `other` is asserted directly in route-class.test.ts; what belongs
+    // here is that the span NAME is built from the classifier, so an
+    // unbounded path can never become a span name.
+    const spans = await spansFor([{ path: "/some/spa/path", method: "PATCH" }]);
+    expect(spans[0]?.name).toBe("PATCH spa");
     expect(spans[0]?.name).not.toContain("/some/spa/path");
   });
 });
@@ -163,10 +182,16 @@ describe("proxy child span", () => {
     expect(parent?.status).toBe(2);
   });
 
-  test("a 404 does NOT set ERROR — client fault, matching docz-api", async () => {
-    // An SPA path returns 200, so use a rejected traversal (400).
-    const spans = await spansFor(["/..%2f..%2fetc/passwd"]);
+  test("a 4xx does NOT set ERROR — client fault, matching docz-api", async () => {
+    // A POST to a non-proxied path is rejected by the router itself, so
+    // this is a 4xx whether or not `dist/` was built. The previous
+    // version used a traversal path expecting 400 but actually got the
+    // SPA fallback's 200 — which flipped to a 500 on CI, where there is
+    // no dist yet, and only then failed.
+    const spans = await spansFor([{ path: "/some/spa/path", method: "POST" }]);
     const parent = spans.find((s) => s.name !== "proxy.upstream");
+
+    expect(parent?.attributes["http.response.status_code"]).toBe(405);
     expect(parent?.status).not.toBe(2);
   });
 });

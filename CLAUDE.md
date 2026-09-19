@@ -236,6 +236,18 @@ Bun is the package manager and script runner (pinned in `mise.toml`).
   Bun-only (outside the vitest `src/` graph) — its `serve.test.ts` runs
   under `bun test server/` (`just test-server`, in the CI chain); guard
   new top-level side effects with `import.meta.main`.
+  Three traps that all pass locally and fail on CI. (1) `test-server`
+  runs BEFORE `build`, so a clean checkout has NO `dist/` and every SPA
+  path answers 500 — server tests must never assume a built dist, and a
+  stale local one hides it. Assert on responses the router makes itself
+  (a POST to a non-proxied path is a deterministic 405). (2) Bun's
+  `Request` constructor SILENTLY rewrites an unrecognised method token
+  to GET (`BREW`, `EVIL-METHOD` → `GET`), so hostile methods cannot be
+  driven through `handleRequest` that way — assert `normalizeMethod`
+  directly. (3) Never substring-assert over a whole prom-client
+  exposition: `process_open_fds` is `/proc`-only (absent on macOS) and
+  its help text "file descriptors" CONTAINS "script". Filter to
+  `docz_site_` lines first.
   On 401, `SessionRequiredRedirect` (query-states.tsx) stashes
   `pathname+search` via `src/lib/authReturn.ts` and replaces to
   `/login`; `RestoreAfterLogin` (AppShell) probes getSession on "/"

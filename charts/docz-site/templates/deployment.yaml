@@ -58,6 +58,8 @@ spec:
               value: {{ .Values.config.logLevel | quote }}
             - name: DOCZ_LOG_FORMAT
               value: {{ .Values.config.logFormat | quote }}
+            - name: DOCZ_METRICS_ENABLED
+              value: {{ .Values.metrics.enabled | quote }}
             {{- with .Values.config.navLinks }}
             - name: DOCZ_NAV_LINKS
               value: {{ toJson . | quote }}

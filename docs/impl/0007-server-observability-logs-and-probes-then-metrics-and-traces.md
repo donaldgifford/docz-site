@@ -349,29 +349,29 @@ Component 5.
 
 ##### Tasks
 
-- [ ] Add `prom-client` as a dependency.
-- [ ] Create `server/metrics.ts` — the four instruments plus
+- [x] Add `prom-client` as a dependency.
+- [x] Create `server/metrics.ts` — the four instruments plus
       `collectDefaultMetrics()`, on an explicit `Registry`.
-- [ ] Add `resolveMetricsEnabled()` and the `/metrics` route.
-- [ ] **When disabled, `/metrics` must return an explicit 404** — if the
+- [x] Add `resolveMetricsEnabled()` and the `/metrics` route.
+- [x] **When disabled, `/metrics` must return an explicit 404** — if the
       route is simply not registered it falls through to the SPA
       handler and a scraper receives `index.html` with a `200`
       (OQ-4a).
-- [ ] Record `docz_site_proxy_errors_total` in both 502 paths, with
+- [x] Record `docz_site_proxy_errors_total` in both 502 paths, with
       `unreachable` and `not_configured` reasons.
-- [ ] Wire HTTP metrics into the Phase 8 pipeline wrapper using Phase 1
+- [x] Wire HTTP metrics into the Phase 8 pipeline wrapper using Phase 1
       labels only.
-- [ ] Add chart `metrics.enabled` + `serviceMonitor.*` values, and
+- [x] Add chart `metrics.enabled` + `serviceMonitor.*` values, and
       `templates/servicemonitor.yaml` gated on **both** flags, mirroring
       docz-api's.
-- [ ] Note in the chart README that `nodejs_gc_duration_seconds` never
+- [x] Note in the chart README that `nodejs_gc_duration_seconds` never
       samples under Bun, so Node dashboards will show empty panels.
-- [ ] Write metrics tests: exposition parses, labels bounded, probe
+- [x] Write metrics tests: exposition parses, labels bounded, probe
       paths absent, disabled returns 404 (not HTML).
-- [ ] Write a **cardinality regression test**: drive many distinct
+- [x] Write a **cardinality regression test**: drive many distinct
       hostile paths and methods through the pipeline and assert the
       registry's series count stays bounded.
-- [ ] Add `helm unittest` cases for the ServiceMonitor gating.
+- [x] Add `helm unittest` cases for the ServiceMonitor gating.
 
 ##### Success Criteria
 

@@ -148,6 +148,25 @@ tests:
             name: DOCZ_LOG_FORMAT
             value: "text"
 
+  - it: should default DOCZ_METRICS_ENABLED to true and follow metrics.enabled
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: DOCZ_METRICS_ENABLED
+            value: "true"
+
+  - it: should set DOCZ_METRICS_ENABLED false when metrics are disabled
+    set:
+      metrics:
+        enabled: false
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: DOCZ_METRICS_ENABLED
+            value: "false"
+
   - it: should reject a log level outside the schema enum
     set:
       config:

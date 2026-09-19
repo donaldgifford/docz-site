@@ -16,6 +16,7 @@
  * the Vite/browser graph. See tsconfig.server.json.
  */
 
+import { createMetrics } from "./metrics";
 import {
   createLogger,
   LOG_FORMATS,
@@ -156,6 +157,18 @@ export function resolveMermaidLayout(raw: string | undefined): string {
 // reason a deployment will not boot.
 const DEFAULT_LOG_LEVEL: LogLevel = "info";
 const DEFAULT_LOG_FORMAT: LogFormat = "json";
+
+/**
+ * Whitelist-validate DOCZ_METRICS_ENABLED; default ON, matching
+ * docz-api's METRICS_ENABLED. Only an explicit, recognised "false"
+ * turns it off — a typo leaves metrics on, which is the harmless
+ * direction (an endpoint nobody scrapes costs nothing; a silently
+ * dark one costs a blind spot).
+ */
+export function resolveMetricsEnabled(raw: string | undefined): boolean {
+  const value = (raw ?? "").trim().toLowerCase();
+  return !["false", "0", "no", "off"].includes(value);
+}
 
 /** Whitelist-validate DOCZ_LOG_LEVEL; empty/garbage → "info". */
 export function resolveLogLevel(raw: string | undefined): LogLevel {
@@ -325,7 +338,12 @@ const MERMAID_LAYOUT = resolveMermaidLayout(process.env.DOCZ_MERMAID_LAYOUT);
 const LOG_LEVEL = resolveLogLevel(process.env.DOCZ_LOG_LEVEL);
 const LOG_FORMAT = resolveLogFormat(process.env.DOCZ_LOG_FORMAT);
 
+const METRICS_ENABLED = resolveMetricsEnabled(process.env.DOCZ_METRICS_ENABLED);
+
 const log = createLogger({ level: LOG_LEVEL, format: LOG_FORMAT });
+// Undefined when disabled, so the instruments are never even created —
+// the feature is absent rather than present-and-ignored.
+const metrics = METRICS_ENABLED ? createMetrics() : undefined;
 const CONFIG_SCRIPT = runtimeConfigScript({
   authProviders: AUTH_PROVIDERS,
   nav: NAV_LINKS,
@@ -347,6 +365,7 @@ async function proxy(
       reason: "not_configured",
       err_message: "DOCZ_API_URL is not set",
     });
+    metrics?.recordProxyError("not_configured");
     return new Response("DOCZ_API_URL is not configured", { status: 502 });
   }
   const target = new URL(url.pathname + url.search, DOCZ_API_URL);
@@ -376,6 +395,7 @@ async function proxy(
       has_cookie: hasCookie(req.headers),
       duration_ms: Math.round(performance.now() - started),
     });
+    metrics?.recordProxy(route, performance.now() - started);
     return new Response(upstream.body, {
       status: upstream.status,
       headers: upstream.headers,
@@ -394,6 +414,7 @@ async function proxy(
       err_message: err instanceof Error ? err.message : String(err),
       duration_ms: Math.round(performance.now() - started),
     });
+    metrics?.recordProxyError("unreachable");
     return new Response("upstream unreachable", { status: 502 });
   }
 }
@@ -518,19 +539,23 @@ export async function handleRequest(req: Request): Promise<Response> {
 
   const started = performance.now();
   const { response, servedFromDisk } = await route(req, url);
-  // One emission point, so the log line can never disagree with the
-  // metric and span that join it here in later phases.
+  const elapsed = performance.now() - started;
+  const method = normalizeMethod(req.method);
+  const routeClass = classifyRoute(pathname, servedFromDisk);
+  // One emission point, so the log line, the metric, and the span can
+  // never disagree about what a request was.
   log.debug("http.request", {
-    method: normalizeMethod(req.method),
-    route: classifyRoute(pathname, servedFromDisk),
+    method,
+    route: routeClass,
     path: redactUrl(url),
     status: response.status,
-    duration_ms: Math.round(performance.now() - started),
+    duration_ms: Math.round(elapsed),
   });
+  metrics?.recordRequest(method, routeClass, response.status, elapsed);
   return response;
 }
 
-/** Operational endpoints. `/metrics` arrives in a later phase. */
+/** Operational endpoints, excluded from every signal. */
 async function probe(pathname: string): Promise<Response> {
   if (pathname === "/healthz") {
     // Liveness only, and unconditional by design — see the readiness
@@ -540,7 +565,35 @@ async function probe(pathname: string): Promise<Response> {
   if (pathname === "/readyz") {
     return await readyz();
   }
+  if (pathname === "/metrics") {
+    return await exposeMetrics();
+  }
   return new Response("not found", { status: 404 });
+}
+
+/**
+ * Exposition, or an EXPLICIT 404 when metrics are off.
+ *
+ * The explicit 404 is the whole point (OQ-4a): `/metrics` is in
+ * PROBE_PATHS unconditionally, so a disabled endpoint still answers
+ * here. Leaving the route unregistered instead would drop the request
+ * into the SPA fallback, and a scraper would receive `index.html` with
+ * a 200 — silently poisoning a dashboard with parse errors rather than
+ * reporting the endpoint as absent.
+ */
+async function exposeMetrics(): Promise<Response> {
+  if (metrics === undefined) {
+    return new Response("metrics are disabled", {
+      status: 404,
+      headers: { "content-type": "text/plain; charset=utf-8" },
+    });
+  }
+  return new Response(await metrics.registry.metrics(), {
+    headers: {
+      "content-type": metrics.registry.contentType,
+      "cache-control": "no-store",
+    },
+  });
 }
 
 async function readyz(): Promise<Response> {
@@ -579,5 +632,6 @@ if (import.meta.main) {
     proxy_target: DOCZ_API_URL ?? "(none — API proxy disabled)",
     log_level: LOG_LEVEL,
     log_format: LOG_FORMAT,
+    metrics_enabled: METRICS_ENABLED,
   });
 }

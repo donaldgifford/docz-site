@@ -92,6 +92,50 @@ config:
       href: "/donaldgifford/docs/docs"
 ```
 
+### Observability
+
+Logging is structured JSON on stdout by default. `config.logLevel`
+takes `debug`, `info`, `warn`, or `error`; `debug` adds a line per
+request plus the proxied `/auth/*` flow, which is the level to reach
+for when troubleshooting an Okta or Keycloak login. Credential-bearing
+values (`code`, `state`, cookies) are redacted at every level.
+
+The probes are deliberately split, because Kubernetes responds to them
+differently. `livenessProbe` stays on `/healthz`, which is
+unconditional — a failing liveness probe **restarts** the container,
+and restarting cannot fix a broken image. `readinessProbe` points at
+`/readyz`, which verifies the built assets are servable and the runtime
+config validated — a failing readiness probe **holds traffic**, so a
+bad deploy stalls the rollout and the previous ReplicaSet keeps
+serving. `/readyz` makes no call to docz-api by design: gating
+readiness on the API would evict every pod from the Service the moment
+it blipped.
+
+`metrics.enabled` (default `true`) exposes Prometheus metrics on
+`/metrics`. When disabled the endpoint returns an explicit `404`
+rather than falling through to the SPA, so a scraper is told the
+endpoint is absent instead of being handed `index.html` with a `200`.
+Set `serviceMonitor.enabled: true` for a Prometheus Operator
+`ServiceMonitor` — it is gated on **both** flags.
+
+```yaml
+metrics:
+  enabled: true
+serviceMonitor:
+  enabled: true
+  interval: 30s
+  labels:
+    release: kube-prometheus-stack
+```
+
+Alongside the four `docz_site_*` instruments, `prom-client`'s default
+process and runtime metrics are exported. One caveat worth knowing
+before you build dashboards: **`nodejs_gc_duration_seconds` is declared
+but never samples**, because the server runs on Bun rather than Node
+and Bun does not emit the GC performance entries that metric is fed
+from. A stock Node.js dashboard will show empty GC panels. Every other
+`nodejs_*` metric (event-loop lag, heap size, handles) does report.
+
 ## Exposure
 
 The site is a `ClusterIP` Service by default. Front it with one of:
@@ -148,6 +192,7 @@ memory metric). The SPA server is stateless, so horizontal scaling is safe.
 | ingress.hosts | list | `[]` | Ingress hosts. Each entry: {host, paths: [{path, pathType}]}. |
 | ingress.tls | list | `[]` | TLS blocks. Each entry: {secretName, hosts: []}. |
 | livenessProbe | object | `{"httpGet":{"path":"/healthz","port":"http"},"initialDelaySeconds":5,"periodSeconds":15}` | Liveness probe. Stays on /healthz, which is unconditional: a failing liveness probe RESTARTS the container, and restarting cannot fix a broken image or mount — that is just CrashLoopBackOff. |
+| metrics.enabled | bool | `true` | Expose Prometheus metrics on /metrics (DOCZ_METRICS_ENABLED). When false the endpoint returns an explicit 404 rather than falling through to the SPA — a scraper is told the endpoint is absent instead of being handed index.html with a 200. |
 | nameOverride | string | `""` | Override the chart name |
 | nodeSelector | object | `{}` | Node selector |
 | podAnnotations | object | `{}` | Pod annotations |
@@ -163,6 +208,9 @@ memory metric). The SPA server is stateless, so horizontal scaling is safe.
 | serviceAccount.annotations | object | `{}` | Annotations for the ServiceAccount |
 | serviceAccount.create | bool | `true` | Create a ServiceAccount |
 | serviceAccount.name | string | `""` | Override the ServiceAccount name |
+| serviceMonitor.enabled | bool | `false` | Create a Prometheus Operator ServiceMonitor scraping /metrics. Requires `metrics.enabled`; the template is gated on both. |
+| serviceMonitor.interval | string | `"30s"` | Scrape interval |
+| serviceMonitor.labels | object | `{}` | Additional labels for the ServiceMonitor (e.g. the `release` label your Prometheus Operator selects on) |
 | tolerations | list | `[]` | Tolerations |
 
 ## Maintainers

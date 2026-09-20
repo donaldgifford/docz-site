@@ -466,19 +466,25 @@ three signals.
 ##### Success Criteria
 
 - `just ci` green including `format:check`.
-- All CI checks pass, Helm jobs included. **One gap while #36 is
-  stacked:** the security workflows trigger on PRs targeting `main`, so
-  #36 runs 8 checks where #35 runs 10 — `CodeQL` and
-  `Analyze TypeScript` never fired on it. PR 2's server code (metrics,
-  tracing, the bundling step) has therefore had no static analysis yet.
-  It self-heals: merging #35 retargets #36 to `main` and CI re-runs.
-  **Wait for those two to go green on #36 after the retarget before
-  merging it** — it is the PR touching OAuth-bearing proxy traffic.
-  Do NOT retarget early to force a scan; that pulls PR 1's commits into
-  #36's diff and destroys the review boundary the split exists for.
+- All CI checks pass, Helm jobs included. While #36 was stacked the
+  security workflows did not fire on it — they trigger on PRs targeting
+  `main`, so it ran 8 checks where #35 ran 10, leaving PR 2's server
+  code without static analysis. #35 merging retargeted #36 to `main`
+  and CodeQL + Analyze TypeScript now run on it; **both must be green
+  before merging**, since this is the PR touching OAuth-bearing proxy
+  traffic. Worth knowing for any future stack: the retarget is also
+  what turns the branch `DIRTY`, because the repo squash-merges and
+  git cannot match PR 1's individual commits against the single squash
+  on main. The fix is `git rebase --onto main <pr1-tip>`, which replays
+  only PR 2's commits — not a merge, which would resurrect them.
 - Chart version bumped and, after merge, the publish job actually
   publishes (`SLSA provenance (chart)` must **not** show `skipped`).
-  **Deferred by construction** — only observable post-merge.
+  **PR 1 VERIFIED** on merge (2026-09-20): `SLSA provenance (chart)`
+  ran `success`, and the artefact was pulled back to confirm rather
+  than inferred from a green run —
+  `ghcr.io/donaldgifford/charts/docz-site:0.1.9`,
+  digest `sha256:b05c3f74…`, tag `v0.9.0`. Repeat the same check for
+  chart **0.1.10** when #36 merges.
 - Both PRs' behaviour verified against a real docz-api, not only MSW.
   **VERIFIED** 2026-09-19 against the docz-api local stack, with the
   shipped container (both PRs' code). Beyond the trace join above:

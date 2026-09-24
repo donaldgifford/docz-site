@@ -135,10 +135,75 @@ docker run -p 8080:8080 -e DOCZ_API_URL=http://docz-api:8080 docz-site
 
 The image is a multi-stage build: dist/ plus `server/serve.ts`, a small
 `Bun.serve` that serves hashed assets immutably (precompressed where it
-pays), falls back to `index.html` for SPA routes, answers `/healthz`,
-and proxies `/api`, `/auth`, `/webhooks`, and `/openapi.yaml` to
+pays), falls back to `index.html` for SPA routes, answers the `/healthz`
+and `/readyz` probes, and proxies `/api`, `/auth`, `/webhooks`, and
+`/openapi.yaml` to
 docz-api — browser and API share one origin, so the httpOnly session
 cookie is first-party and there is no CORS.
+
+### Observability
+
+The server logs one structured object per line to stdout — JSON by
+default, `text` for local runs (`DOCZ_LOG_FORMAT`). `DOCZ_LOG_LEVEL`
+takes `debug`, `info` (default), `warn`, or `error`; an unrecognized
+value falls back to `info` rather than to something noisier.
+
+At the default level you get the startup line and any proxy failure,
+naming the cause — an unreachable docz-api and a missing `DOCZ_API_URL`
+are distinct reasons, where both used to be a silent `502`. `debug`
+adds a line per request plus the proxied `/auth/*` flow, which is the
+level to reach for when troubleshooting an Okta or Keycloak login.
+
+**Credential-bearing values never reach a log at any level.** Query
+*keys* are kept and every *value* is replaced with `<redacted>`
+(allowlist, so a new parameter is redacted by default), headers are
+never recorded — a session cookie shows up as `has_cookie: true` and
+nothing more — and a `Location` is reduced to its host. A test drives a
+realistic OAuth callback through the serialized output at every level
+and fails if a `code`, `state`, or cookie value appears.
+
+The probes are split, because Kubernetes responds to them differently:
+
+| Path | Probe | Behaviour |
+| --- | --- | --- |
+| `/healthz` | liveness | unconditional `200 ok` |
+| `/readyz` | readiness | `200`/`503` with per-check status |
+
+A failing liveness probe **restarts** the container; a failing
+readiness probe **holds traffic**. A missing or mis-mounted `dist/` is
+not fixed by restarting, but it should stall the rollout and leave the
+previous ReplicaSet serving — so `/readyz` checks that `dist/` is
+servable and that the runtime config validated, while `/healthz` stays
+unconditional. `/readyz` makes **no call to docz-api**: gating
+readiness on the API would evict every pod from the Service the moment
+it blipped, turning a degradation the SPA already handles into a total
+outage.
+
+`/healthz`, `/readyz`, and `/metrics` are reserved server paths — no
+SPA route can claim them.
+
+Prometheus metrics are on `/metrics`, enabled by default
+(`DOCZ_METRICS_ENABLED`): request counts and durations by method and
+route class, upstream proxy durations, and `docz_site_proxy_errors_total`
+— the docz-api health signal that can page a human without evicting a
+pod. Labels are drawn from a closed set, so no request can inflate
+cardinality. When disabled the endpoint returns an explicit `404`
+rather than the SPA shell. One caveat: `nodejs_gc_duration_seconds` is
+declared but never samples under Bun, so stock Node dashboards show
+empty GC panels.
+
+Tracing is OpenTelemetry over OTLP/HTTP, off until
+`OTEL_EXPORTER_OTLP_ENDPOINT` names an absolute `http(s)` URL — with no
+endpoint no provider is registered and no network call is attempted.
+It is **hand-instrumented on purpose**: OTel's HTTP auto-instrumentation
+records `url.full`, which on a server that proxies `/auth/*` would ship
+OAuth codes to a collector. Span attributes are an allowlist and the
+proxy hop carries a `traceparent`, so docz-api — which already extracts
+it — joins the same trace with no configuration of its own.
+
+The server ships as a single bundled file (`bun build --target=bun`),
+because the runtime image carries no `node_modules`. `just build-server`
+produces it; `just serve-bundle` runs what the container runs.
 
 `deploy/compose.yaml` is a reference single-host stack: the site is the
 only published port, with docz-api and its dependencies (Postgres,

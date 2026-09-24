@@ -6,7 +6,8 @@
  *      index.html always revalidated), preferring precompressed .gz
  *      variants when the client accepts them;
  *   2. falls back to index.html for SPA routes;
- *   3. answers /healthz for probes;
+ *   3. answers the operational probes — /healthz (liveness,
+ *      unconditional) and /readyz (readiness, checks dist/ and config);
  *   4. proxies /api, /auth, /webhooks and /openapi.yaml to docz-api
  *      (DOCZ_API_URL) so browser and API share one origin — no CORS,
  *      and the httpOnly session cookie just works.
@@ -15,12 +16,40 @@
  * the Vite/browser graph. See tsconfig.server.json.
  */
 
+import {
+  context,
+  propagation,
+  SpanStatusCode,
+  trace,
+} from "@opentelemetry/api";
+
+import { createMetrics } from "./metrics";
+import {
+  initTracing,
+  resolveOtelEndpoint,
+  resolveSampleRate,
+  resolveServiceName,
+} from "./tracing";
+import {
+  createLogger,
+  LOG_FORMATS,
+  LOG_LEVELS,
+  type LogFormat,
+  type LogLevel,
+} from "./logger";
+import { hasCookie, redactLocation, redactUrl } from "./redact";
+import {
+  classifyRoute,
+  IMMUTABLE_PREFIX,
+  isProxiedPath,
+  normalizeMethod,
+  PROBE_PATHS,
+  type RouteClass,
+} from "./route-class";
+
 const PORT = Number(process.env.PORT ?? "8080");
 const DIST = process.env.DOCZ_SITE_DIST ?? "dist";
 const DOCZ_API_URL = process.env.DOCZ_API_URL;
-
-const PROXY_PREFIXES = ["/api/", "/auth/", "/webhooks/"];
-const PROXY_EXACT = new Set(["/api", "/auth", "/webhooks", "/openapi.yaml"]);
 
 // Runtime login-provider config. The set of login buttons the SPA
 // renders is chosen per-DEPLOYMENT (DOCZ_AUTH_PROVIDERS), not baked at
@@ -135,6 +164,144 @@ export function resolveMermaidLayout(raw: string | undefined): string {
   return KNOWN_MERMAID_LAYOUTS.has(layout) ? layout : DEFAULT_MERMAID_LAYOUT;
 }
 
+// Logging config (DESIGN-0006). Same whitelist-with-fallback discipline
+// as everything above: bad config degrades to the default rather than
+// failing startup, because a typo in a log level must never be the
+// reason a deployment will not boot.
+const DEFAULT_LOG_LEVEL: LogLevel = "info";
+const DEFAULT_LOG_FORMAT: LogFormat = "json";
+
+/**
+ * Whitelist-validate DOCZ_METRICS_ENABLED; default ON, matching
+ * docz-api's METRICS_ENABLED. Only an explicit, recognised "false"
+ * turns it off — a typo leaves metrics on, which is the harmless
+ * direction (an endpoint nobody scrapes costs nothing; a silently
+ * dark one costs a blind spot).
+ */
+export function resolveMetricsEnabled(raw: string | undefined): boolean {
+  const value = (raw ?? "").trim().toLowerCase();
+  return !["false", "0", "no", "off"].includes(value);
+}
+
+/** Whitelist-validate DOCZ_LOG_LEVEL; empty/garbage → "info". */
+export function resolveLogLevel(raw: string | undefined): LogLevel {
+  const value = (raw ?? "").trim().toLowerCase();
+  return LOG_LEVELS.find((level) => level === value) ?? DEFAULT_LOG_LEVEL;
+}
+
+/** Whitelist-validate DOCZ_LOG_FORMAT; empty/garbage → "json". */
+export function resolveLogFormat(raw: string | undefined): LogFormat {
+  const value = (raw ?? "").trim().toLowerCase();
+  return LOG_FORMATS.find((format) => format === value) ?? DEFAULT_LOG_FORMAT;
+}
+
+// Readiness (DESIGN-0006 Component 4). Liveness and readiness answer
+// different questions and Kubernetes responds to them differently: a
+// failing liveness probe RESTARTS the container, a failing readiness
+// probe HOLDS TRAFFIC. A missing dist/ is not fixed by restarting —
+// that is CrashLoopBackOff — but it should absolutely stall the rollout
+// and leave the previous ReplicaSet serving. Same detection, correct
+// response. That asymmetry is the whole reason for a second endpoint.
+
+/** The environment readiness inspects, injectable for tests. */
+export type ConfigEnv = Readonly<Record<string, string | undefined>>;
+
+/** Per-check status: `ok`, or the reason it is not. */
+export interface ReadyChecks {
+  dist: "ok" | "missing";
+  config: "ok" | "invalid";
+}
+
+export interface ReadyReport {
+  ready: boolean;
+  checks: ReadyChecks;
+  /** Names of vars that were set but produced nothing usable. */
+  invalid: string[];
+}
+
+function isSet(raw: string | undefined): raw is string {
+  return raw !== undefined && raw.trim() !== "";
+}
+
+/** True when every provider the resolver returned was actually asked for. */
+function authProvidersHonoured(raw: string): boolean {
+  const asked = new Set(
+    raw
+      .split(",")
+      .map((key) => key.trim().toLowerCase())
+      .filter((key) => key !== ""),
+  );
+  return resolveAuthProviders(raw).every((key) => asked.has(key));
+}
+
+/**
+ * Config vars that are SET but produce nothing usable — an unambiguous
+ * deployment mistake rather than a preference.
+ *
+ * Deliberately narrow, because readiness failure stalls a rollout and
+ * that is too blunt an instrument for a cosmetic typo. An unset var is
+ * a default, not a fault; a nav array where some entries validate is
+ * honoured for the ones that did. Only a non-empty value that survives
+ * validation empty-handed counts.
+ *
+ * No whitelist is restated here — each check runs the real resolver and
+ * looks at whether it fell back, so this cannot drift from the rules it
+ * is reporting on.
+ */
+export function invalidConfigVars(env: ConfigEnv): string[] {
+  const invalid: string[] = [];
+
+  // Closed-set vars echo a valid value back, so a mismatch with the
+  // normalised input IS the fallback.
+  const closedSet: readonly [string, (raw: string) => string][] = [
+    ["DOCZ_MERMAID_LAYOUT", resolveMermaidLayout],
+    ["DOCZ_LOG_LEVEL", resolveLogLevel],
+    ["DOCZ_LOG_FORMAT", resolveLogFormat],
+  ];
+  for (const [name, resolve] of closedSet) {
+    const raw = env[name];
+    if (isSet(raw) && resolve(raw) !== raw.trim().toLowerCase()) {
+      invalid.push(name);
+    }
+  }
+
+  const providers = env.DOCZ_AUTH_PROVIDERS;
+  if (isSet(providers) && !authProvidersHonoured(providers)) {
+    invalid.push("DOCZ_AUTH_PROVIDERS");
+  }
+  const nav = env.DOCZ_NAV_LINKS;
+  if (isSet(nav) && resolveNavLinks(nav).length === 0) {
+    invalid.push("DOCZ_NAV_LINKS");
+  }
+  return invalid;
+}
+
+/**
+ * Readiness: can this pod serve? Takes `distDir` rather than reading the
+ * module-level DIST so tests can vary it — DIST is read once at import
+ * and cannot be changed afterwards.
+ *
+ * This makes NO network call. Gating readiness on docz-api would evict
+ * every pod from the Service the moment the API blipped, converting a
+ * degradation the SPA already handles into a total outage (INV-0006 F3).
+ * Upstream health is a metric, not a probe.
+ */
+export async function checkReady(
+  distDir: string,
+  env: ConfigEnv = process.env,
+): Promise<ReadyReport> {
+  const distOk = await Bun.file(`${distDir}/index.html`).exists();
+  const invalid = invalidConfigVars(env);
+  return {
+    ready: distOk && invalid.length === 0,
+    checks: {
+      dist: distOk ? "ok" : "missing",
+      config: invalid.length === 0 ? "ok" : "invalid",
+    },
+    invalid,
+  };
+}
+
 /**
  * Everything the SPA reads off window.__DOCZ_CONFIG__. Every field is
  * the output of a whitelist above, never raw env text.
@@ -181,25 +348,46 @@ export function injectRuntimeConfig(html: string, script: string): string {
 const AUTH_PROVIDERS = resolveAuthProviders(process.env.DOCZ_AUTH_PROVIDERS);
 const NAV_LINKS = resolveNavLinks(process.env.DOCZ_NAV_LINKS);
 const MERMAID_LAYOUT = resolveMermaidLayout(process.env.DOCZ_MERMAID_LAYOUT);
+const LOG_LEVEL = resolveLogLevel(process.env.DOCZ_LOG_LEVEL);
+const LOG_FORMAT = resolveLogFormat(process.env.DOCZ_LOG_FORMAT);
+
+const METRICS_ENABLED = resolveMetricsEnabled(process.env.DOCZ_METRICS_ENABLED);
+
+const OTEL_ENDPOINT = resolveOtelEndpoint(
+  process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
+);
+const tracing = initTracing({
+  endpoint: OTEL_ENDPOINT,
+  serviceName: resolveServiceName(process.env.OTEL_SERVICE_NAME),
+  sampleRate: resolveSampleRate(process.env.OTEL_TRACES_SAMPLER_ARG),
+});
+
+const log = createLogger({ level: LOG_LEVEL, format: LOG_FORMAT });
+// Undefined when disabled, so the instruments are never even created —
+// the feature is absent rather than present-and-ignored.
+const metrics = METRICS_ENABLED ? createMetrics() : undefined;
 const CONFIG_SCRIPT = runtimeConfigScript({
   authProviders: AUTH_PROVIDERS,
   nav: NAV_LINKS,
   mermaidLayout: MERMAID_LAYOUT,
 });
 
-// Text-ish assets get a build-time .gz sibling (see Dockerfile); fonts
-// and images are already compressed.
-const IMMUTABLE_PREFIX = "/assets/";
-
-function isProxied(pathname: string): boolean {
-  return (
-    PROXY_EXACT.has(pathname) ||
-    PROXY_PREFIXES.some((prefix) => pathname.startsWith(prefix))
-  );
-}
-
-async function proxy(req: Request, url: URL): Promise<Response> {
+async function proxy(
+  req: Request,
+  url: URL,
+  route: RouteClass,
+): Promise<Response> {
+  const method = normalizeMethod(req.method);
   if (DOCZ_API_URL === undefined) {
+    // A config fault and a network fault are indistinguishable from
+    // outside — both are a bare 502 — so they get distinct reasons here.
+    log.error("proxy.error", {
+      method,
+      route,
+      reason: "not_configured",
+      err_message: "DOCZ_API_URL is not set",
+    });
+    metrics?.recordProxyError("not_configured");
     return new Response("DOCZ_API_URL is not configured", { status: 502 });
   }
   const target = new URL(url.pathname + url.search, DOCZ_API_URL);
@@ -207,6 +395,30 @@ async function proxy(req: Request, url: URL): Promise<Response> {
   headers.set("host", target.host);
   headers.set("x-forwarded-host", url.host);
   headers.set("x-forwarded-proto", url.protocol.replace(":", ""));
+  const started = performance.now();
+
+  const span = tracing.tracer.startSpan("proxy.upstream", {
+    attributes: {
+      "http.request.method": method,
+      "http.route": route,
+      // The upstream HOST, never the URL — the path and query on an
+      // /auth/* hop carry the authorization code.
+      "server.address": target.host,
+    },
+  });
+  // Inject traceparent from the child span's context. docz-api installs
+  // a TraceContext propagator unconditionally and Extracts on every
+  // request, so its spans become children of this one with ZERO
+  // upstream change (INV-0006 F5).
+  propagation.inject(trace.setSpan(context.active(), span), headers, {
+    set: (carrier, key, value) => {
+      carrier.set(
+        key,
+        typeof value === "string" ? value : JSON.stringify(value),
+      );
+    },
+  });
+
   try {
     const upstream = await fetch(target, {
       method: req.method,
@@ -216,11 +428,50 @@ async function proxy(req: Request, url: URL): Promise<Response> {
       // redirects through instead of following them server-side.
       redirect: "manual",
     });
+    span.setAttribute("http.response.status_code", upstream.status);
+    if (upstream.status >= 500) {
+      // 5xx only. A 401 or 404 from docz-api is a client fault, not a
+      // failed span — same serverErrorFloor docz-api itself uses.
+      span.setStatus({ code: SpanStatusCode.ERROR });
+    }
+    span.end();
+    // The OAuth-debugging line: where we sent the request, what came
+    // back, and which host the browser is about to be redirected to.
+    // Never the Location query — that carries client id and state.
+    log.debug("proxy.request", {
+      method,
+      route,
+      target_host: target.host,
+      upstream_status: upstream.status,
+      location_host: redactLocation(upstream.headers.get("location")),
+      has_cookie: hasCookie(req.headers),
+      duration_ms: Math.round(performance.now() - started),
+    });
+    metrics?.recordProxy(route, performance.now() - started);
     return new Response(upstream.body, {
       status: upstream.status,
       headers: upstream.headers,
     });
-  } catch {
+  } catch (err) {
+    // Binding this was the single highest-value fix in DESIGN-0006: the
+    // cause used to be discarded at the language level, leaving an
+    // operator with a bare 502 and no way to learn whether it was DNS,
+    // a refused connection, TLS, or a timeout.
+    log.error("proxy.error", {
+      method,
+      route,
+      reason: "unreachable",
+      target_host: target.host,
+      err_name: err instanceof Error ? err.name : "unknown",
+      err_message: err instanceof Error ? err.message : String(err),
+      duration_ms: Math.round(performance.now() - started),
+    });
+    span.setStatus({
+      code: SpanStatusCode.ERROR,
+      message: err instanceof Error ? err.name : "unknown",
+    });
+    span.end();
+    metrics?.recordProxyError("unreachable");
     return new Response("upstream unreachable", { status: 502 });
   }
 }
@@ -291,45 +542,186 @@ function startServer() {
   });
 }
 
-async function handleRequest(req: Request): Promise<Response> {
-  const url = new URL(req.url);
+/** A response plus the fact only the serving path knows. */
+interface Served {
+  response: Response;
+  servedFromDisk: boolean;
+}
+
+/** Today's routing, unchanged, reporting whether a file was found. */
+async function route(req: Request, url: URL): Promise<Served> {
   const { pathname } = url;
 
-  if (pathname === "/healthz") {
-    return new Response("ok", {
-      headers: { "cache-control": "no-store" },
-    });
-  }
-  if (isProxied(pathname)) {
-    return proxy(req, url);
+  if (isProxiedPath(pathname)) {
+    const routeClass = classifyRoute(pathname, false);
+    return {
+      response: await proxy(req, url, routeClass),
+      servedFromDisk: false,
+    };
   }
   if (req.method !== "GET" && req.method !== "HEAD") {
-    return new Response("method not allowed", { status: 405 });
+    return {
+      response: new Response("method not allowed", { status: 405 }),
+      servedFromDisk: false,
+    };
   }
 
   if (pathname !== "/") {
     const filePath = safeDistPath(pathname);
     if (filePath === null) {
-      return new Response("bad request", { status: 400 });
+      return {
+        response: new Response("bad request", { status: 400 }),
+        servedFromDisk: false,
+      };
     }
     const file = await serveFile(req, filePath, cacheControl(pathname));
     if (file !== null) {
-      return file;
+      return { response: file, servedFromDisk: true };
     }
   }
   // SPA fallback: the router owns every other path.
-  return serveIndex();
+  return { response: await serveIndex(), servedFromDisk: false };
+}
+
+export async function handleRequest(req: Request): Promise<Response> {
+  const url = new URL(req.url);
+  const { pathname } = url;
+
+  // Probes short-circuit before any signal is recorded. A kubelet
+  // hitting these every 10s would otherwise be most of the log volume
+  // on a quiet docs site.
+  if (PROBE_PATHS.has(pathname)) {
+    return await probe(pathname);
+  }
+
+  const method = normalizeMethod(req.method);
+  const started = performance.now();
+
+  // The server span is the ROOT and wraps the whole pipeline, so the
+  // proxy child below inherits it through the active context. Its name
+  // is finalised after routing, because the route class is only knowable
+  // once we know whether a file was found.
+  const span = tracing.tracer.startSpan(`${method} ${pathname}`);
+
+  try {
+    return await context.with(
+      trace.setSpan(context.active(), span),
+      async () => {
+        const { response, servedFromDisk } = await route(req, url);
+        const elapsed = performance.now() - started;
+        const routeClass = classifyRoute(pathname, servedFromDisk);
+
+        // ONE emission point for all three signals, so a log line, a
+        // metric, and a span can never disagree about what a request
+        // was (Component 8).
+        log.debug("http.request", {
+          method,
+          route: routeClass,
+          path: redactUrl(url),
+          status: response.status,
+          duration_ms: Math.round(elapsed),
+        });
+        metrics?.recordRequest(method, routeClass, response.status, elapsed);
+
+        span.updateName(`${method} ${routeClass}`);
+        // ALLOWLIST. Never url.full, never headers — on this proxy the
+        // full URL of an /auth/* hop carries the OAuth code, which is
+        // exactly what auto-instrumentation would have shipped.
+        span.setAttributes({
+          "http.request.method": method,
+          "http.route": routeClass,
+          "http.response.status_code": response.status,
+          "url.path": redactUrl(url),
+        });
+        if (response.status >= 500) {
+          span.setStatus({ code: SpanStatusCode.ERROR });
+        }
+        return response;
+      },
+    );
+  } finally {
+    span.end();
+  }
+}
+
+/** Operational endpoints, excluded from every signal. */
+async function probe(pathname: string): Promise<Response> {
+  if (pathname === "/healthz") {
+    // Liveness only, and unconditional by design — see the readiness
+    // comment above for why this one must never check anything.
+    return new Response("ok", { headers: { "cache-control": "no-store" } });
+  }
+  if (pathname === "/readyz") {
+    return await readyz();
+  }
+  if (pathname === "/metrics") {
+    return await exposeMetrics();
+  }
+  return new Response("not found", { status: 404 });
+}
+
+/**
+ * Exposition, or an EXPLICIT 404 when metrics are off.
+ *
+ * The explicit 404 is the whole point (OQ-4a): `/metrics` is in
+ * PROBE_PATHS unconditionally, so a disabled endpoint still answers
+ * here. Leaving the route unregistered instead would drop the request
+ * into the SPA fallback, and a scraper would receive `index.html` with
+ * a 200 — silently poisoning a dashboard with parse errors rather than
+ * reporting the endpoint as absent.
+ */
+async function exposeMetrics(): Promise<Response> {
+  if (metrics === undefined) {
+    return new Response("metrics are disabled", {
+      status: 404,
+      headers: { "content-type": "text/plain; charset=utf-8" },
+    });
+  }
+  return new Response(await metrics.registry.metrics(), {
+    headers: {
+      "content-type": metrics.registry.contentType,
+      "cache-control": "no-store",
+    },
+  });
+}
+
+async function readyz(): Promise<Response> {
+  const report = await checkReady(DIST);
+  if (!report.ready) {
+    // The failing var NAMES go to the log, never to the response: the
+    // body is reachable by anything that can reach the pod.
+    log.warn("readyz.fail", {
+      dist: report.checks.dist,
+      config: report.checks.config,
+      invalid: report.invalid.join(",") || undefined,
+    });
+  }
+  return Response.json(
+    {
+      status: report.ready ? "ready" : "not ready",
+      checks: report.checks,
+    },
+    {
+      status: report.ready ? 200 : 503,
+      headers: { "cache-control": "no-store" },
+    },
+  );
 }
 
 // Guard startup so tests can import the pure helpers above without
 // binding a port (import.meta.main is true only for the entrypoint).
 if (import.meta.main) {
   const server = startServer();
-  console.log(
-    `docz-site serving ${DIST}/ on :${String(server.port)} ` +
-      `(auth: ${AUTH_PROVIDERS.join(",")})` +
-      (DOCZ_API_URL === undefined
-        ? " (no DOCZ_API_URL — API proxy disabled)"
-        : ` (proxying to ${DOCZ_API_URL})`),
-  );
+  log.info("server.start", {
+    port: server.port,
+    dist: DIST,
+    auth_providers: AUTH_PROVIDERS.join(","),
+    nav_links: NAV_LINKS.length,
+    mermaid_layout: MERMAID_LAYOUT,
+    proxy_target: DOCZ_API_URL ?? "(none — API proxy disabled)",
+    log_level: LOG_LEVEL,
+    log_format: LOG_FORMAT,
+    metrics_enabled: METRICS_ENABLED,
+    tracing: tracing.enabled ? (OTEL_ENDPOINT ?? "on") : "off",
+  });
 }

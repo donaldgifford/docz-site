@@ -5,9 +5,29 @@ based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 this project adheres to [Semantic Versioning](https://semver.org/).
 ## [unreleased]
 
+### Documentation
+
+- Confirm both chart publishes and close out IMPL-0007 ([#37](https://github.com/donaldgifford/docz-site/issues/37))
+
+## [0.10.0] - 2026-09-20
+
+### Features
+
+- *(server)* Prometheus metrics and OpenTelemetry tracing ([#36](https://github.com/donaldgifford/docz-site/issues/36))
+
+## [0.9.0] - 2026-09-20
+
+### Features
+
+- *(server)* Structured logging, split probes, and a route error boundary ([#35](https://github.com/donaldgifford/docz-site/issues/35))
+
 ### Bug Fixes
 
 - *(chart)* Bump chart to 0.1.8 and appVersion to 0.8.0 ([#32](https://github.com/donaldgifford/docz-site/issues/32))
+
+### Documentation
+
+- INV-0006, DESIGN-0006, and IMPL-0007 for server observability ([#34](https://github.com/donaldgifford/docz-site/issues/34))
 
 ## [0.8.0] - 2026-09-15
 

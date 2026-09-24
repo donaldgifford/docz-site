@@ -38,6 +38,9 @@ Thumbs.db
 
 # Testing
 coverage
+# Server suites are not runtime code and never belong in the build
+# context (the server ships as a bundle; see Dockerfile).
+server/*.test.ts
 
 # Misc
 README.md

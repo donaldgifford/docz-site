@@ -28,7 +28,7 @@ The chart is published as an OCI artifact to GHCR:
 ```bash
 helm install docz-site \
   oci://ghcr.io/donaldgifford/charts/docz-site \
-  --version 0.1.8 \
+  --version 0.1.10 \
   --namespace docz-site \
   --create-namespace \
   --set config.doczApiUrl=http://docz-api:8080
@@ -92,6 +92,50 @@ config:
       href: "/donaldgifford/docs/docs"
 ```
 
+### Observability
+
+Logging is structured JSON on stdout by default. `config.logLevel`
+takes `debug`, `info`, `warn`, or `error`; `debug` adds a line per
+request plus the proxied `/auth/*` flow, which is the level to reach
+for when troubleshooting an Okta or Keycloak login. Credential-bearing
+values (`code`, `state`, cookies) are redacted at every level.
+
+The probes are deliberately split, because Kubernetes responds to them
+differently. `livenessProbe` stays on `/healthz`, which is
+unconditional — a failing liveness probe **restarts** the container,
+and restarting cannot fix a broken image. `readinessProbe` points at
+`/readyz`, which verifies the built assets are servable and the runtime
+config validated — a failing readiness probe **holds traffic**, so a
+bad deploy stalls the rollout and the previous ReplicaSet keeps
+serving. `/readyz` makes no call to docz-api by design: gating
+readiness on the API would evict every pod from the Service the moment
+it blipped.
+
+`metrics.enabled` (default `true`) exposes Prometheus metrics on
+`/metrics`. When disabled the endpoint returns an explicit `404`
+rather than falling through to the SPA, so a scraper is told the
+endpoint is absent instead of being handed `index.html` with a `200`.
+Set `serviceMonitor.enabled: true` for a Prometheus Operator
+`ServiceMonitor` — it is gated on **both** flags.
+
+```yaml
+metrics:
+  enabled: true
+serviceMonitor:
+  enabled: true
+  interval: 30s
+  labels:
+    release: kube-prometheus-stack
+```
+
+Alongside the four `docz_site_*` instruments, `prom-client`'s default
+process and runtime metrics are exported. One caveat worth knowing
+before you build dashboards: **`nodejs_gc_duration_seconds` is declared
+but never samples**, because the server runs on Bun rather than Node
+and Bun does not emit the GC performance entries that metric is fed
+from. A stock Node.js dashboard will show empty GC panels. Every other
+`nodejs_*` metric (event-loop lag, heap size, handles) does report.
+
 ## Exposure
 
 The site is a `ClusterIP` Service by default. Front it with one of:
@@ -119,12 +163,14 @@ memory metric). The SPA server is stateless, so horizontal scaling is safe.
 | autoscaling.minReplicas | int | `1` | Minimum replicas |
 | autoscaling.targetCPUUtilizationPercentage | int | `80` | Target average CPU utilization (percent) |
 | autoscaling.targetMemoryUtilizationPercentage | int | `0` | Target average memory utilization (percent). Unset → no memory metric. |
-| config | object | `{"authProviders":"github","doczApiUrl":"","mermaidLayout":"elk","navLinks":[],"port":8080}` | docz-site runtime configuration. The site is a static SPA served by a small Bun process that also reverse-proxies the API surface, so the browser and API share one origin (no CORS, first-party session cookie). |
+| config | object | `{"authProviders":"github","doczApiUrl":"","logFormat":"json","logLevel":"info","mermaidLayout":"elk","navLinks":[],"port":8080}` | docz-site runtime configuration. The site is a static SPA served by a small Bun process that also reverse-proxies the API surface, so the browser and API share one origin (no CORS, first-party session cookie). |
 | config.authProviders | string | `"github"` | Comma-separated login providers to show on /login (DOCZ_AUTH_PROVIDERS): github, okta, keycloak. The server injects this into the SPA at runtime (whitelist-validated), so one image serves any combo — no rebuild. Must match docz-api's own AUTH_PROVIDERS. Empty/unknown → github. The GitHub App ingest ("machine identity") is docz-api's and is independent of this. |
 | config.doczApiUrl | string | `""` | Absolute base URL of the docz-api the site proxies to (DOCZ_API_URL). In-cluster this is the docz-api Service, e.g. http://docz-api:8080. Required — without it the API proxy returns 502. |
+| config.logFormat | string | `"json"` | Log output format (DOCZ_LOG_FORMAT): `json` (one object per line, for a log aggregator) or `text` (readable, for local runs). |
+| config.logLevel | string | `"info"` | Log verbosity (DOCZ_LOG_LEVEL): `debug`, `info`, `warn`, or `error`. `debug` adds a line per request plus the proxied `/auth/*` flow — the level to reach for when troubleshooting an Okta or Keycloak login. Credential-bearing values (`code`, `state`, cookies) are redacted at every level, enforced by a test. The values schema constrains this to the four names so a typo fails at install; at runtime an unrecognized level falls back to `info`, never to something noisier. |
 | config.mermaidLayout | string | `"elk"` | Diagram layout engine (DOCZ_MERMAID_LAYOUT): `elk` or `dagre`. mermaid 12 made ELK the default and so is it here; `dagre` restores the pre-12 layout without rebuilding the image. Injected into the SPA at runtime and whitelist-validated at both ends, so anything unrecognized falls back to `elk` — the values schema constrains it to the two names so a typo fails at install rather than silently rendering the default. |
 | config.navLinks | list | `[]` | Topbar nav pins (DOCZ_NAV_LINKS): a list of `{label, href}` links rendered between Repos and the session menu. Injected into the SPA at runtime as JSON, whitelist-validated by the server (short label charset, same-origin app-path hrefs, cap 6); invalid entries degrade to fewer/no pins, never a broken page. Empty → no pins and the env var is omitted. |
-| config.port | int | `8080` | Container HTTP listen port (drives the PORT env var and the Service targetPort). The SPA, /healthz, and the API proxy are all served here. |
+| config.port | int | `8080` | Container HTTP listen port (drives the PORT env var and the Service targetPort). The SPA, /healthz, /readyz, and the API proxy are all served here. |
 | extraEnv | list | `[]` | Additional environment variables |
 | extraVolumeMounts | list | `[]` | Additional volume mounts |
 | extraVolumes | list | `[]` | Additional volumes |
@@ -145,19 +191,17 @@ memory metric). The SPA server is stateless, so horizontal scaling is safe.
 | ingress.enabled | bool | `false` | Enable an Ingress |
 | ingress.hosts | list | `[]` | Ingress hosts. Each entry: {host, paths: [{path, pathType}]}. |
 | ingress.tls | list | `[]` | TLS blocks. Each entry: {secretName, hosts: []}. |
-| livenessProbe.httpGet.path | string | `"/healthz"` |  |
-| livenessProbe.httpGet.port | string | `"http"` |  |
-| livenessProbe.initialDelaySeconds | int | `5` |  |
-| livenessProbe.periodSeconds | int | `15` |  |
+| livenessProbe | object | `{"httpGet":{"path":"/healthz","port":"http"},"initialDelaySeconds":5,"periodSeconds":15}` | Liveness probe. Stays on /healthz, which is unconditional: a failing liveness probe RESTARTS the container, and restarting cannot fix a broken image or mount — that is just CrashLoopBackOff. |
+| metrics.enabled | bool | `true` | Expose Prometheus metrics on /metrics (DOCZ_METRICS_ENABLED). When false the endpoint returns an explicit 404 rather than falling through to the SPA — a scraper is told the endpoint is absent instead of being handed index.html with a 200. |
 | nameOverride | string | `""` | Override the chart name |
 | nodeSelector | object | `{}` | Node selector |
+| otel.endpoint | string | `""` | OTLP/HTTP traces endpoint (OTEL_EXPORTER_OTLP_ENDPOINT), e.g. http://otel-collector:4318/v1/traces. EMPTY MEANS TRACING IS OFF — no provider is registered, no network call is attempted, and the env var is omitted entirely. Only absolute http(s) URLs are accepted; anything else is treated as unset rather than guessed at, because this decides where request telemetry is sent. |
+| otel.sampleRate | int | `1` | Head sample rate (OTEL_TRACES_SAMPLER_ARG), clamped to 0..1. docz-site injects `traceparent` on the proxy hop and docz-api already extracts it, so a sampled request produces ONE trace spanning both services with no docz-api configuration. |
+| otel.serviceName | string | `"docz-site"` | Service name reported to the collector (OTEL_SERVICE_NAME) |
 | podAnnotations | object | `{}` | Pod annotations |
 | podLabels | object | `{}` | Pod labels |
 | podSecurityContext | object | `{"fsGroup":1000,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000,"seccompProfile":{"type":"RuntimeDefault"}}` | Pod security context. Defaults match the `oven/bun` runtime image, whose `bun` user is UID/GID 1000, and drop to a RuntimeDefault seccomp profile. |
-| readinessProbe.httpGet.path | string | `"/healthz"` |  |
-| readinessProbe.httpGet.port | string | `"http"` |  |
-| readinessProbe.initialDelaySeconds | int | `5` |  |
-| readinessProbe.periodSeconds | int | `10` |  |
+| readinessProbe | object | `{"httpGet":{"path":"/readyz","port":"http"},"initialDelaySeconds":5,"periodSeconds":10}` | Readiness probe. Points at /readyz, which verifies the dist/ is servable and the runtime config validated — a failing readiness probe HOLDS TRAFFIC, so a bad deploy stalls the rollout and the previous ReplicaSet keeps serving. /readyz makes no call to docz-api by design: gating readiness on the API would evict every pod from the Service when the API blipped. |
 | replicaCount | int | `1` | Number of replicas |
 | resources | object | `{"limits":{"cpu":"250m","memory":"128Mi"},"requests":{"cpu":"25m","memory":"64Mi"}}` | Container resource requests and limits |
 | revisionHistoryLimit | int | `3` | Number of old ReplicaSets retained for rollback. Defaults to 3 to keep the kubectl `get rs` view tidy; bump if you need more rollback headroom. Kubernetes default is 10. |
@@ -167,6 +211,9 @@ memory metric). The SPA server is stateless, so horizontal scaling is safe.
 | serviceAccount.annotations | object | `{}` | Annotations for the ServiceAccount |
 | serviceAccount.create | bool | `true` | Create a ServiceAccount |
 | serviceAccount.name | string | `""` | Override the ServiceAccount name |
+| serviceMonitor.enabled | bool | `false` | Create a Prometheus Operator ServiceMonitor scraping /metrics. Requires `metrics.enabled`; the template is gated on both. |
+| serviceMonitor.interval | string | `"30s"` | Scrape interval |
+| serviceMonitor.labels | object | `{}` | Additional labels for the ServiceMonitor (e.g. the `release` label your Prometheus Operator selects on) |
 | tolerations | list | `[]` | Tolerations |
 
 ## Maintainers

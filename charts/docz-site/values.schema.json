@@ -28,6 +28,34 @@
               "href": { "type": "string" }
             }
           }
+        },
+        "logLevel": {
+          "description": "Log verbosity. Constrained because the server falls back to info on anything it does not recognize, so a typo here would otherwise be invisible — the deployment would simply keep logging at the default.",
+          "type": "string",
+          "enum": ["debug", "info", "warn", "error"]
+        },
+        "logFormat": {
+          "description": "Log output format: json for one object per line into an aggregator, text for readable local runs.",
+          "type": "string",
+          "enum": ["json", "text"]
+        }
+      }
+    },
+    "otel": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "endpoint": {
+          "description": "OTLP/HTTP traces endpoint. Empty means tracing is off. Constrained to absolute http(s) URLs because this decides where request telemetry is sent — the server treats anything else as unset rather than guessing.",
+          "type": "string",
+          "pattern": "^$|^https?://"
+        },
+        "serviceName": { "type": "string" },
+        "sampleRate": {
+          "description": "Head sample rate. The server clamps out-of-range values, but a schema rejection at install time is a better signal than a silent clamp.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
         }
       }
     },

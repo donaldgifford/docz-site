@@ -1,5 +1,8 @@
 # docz-site
 
+> [!WARNING]
+> This is now archived and migrated to the [docz](https://github.com/donaldgifford/docz/) repo.
+
 Web UI for [docz-api](https://github.com/donaldgifford/docz-api) — a
 cross-repo reader, search directory, and repo pages for docz-managed
 documentation (RFCs, ADRs, designs, guides, and friends) ingested from

@@ -11,7 +11,7 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Miscellaneous Tasks
 
-- *(README)* Update readme
+- *(README)* Update README.md with warning that current ui has moved to the docz repo ([#40](https://github.com/donaldgifford/docz-site/issues/40))
 
 ## [0.10.0] - 2026-09-20
 
